@@ -1,0 +1,21 @@
+﻿
+namespace Qydha.API.Controllers.Attributes;
+
+public class AuthFilter : IAuthorizationFilter
+{
+    public void OnAuthorization(AuthorizationFilterContext ctx)
+    {
+        // Console.WriteLine(">>>>>>>>>>>> From AuthFilter <<<<<<<<<<<");
+        var userIdStr = ctx.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+        if (userIdStr is null || !Guid.TryParse(userIdStr, out Guid userId))
+            ctx.Result = new UnauthorizedObjectResult(new
+            {
+                Code = ErrorCodes.InvalidToken,
+                Message = "Invalid Token Data"
+            });
+        else
+        {
+            ctx.HttpContext.Items["UserId"] = userId;
+        }
+    }
+}
