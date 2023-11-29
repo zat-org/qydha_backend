@@ -62,8 +62,7 @@ public class MailingService : IMailingService
     public string GenerateConfirmEmailBody(string otp, string requestId)
     {
         var mailText = _mailSettings.ConfirmEmailTemplate;
-        var confirmLink = $"{_mailSettings.ConfirmUrl}?Code={otp}&RequestId={requestId}";
-        mailText = mailText.Replace("[confirmLink]", confirmLink);
+        mailText = mailText.Replace("[code]", otp);
         return mailText;
     }
 
