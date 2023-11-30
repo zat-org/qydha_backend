@@ -6,7 +6,7 @@ public interface IAuthService
 
     Task<Result<Tuple<User, string>>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId);
 
-    Task<Result<Tuple<User, string>>> Login(string username, string password);
+    Task<Result<Tuple<User, string>>> Login(string username, string password, string? fcm_token);
 
     Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken, Guid? userId);
 

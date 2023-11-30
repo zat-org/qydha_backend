@@ -53,6 +53,8 @@ public class AuthService : IAuthService
                 });
             return Result.Ok(otp_request);
         })
+        .OnSuccessAsync<RegistrationOTPRequest>(async (otp_request) => (await _userRepo.IsUsernameAvailable(otp_request.Username)).MapTo(otp_request))
+        .OnSuccessAsync<RegistrationOTPRequest>(async (otp_request) => (await _userRepo.IsPhoneAvailable(otp_request.Phone)).MapTo(otp_request))
         .OnSuccessAsync(SaveUserFromRegistrationOTPRequest)
         .OnSuccess((user) =>
         {
@@ -61,10 +63,16 @@ public class AuthService : IAuthService
         });
     }
 
-    public async Task<Result<Tuple<User, string>>> Login(string username, string password)
+    public async Task<Result<Tuple<User, string>>> Login(string username, string password, string? fcm_token)
     {
         return (await _userRepo.CheckUserCredentials(username, password))
         .OnSuccessAsync<User>(async (user) => (await _userRepo.UpdateUserLastLoginToNow(user.Id)).MapTo(user))
+        .OnSuccessAsync<User>(async (user) =>
+        {
+            if (fcm_token is not null)
+                return (await _userRepo.UpdateUserFCMToken(user.Id, fcm_token)).MapTo(user);
+            return Result.Ok(user);
+        })
         .OnSuccess((user) =>
         {
             var jwtToken = _tokenManager.Generate(user.GetClaims());
@@ -74,7 +82,15 @@ public class AuthService : IAuthService
 
     public async Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken, Guid? userId)
     {
-        return (await _userRepo.IsUsernameAvailable(username))
+        Result result;
+
+        if (userId is not null)
+            result = (await _userRepo.GetByIdAsync(userId.Value))
+            .OnSuccessAsync(async () => await _userRepo.IsUsernameAvailable(username));
+        else
+            result = await _userRepo.IsUsernameAvailable(username);
+
+        return result
         .OnSuccessAsync(async () => await _userRepo.IsPhoneAvailable(phone))
         .OnSuccessAsync(async () =>
         {

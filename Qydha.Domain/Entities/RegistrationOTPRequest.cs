@@ -11,6 +11,10 @@ public class RegistrationOTPRequest
     public Guid? User_Id { get; set; }
     public string? FCM_Token { get; set; }
 
+    public RegistrationOTPRequest()
+    {
+        
+    }
     public RegistrationOTPRequest(string username, string phone, string passwordHash, string otp, Guid? userId, string? fcmToken)
     {
         Username = username;

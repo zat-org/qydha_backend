@@ -51,8 +51,7 @@ public static class InputValidators
         .WithName(propName)
         .Length(2, 25)
         .Matches("^[a-zA-Z][a-zA-Z0-9_.-]*$")
-        .WithMessage("يجب ان يتكون {PropertyName} من حروف انجليزية او ارقام او _ . -")
-        .WithState(r => true);
+        .WithMessage("يجب ان يتكون {PropertyName} من حروف انجليزية او ارقام او _ . -");
 
     }
 
@@ -64,16 +63,15 @@ public static class InputValidators
         .WithName(propName)
         .MinimumLength(6)
         .Matches(@"^(?=.*[a-zA-Z])(?=.*\d).{6,}$")
-        .WithMessage("يجب ان تحتوي {PropertyName} علي حروف و ارقام.")
-        .WithState(r => true);
+        .WithMessage("يجب ان تحتوي {PropertyName} علي حروف و ارقام.");
     }
     public static IRuleBuilderOptions<T, string?> FCM_Token<T>(this IRuleBuilder<T, string?> ruleBuilder, string propName)
     {
         return ruleBuilder
         .NotEmpty()
         .WithName(propName)
-        .Length(140, 140)
-        .Matches("^[A-Za-z0-9_-]{140}$")
+        // .Length(140, 140)
+        // .Matches("^[A-Za-z0-9_-]{140}$")
         .WithMessage("Invalid FCM Token");
     }
 

@@ -79,8 +79,8 @@ public class UserController : ControllerBase
             {
                 return Ok(new
                 {
-                    data = new { request_id = otp_request.Id },
-                    message = "Otp sent successfully."
+                    Data = new { RequestId = otp_request.Id },
+                    Message = "Otp sent successfully."
                 });
             },
             BadRequest);
@@ -115,8 +115,8 @@ public class UserController : ControllerBase
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { request_id = otp_request.Id },
-                    message = "User updated successfully."
+                    Data = new { RequestId = otp_request.Id },
+                    Message = "User updated successfully."
                 });
             },
             BadRequest);

@@ -89,6 +89,7 @@ public class UserService : IUserService
 
                 return Result.Ok(otp_request);
             })
+            .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.IsPhoneAvailable(otp_request.Phone)).MapTo(otp_request))
             .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.PatchById(otp_request.User_Id, "phone", otp_request.Phone)).MapTo(otp_request))
             .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.User_Id));
     }
@@ -130,6 +131,7 @@ public class UserService : IUserService
 
             return Result.Ok(otp_request);
         })
+        .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) => (await _userRepo.IsEmailAvailable(otp_request.Email)).MapTo(otp_request))
         .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) =>
             (await _userRepo.PatchById(otp_request.User_Id,
                 new() { { "email", otp_request.Email }, { "is_email_confirmed", true } }))

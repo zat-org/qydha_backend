@@ -33,8 +33,8 @@ public class AuthController : ControllerBase
             (req) => Ok(
                 new
                 {
-                    request_id = req.Id,
-                    message = "otp sent successfully."
+                    RequestId = req.Id,
+                    Message = "otp sent successfully."
                 }),
             BadRequest
         );
@@ -51,8 +51,8 @@ public class AuthController : ControllerBase
         .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
             new
             {
-                request_id = req.Id,
-                message = "otp sent successfully."
+                RequestId = req.Id,
+                Message = "otp sent successfully."
             }),
         BadRequest);
     }
@@ -60,7 +60,7 @@ public class AuthController : ControllerBase
     [HttpPost("login/")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        return (await _authService.Login(dto.Username, dto.Password))
+        return (await _authService.Login(dto.Username, dto.Password, dto.FCM_Token))
         .Handle<Tuple<User, string>, IActionResult>(
             (tuple) =>
             {
@@ -71,7 +71,11 @@ public class AuthController : ControllerBase
                     message = "Logged in successfully."
                 });
             },
-            BadRequest
+            (result) => BadRequest(new
+            {
+                Code = ErrorCodes.InvalidCredentials,
+                Message = "اسم المستخدم او كلمة السر غير صحيحة"
+            })
         );
     }
 

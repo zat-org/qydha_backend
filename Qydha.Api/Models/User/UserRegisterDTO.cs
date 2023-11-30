@@ -3,9 +3,7 @@
 public class UserRegisterDTO
 {
     public string Username { get; set; } = null!;
-
     public string Password { get; set; } = null!;
-
     public string Phone { get; set; } = null!;
     public string? FCM_Token { get; set; }
 

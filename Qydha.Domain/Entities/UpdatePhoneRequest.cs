@@ -8,7 +8,10 @@ public class UpdatePhoneRequest
     public DateTime Created_On { get; set; } = DateTime.UtcNow;
     public Guid User_Id { get; set; }
 
+    public UpdatePhoneRequest()
+    {
 
+    }
     public UpdatePhoneRequest(string phone, string otp, Guid user_id)
     {
         Phone = phone;
