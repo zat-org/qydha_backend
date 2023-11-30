@@ -110,18 +110,17 @@ public class UserRepo : IUserRepo
     }
     public async Task<Result<User>> GetByEmailAsync(string email)
     {
-        return await GetByPropAsync("email", email);
+        return await GetByPropAsync("Normalized_Email", email.ToUpper());
     }
     public async Task<Result<User>> GetByUsernameAsync(string username)
     {
-        //! TODO :: GET LOWER OR NORMALIZED USERNAME
-        return await GetByPropAsync("username", username);
+        return await GetByPropAsync("Normalized_Username", username.ToUpper());
     }
 
-    public async Task<Result> IsUsernameAvailable(string username)
+    public async Task<Result> IsUsernameAvailable(string username, Guid? userId = null)
     {
         Result<User> getUserRes = await GetByUsernameAsync(username);
-        if (getUserRes.IsSuccess)
+        if (getUserRes.IsSuccess && ((userId is null) || (userId is not null && getUserRes.Value.Id != userId)))
             return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "اسم المستخدم موجود بالفعل." });
         return Result.Ok();
     }
@@ -134,10 +133,10 @@ public class UserRepo : IUserRepo
         return Result.Ok();
     }
 
-    public async Task<Result> IsEmailAvailable(string email)
+    public async Task<Result> IsEmailAvailable(string email, Guid? userId = null)
     {
         Result<User> getUserRes = await GetByEmailAsync(email);
-        if (getUserRes.IsSuccess)
+        if (getUserRes.IsSuccess && ((userId is null) || (userId is not null && getUserRes.Value.Id != userId)))
             return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "البريد الالكتروني موجود بالفعل." });
         return Result.Ok();
     }
@@ -193,6 +192,28 @@ public class UserRepo : IUserRepo
     public async Task<Result> UpdateUserFCMToken(Guid userId, string fcmToken) =>
             await PatchById(userId, "FCM_Token", fcmToken);
 
+    public async Task<Result> UpdateUserPassword(Guid userId, string passwordHash) =>
+                await PatchById(userId, "password_hash", passwordHash);
+    public async Task<Result> UpdateUserUsername(Guid userId, string username) =>
+                    await PatchById(userId, new() {
+                        { "username", username },
+                        { "Normalized_Username", username.ToUpper() }
+                    });
+    public async Task<Result> UpdateUserPhone(Guid userId, string phone) =>
+                   await PatchById(userId, "phone", phone);
+
+    public async Task<Result> UpdateUserEmail(Guid userId, string email) =>
+                     await PatchById(userId, new() {
+                        { "email", email },
+                        { "Normalized_Email", email.ToUpper() },
+                        { "is_email_confirmed", true }
+                     });
+
+    public async Task<Result> UpdateUserAvatarData(Guid userId, string avatarPath, string avatarUrl) =>
+    await PatchById(userId, new() {
+                        { "Avatar_Path", avatarPath },
+                        { "Avatar_Url", avatarUrl }
+    });
     #endregion
 
 

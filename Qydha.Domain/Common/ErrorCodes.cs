@@ -6,14 +6,12 @@ public static class ErrorCodes
     public const string InvalidBodyInput = "4001";
     public const string InvalidPhotoFileInput = "4002";
     public const string NotFound = "4040";
-
     public const string AnonymousUserNotFound = "4041";
     public const string UserNotFound = "4042";
     public const string RegistrationRequestNotFound = "4043";
     public const string UpdatePhoneRequestNotFound = "4044";
     public const string UpdateEmailRequestNotFound = "4045";
     public const string NotificationNotFound = "4046";
-
     public const string InvalidDeleteOnRegularUser = "4091";
     public const string InvalidIAPHupToken = "4092";
     public const string EmailSendingError = "4093";

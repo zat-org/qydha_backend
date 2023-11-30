@@ -9,8 +9,8 @@ public static class InputValidators
         return ruleBuilder
         .NotEmpty()
         .WithName(propName)
-        .MinimumLength(4)
-        .Matches(@"^[A-Za-z\u0621-\u064A0-9\s]$")
+        .MinimumLength(2)
+        .Matches(@"^[\p{L}0-9\s]+$")
         .WithMessage("يجب ان يحتوى {PropertyName} علي حروف عربية او انجليزية او ارقام");
     }
 

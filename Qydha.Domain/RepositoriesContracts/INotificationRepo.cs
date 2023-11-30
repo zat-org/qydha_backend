@@ -3,7 +3,7 @@
 public interface INotificationRepo
 {
     Task<Result<Notification>> AddAsync(Notification notification);
-    Task<Result> DeleteByIdAsync(int id);
+    Task<Result> DeleteByIdAsync(Guid userId, int id);
     Task<Result<int>> DeleteAllByUserIdAsync(Guid userId);
     Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, Func<Notification, bool> filterCriteria, int pageSize = 10, int pageNumber = 1);
     Task<Result> MarkNotificationAsRead(Guid userId, int id);

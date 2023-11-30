@@ -3,5 +3,5 @@
 public interface IMailingService
 {
     Task<Result> SendEmailAsync(string mailTo, string subject, string body, IList<IFormFile>? attachments = null);
-    string GenerateConfirmEmailBody(string otp, string requestId);
+    string GenerateConfirmEmailBody(string otp, string requestId, User user);
 }

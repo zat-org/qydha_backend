@@ -72,7 +72,10 @@ public class NotificationService : INotificationService
     public async Task<Result> MarkNotificationAsRead(Guid userId, int notificationId) =>
         await _notificationRepo.MarkNotificationAsRead(userId, notificationId);
 
-
+    public async Task<Result> DeleteNotification(Guid userId, int notificationId) =>
+        await _notificationRepo.DeleteByIdAsync(userId, notificationId);
+    public async Task<Result> DeleteAll(Guid userId) =>
+        await _notificationRepo.DeleteAllByUserIdAsync(userId);
     public async Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null)
     {
         bool filter(Notification n)

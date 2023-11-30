@@ -6,6 +6,7 @@
 [TypeFilter(typeof(AuthFilter))]
 public class UserController : ControllerBase
 {
+    #region injections and ctor
     private readonly IUserService _userService;
     private readonly INotificationService _notificationService;
     private readonly IOptions<AvatarSettings> _optionsOfPhoto;
@@ -16,6 +17,10 @@ public class UserController : ControllerBase
         _notificationService = notificationService;
         _optionsOfPhoto = optionsOfPhoto;
     }
+
+    #endregion
+
+    #region Get user 
     [HttpGet("me/")]
     public async Task<IActionResult> GetUser()
     {
@@ -35,6 +40,9 @@ public class UserController : ControllerBase
         );
     }
 
+    #endregion
+
+    #region update user
     [HttpPatch("me/update-password/")]
     public async Task<IActionResult> UpdateAuthorizedUserPassword([FromBody] ChangePasswordDto changePasswordDto)
     {
@@ -51,7 +59,6 @@ public class UserController : ControllerBase
             },
             BadRequest);
     }
-
 
     [HttpPatch("me/update-username/")]
     public async Task<IActionResult> UpdateAuthorizedUsername([FromBody] ChangeUsernameDto changeUsernameDto)
@@ -122,8 +129,7 @@ public class UserController : ControllerBase
             BadRequest);
     }
 
-
-    [HttpGet("me/confirm-email-update/")]
+    [HttpPost("me/confirm-email-update/")]
     public async Task<IActionResult> ConfirmEmailUpdate([FromBody] ConfirmEmailDto confirmEmailDto)
     {
         Guid userId = (Guid)HttpContext.Items["UserId"]!;
@@ -170,6 +176,17 @@ public class UserController : ControllerBase
             }, BadRequest);
     }
 
+
+    [HttpPatch("me/update-fcm-token")]
+    public async Task<IActionResult> UpdateUsersFCMToken([FromBody] ChangeUserFCMTokenDto changeUserFCMTokenDto)
+    {
+        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        return (await _userService.UpdateFCMToken(userId, changeUserFCMTokenDto.FCM_Token))
+        .Handle<IActionResult>(() => Ok(new { data = new { }, Message = "User fcm token Updated Successfully" }), BadRequest);
+    }
+
+
+
     [HttpPatch("me/")]
     public async Task<IActionResult> UpdateUserData([FromBody] JsonPatchDocument<UpdateUserDto> updateUserDtoPatch)
     {
@@ -210,12 +227,17 @@ public class UserController : ControllerBase
             var mapper = new UserMapper();
             return Ok(new
             {
-                data = mapper.UserToUserDto(user),
+                data = new { user = mapper.UserToUserDto(user) },
                 message = "User updated Successfully"
             });
         }, BadRequest);
     }
 
+
+
+    #endregion
+
+    #region Delete user
     [HttpDelete("me/")]
     public async Task<IActionResult> DeleteUser(DeleteUserDto deleteUserDto)
     {
@@ -223,7 +245,7 @@ public class UserController : ControllerBase
 
         return (await _userService.DeleteUser(userId, deleteUserDto.Password))
         .Handle<User, IActionResult>(
-            (user) => Ok(new { message = $"User with username: '{user.Username}' Deleted Successfully." })
+            (user) => Ok(new { data = new { }, message = $"User with username: '{user.Username}' Deleted Successfully." })
             , BadRequest);
     }
 
@@ -233,10 +255,13 @@ public class UserController : ControllerBase
         Guid userId = (Guid)HttpContext.Items["UserId"]!;
         return (await _userService.DeleteAnonymousUser(userId))
         .Handle<User, IActionResult>(
-            (user) => Ok(new { message = $"Anonymous user deleted successfully." })
+            (user) => Ok(new { data = new { }, message = $"Anonymous user deleted successfully." })
             , BadRequest);
     }
 
+    #endregion
+
+    #region user notifications
     [HttpGet("me/notifications")]
     public async Task<IActionResult> GetUserNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1, [FromQuery] bool? isRead = null)
     {
@@ -244,11 +269,12 @@ public class UserController : ControllerBase
 
         return (await _notificationService.GetAllNotificationsOfUserById(userId, pageSize, pageNumber, isRead))
         .Handle<IEnumerable<Notification>, IActionResult>((notifications) =>
-            Ok(new
-            {
-                data = notifications,
-                message = "Notifications Fetched successfully."
-            })
+            Ok(
+                new
+                {
+                    data = new { notifications },
+                    message = "Notifications Fetched successfully."
+                })
          , BadRequest);
     }
 
@@ -257,14 +283,22 @@ public class UserController : ControllerBase
     {
         Guid userId = (Guid)HttpContext.Items["UserId"]!;
         return (await _notificationService.MarkNotificationAsRead(userId, notificationId))
-        .Handle<IActionResult>(() => Ok(new { message = "notification marked as read." }), BadRequest);
+        .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
     }
-
-    [HttpPatch("me/update-fcm-token")]
-    public async Task<IActionResult> UpdateUsersFCMToken([FromBody] ChangeUserFCMTokenDto changeUserFCMTokenDto)
+    [HttpDelete("me/notifications/{notificationId}")]
+    public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
     {
         Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.UpdateFCMToken(userId, changeUserFCMTokenDto.FCM_Token))
-        .Handle<IActionResult>(() => Ok(new { Message = "User fcm token Updated Successfully" }), BadRequest);
+        return (await _notificationService.DeleteNotification(userId, notificationId))
+        .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification Deleted." }), BadRequest);
     }
+
+    [HttpDelete("me/notifications/")]
+    public async Task<IActionResult> DeleteAllNotifications()
+    {
+        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        return (await _notificationService.DeleteAll(userId))
+        .Handle<IActionResult>(() => Ok(new { data = new { }, message = "All Notifications has been Deleted." }), BadRequest);
+    }
+    #endregion
 }

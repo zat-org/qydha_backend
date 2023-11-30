@@ -62,7 +62,7 @@ public class IAPHubController : ControllerBase
             (user) =>
             {
                 var mapper = new UserMapper();
-                return Ok(new { Data = mapper.UserToUserDto(user) });
+                return Ok(new { Data = new { user = mapper.UserToUserDto(user) }, message = "Enjoy your free subscription." });
             },
             BadRequest);
     }

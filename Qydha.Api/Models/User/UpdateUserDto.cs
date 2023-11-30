@@ -9,7 +9,13 @@ public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
 {
     public UpdateUserDtoValidator()
     {
-        RuleFor(r => r.Name).Name("الاسم");
-        RuleFor(r => r.BirthDate).BirthDate("تاريخ الميلاد");
+        When(r => !string.IsNullOrEmpty(r.Name), () =>
+        {
+            RuleFor(r => r.Name).Name("الاسم");
+        });
+        When(r => r.BirthDate is not null, () =>
+        {
+            RuleFor(r => r.BirthDate).BirthDate("تاريخ الميلاد");
+        });
     }
 }

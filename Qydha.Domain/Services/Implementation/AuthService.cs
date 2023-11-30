@@ -22,13 +22,13 @@ public class AuthService : IAuthService
     #endregion
 
 
-    public async Task<Result<string>> LoginAsAnonymousAsync()
+    public async Task<Result<Tuple<User, string>>> LoginAsAnonymousAsync()
     {
         var user = User.CreateAnonymousUser();
         return (await _userRepo.AddAsync(user))
             .OnSuccess((user) =>
             {
-                return Result.Ok(_tokenManager.Generate(user.GetClaims()));
+                return Result.Ok<Tuple<User, string>>(new(user, _tokenManager.Generate(user.GetClaims())));
             });
     }
 

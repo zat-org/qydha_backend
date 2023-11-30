@@ -31,10 +31,10 @@ public class NotificationRepo : INotificationRepo
         return Result.Ok(notification);
     }
 
-    public async Task<Result> DeleteByIdAsync(int id)
+    public async Task<Result> DeleteByIdAsync(Guid userId, int id)
     {
-        var sql = @$"DELETE FROM {TableName} WHERE id = @Id;";
-        var effectedRows = await _dbConnection.ExecuteAsync(sql, new { Id = id });
+        var sql = @$"DELETE FROM {TableName} WHERE id = @Id And User_Id = @userId;";
+        var effectedRows = await _dbConnection.ExecuteAsync(sql, new { Id = id, userId });
         return effectedRows == 1 ?
             Result.Ok() :
             Result.Fail(new() { Code = ErrorCodes.NotificationNotFound, Message = "Notification Not Found" });

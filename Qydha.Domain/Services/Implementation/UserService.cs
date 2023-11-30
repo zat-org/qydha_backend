@@ -40,15 +40,15 @@ public class UserService : IUserService
         Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, oldPassword);
         return checkingRes
             .OnSuccessAsync<User>(async (user) =>
-                (await _userRepo.PatchById(userId, "password_hash", BCrypt.Net.BCrypt.HashPassword(newPassword)))
+                (await _userRepo.UpdateUserPassword(userId, BCrypt.Net.BCrypt.HashPassword(newPassword)))
                 .MapTo(user));
     }
     public async Task<Result<User>> UpdateUserUsername(Guid userId, string password, string newUsername)
     {
         Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, password);
         return checkingRes
-            .OnSuccessAsync<User>(async (user) => (await _userRepo.IsUsernameAvailable(newUsername)).MapTo(user))
-            .OnSuccessAsync<User>(async (user) => (await _userRepo.PatchById(userId, "username", newUsername)).MapTo(user))
+            .OnSuccessAsync<User>(async (user) => (await _userRepo.IsUsernameAvailable(newUsername, userId)).MapTo(user))
+            .OnSuccessAsync<User>(async (user) => (await _userRepo.UpdateUserUsername(userId, newUsername)).MapTo(user))
             .OnSuccess<User>(user =>
             {
                 user.Username = newUsername;
@@ -90,20 +90,20 @@ public class UserService : IUserService
                 return Result.Ok(otp_request);
             })
             .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.IsPhoneAvailable(otp_request.Phone)).MapTo(otp_request))
-            .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.PatchById(otp_request.User_Id, "phone", otp_request.Phone)).MapTo(otp_request))
+            .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.UpdateUserPhone(otp_request.User_Id, otp_request.Phone)).MapTo(otp_request))
             .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.User_Id));
     }
     public async Task<Result<UpdateEmailRequest>> UpdateUserEmail(Guid userId, string password, string newEmail)
     {
-        Result checkingRes = await _userRepo.CheckUserCredentials(userId, password);
+        Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, password);
         return checkingRes
-            .OnSuccessAsync(async () => await _userRepo.IsEmailAvailable(newEmail))
-            .OnSuccessAsync(async () =>
+            .OnSuccessAsync<User>(async (user) => (await _userRepo.IsEmailAvailable(newEmail, user.Id)).MapTo(user))
+            .OnSuccessAsync<User, Tuple<string, Guid>>(async (user) =>
             {
                 string otp = _otpManager.GenerateOTP();
                 Guid requestId = Guid.NewGuid();
                 var emailSubject = "تأكيد البريد الالكتروني لحساب تطبيق قيدها";
-                var emailBody = _mailingService.GenerateConfirmEmailBody(otp, requestId.ToString());
+                var emailBody = _mailingService.GenerateConfirmEmailBody(otp, requestId.ToString(), user);
                 return (await _mailingService.SendEmailAsync(newEmail, emailSubject, emailBody))
                         .MapTo(new Tuple<string, Guid>(otp, requestId));
             })
@@ -131,10 +131,9 @@ public class UserService : IUserService
 
             return Result.Ok(otp_request);
         })
-        .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) => (await _userRepo.IsEmailAvailable(otp_request.Email)).MapTo(otp_request))
+        .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) => (await _userRepo.IsEmailAvailable(otp_request.Email, otp_request.User_Id)).MapTo(otp_request))
         .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) =>
-            (await _userRepo.PatchById(otp_request.User_Id,
-                new() { { "email", otp_request.Email }, { "is_email_confirmed", true } }))
+            (await _userRepo.UpdateUserEmail(otp_request.User_Id, otp_request.Email))
             .MapTo(otp_request))
         .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.User_Id));
     }
@@ -161,7 +160,7 @@ public class UserService : IUserService
             return await _fileService.UploadFile(_avatarSettings.FolderPath, file);
         })
         .OnSuccessAsync<FileData>(async (fileData) =>
-            (await _userRepo.PatchById(userId, new() { { "Avatar_Path", fileData.Path }, { "Avatar_Url", fileData.Url } }))
+            (await _userRepo.UpdateUserAvatarData(userId, fileData.Path, fileData.Url))
             .MapTo(fileData))
         .OnSuccessAsync(async () => await _userRepo.GetByIdAsync(userId));
     }

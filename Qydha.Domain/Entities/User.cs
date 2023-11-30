@@ -20,6 +20,8 @@ public class User
     public DateTime? Expire_Date { get; set; } = null;
     public int Free_Subscription_Used { get; set; } = 0;
     public string FCM_Token { get; set; } = string.Empty;
+    public string? Normalized_Username { get; set; }
+    public string? Normalized_Email { get; set; }
 
 
     public static User CreateAnonymousUser()
@@ -46,6 +48,7 @@ public class User
         return new User()
         {
             Username = otpRequest.Username,
+            Normalized_Username = otpRequest.Username.ToUpper(),
             Password_Hash = otpRequest.Password_Hash,
             Phone = otpRequest.Phone,
             Created_On = DateTime.UtcNow,
@@ -61,6 +64,7 @@ public class User
         {
             Id = Id,
             Username = otpRequest.Username,
+            Normalized_Username = otpRequest.Username.ToUpper(),
             Password_Hash = otpRequest.Password_Hash,
             Phone = otpRequest.Phone,
             Created_On = Created_On,

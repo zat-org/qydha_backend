@@ -59,7 +59,7 @@ public class MailingService : IMailingService
         }
     }
 
-    public string GenerateConfirmEmailBody(string otp, string requestId)
+    public string GenerateConfirmEmailBody(string otp, string requestId, User user)
     {
         var mailText = _mailSettings.ConfirmEmailTemplate;
         mailText = mailText.Replace("[code]", otp);

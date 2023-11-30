@@ -15,13 +15,16 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> LoginAsAnonymous()
     {
         return (await _authService.LoginAsAnonymousAsync())
-        .Handle<string, IActionResult>(
-            (token) => Ok(
-                new
+        .Handle<Tuple<User, string>, IActionResult>(
+            (tuple) =>
+            {
+                var mapper = new UserMapper();
+                return Ok(new
                 {
-                    data = new { token = token },
+                    data = new { user = mapper.UserToUserDto(tuple.Item1), token = tuple.Item2 },
                     message = "Anonymous account created successfully."
-                })
+                });
+            }
             , BadRequest);
     }
 
@@ -33,7 +36,10 @@ public class AuthController : ControllerBase
             (req) => Ok(
                 new
                 {
-                    RequestId = req.Id,
+                    data = new
+                    {
+                        RequestId = req.Id,
+                    },
                     Message = "otp sent successfully."
                 }),
             BadRequest
@@ -51,7 +57,10 @@ public class AuthController : ControllerBase
         .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
             new
             {
-                RequestId = req.Id,
+                data = new
+                {
+                    RequestId = req.Id,
+                },
                 Message = "otp sent successfully."
             }),
         BadRequest);
@@ -106,7 +115,7 @@ public class AuthController : ControllerBase
 
         return (await _authService.Logout(userId))
         .Handle<IActionResult>(
-            () => Ok(new { message = "User logged out successfully." }),
+            () => Ok(new { data = new { }, message = "User logged out successfully." }),
             BadRequest
         );
     }

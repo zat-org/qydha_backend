@@ -2,7 +2,7 @@
 
 public interface IAuthService
 {
-    Task<Result<string>> LoginAsAnonymousAsync();
+    Task<Result<Tuple<User, string>>> LoginAsAnonymousAsync();
 
     Task<Result<Tuple<User, string>>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId);
 
