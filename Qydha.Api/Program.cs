@@ -15,7 +15,7 @@ var connectionString = builder.Configuration.GetConnectionString("postgres");
 
 builder.Services.AddControllers((options) =>
 {
-    // options.Filters.Add<ExceptionHandlerAttribute>();
+    options.Filters.Add<ExceptionHandlerAttribute>();
     // options.Filters.Add<AuthFilter>();
 }).AddNewtonsoftJson();
 
@@ -39,7 +39,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 #region Filters 
 
 //defined filters 
-// builder.Services.AddScoped<ExceptionHandlerAttribute>();
+builder.Services.AddScoped<ExceptionHandlerAttribute>();
 builder.Services.AddScoped<AuthFilter>();
 
 

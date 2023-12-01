@@ -1,6 +1,4 @@
-﻿
-
-namespace Qydha.Domain.Services.Implementation;
+﻿namespace Qydha.Domain.Services.Implementation;
 
 public class NotificationService : INotificationService
 {
@@ -8,13 +6,15 @@ public class NotificationService : INotificationService
     private readonly IPushNotificationService _pushNotificationService;
     private readonly IUserRepo _userRepo;
     private readonly NotificationsSettings _notificationsSettings;
+    private readonly ILogger<NotificationService> _logger;
 
-    public NotificationService(INotificationRepo notificationRepo, IPushNotificationService pushNotificationService, IUserRepo userRepo, IOptions<NotificationsSettings> notificationOptions)
+    public NotificationService(INotificationRepo notificationRepo, ILogger<NotificationService> logger, IPushNotificationService pushNotificationService, IUserRepo userRepo, IOptions<NotificationsSettings> notificationOptions)
     {
         _notificationRepo = notificationRepo;
         _pushNotificationService = pushNotificationService;
         _userRepo = userRepo;
         _notificationsSettings = notificationOptions.Value;
+        _logger = logger;
     }
 
 
@@ -32,7 +32,9 @@ public class NotificationService : INotificationService
                 (await _pushNotificationService.SendToToken(user.FCM_Token, notification.Title, notification.Description))
                 .OnFailure((result) =>
                 {
-                    //! Handle Error in send push notification to User with fcm; 
+                    //! Handle Error in send push notification to User with fcm;
+                    _logger.LogError(result.Error.ToString());
+
                 });
             return Result.Ok(user);
         });
@@ -47,6 +49,7 @@ public class NotificationService : INotificationService
             .OnFailure((result) =>
             {
                 //! Handle Error in send push notification to User with fcm; 
+                _logger.LogError(result.Error.ToString());
             });
             return Result.Ok(effected);
         });
@@ -64,6 +67,7 @@ public class NotificationService : INotificationService
             .OnFailure((result) =>
             {
                 //! TODO Handle Error In Send Tokens
+                _logger.LogError(result.Error.ToString());
             });
             return Result.Ok(tuple.Item2);
         });

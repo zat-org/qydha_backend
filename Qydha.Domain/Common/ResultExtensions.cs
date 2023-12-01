@@ -97,6 +97,19 @@ public static class ResultExtensions
         return result;
     }
 
+    public static Result<T> OnFailure<T>(this Result<T> result, Func<Error, Error> action)
+    {
+        if (result.IsFailure)
+            return Result.Fail<T>(action(result.Error));
+        return result;
+    }
+    public static Result OnFailure(this Result result, Func<Error, Error> action)
+    {
+        if (result.IsFailure)
+            return Result.Fail(action(result.Error));
+        return result;
+    }
+
 
     // public static Result OnBoth(this Result result, Action<Result> action)
     // {

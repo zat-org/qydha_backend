@@ -16,10 +16,15 @@ public class ExceptionHandlerAttribute : ExceptionFilterAttribute
         {
             Exception = Exception.InnerException;
         }
-        context.Result = new BadRequestObjectResult(new Error()
+
+        var res = new ObjectResult(new Error()
         {
             Message = Exception.Message,
-            Code = ErrorCodes.UnknownError
-        });
+            Code = ErrorCodes.ServerError
+        })
+        {
+            StatusCode = 500
+        };
+        context.Result = res;
     }
 }

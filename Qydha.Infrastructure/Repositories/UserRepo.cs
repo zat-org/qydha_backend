@@ -121,7 +121,7 @@ public class UserRepo : IUserRepo
     {
         Result<User> getUserRes = await GetByUsernameAsync(username);
         if (getUserRes.IsSuccess && ((userId is null) || (userId is not null && getUserRes.Value.Id != userId)))
-            return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "اسم المستخدم موجود بالفعل." });
+            return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "اسم المستخدم موجود بالفعل" });
         return Result.Ok();
     }
 
@@ -129,7 +129,7 @@ public class UserRepo : IUserRepo
     {
         Result<User> getUserRes = await GetByPhoneAsync(phone);
         if (getUserRes.IsSuccess)
-            return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "رقم الجوال موجود بالفعل." });
+            return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "رقم الجوال موجود بالفعل" });
         return Result.Ok();
     }
 

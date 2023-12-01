@@ -11,9 +11,10 @@ public class UserService : IUserService
     private readonly IUpdateEmailRequestRepo _updateEmailRequestRepo;
     private readonly IUpdatePhoneOTPRequestRepo _updatePhoneOTPRequestRepo;
     private readonly AvatarSettings _avatarSettings;
+    private readonly ILogger<UserService> _logger;
     #endregion
 
-    public UserService(IUserRepo userRepo, IMessageService messageService, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions)
+    public UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions)
     {
         _userRepo = userRepo;
         _updatePhoneOTPRequestRepo = updatePhoneOTPRequestRepo;
@@ -23,6 +24,7 @@ public class UserService : IUserService
         _updateEmailRequestRepo = updateEmailRequestRepo;
         _fileService = fileService;
         _avatarSettings = avatarOptions.Value;
+        _logger = logger;
     }
 
     #region Get User 
@@ -152,12 +154,23 @@ public class UserService : IUserService
                     user.Avatar_Path = null;
                     user.Avatar_Url = null;
                 })
-                .OnFailure(() =>
+                .OnFailure((result) =>
                 {
                     //! TODO :: Handle Delete File Error
+                    _logger.LogError(result.Error.ToString());
                 });
             }
-            return await _fileService.UploadFile(_avatarSettings.FolderPath, file);
+            return (await _fileService.UploadFile(_avatarSettings.FolderPath, file))
+                    .OnFailure((err) =>
+                    {
+                        //! TODO :: Handle upload File Error
+                        _logger.LogError(err.ToString());
+                        return new()
+                        {
+                            Code = ErrorCodes.FileUploadError,
+                            Message = "حدث عطل اثناء حفظ الصورة برجاء المحاولة مرة اخري"
+                        };
+                    });
         })
         .OnSuccessAsync<FileData>(async (fileData) =>
             (await _userRepo.UpdateUserAvatarData(userId, fileData.Path, fileData.Url))
@@ -184,9 +197,11 @@ public class UserService : IUserService
         {
             if (user.Avatar_Path is not null)
                 (await _fileService.DeleteFile(user.Avatar_Path))
-                .OnFailure(() =>
+                .OnFailure((result) =>
                 {
                     //! TODO :: Handle Delete File Error 
+                    _logger.LogError(result.Error.ToString());
+
                 });
             return Result.Ok(user);
         });

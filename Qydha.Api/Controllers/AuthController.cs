@@ -120,12 +120,16 @@ public class AuthController : ControllerBase
         );
     }
 
-    [HttpGet()]
+    [HttpGet("test")]
     public IActionResult TestDeploy()
     {
         return Ok(new { message = "Deployed. ✔️✔️" });
     }
-
+    [HttpGet("throwError")]
+    public IActionResult ThrowError()
+    {
+        throw new InvalidOperationException();
+    }
 
 }
 
