@@ -31,6 +31,16 @@ public class FCMService : IPushNotificationService
                 }
             );
         }
+        catch (Exception exp)
+        {
+            return Result.Fail(
+                new()
+                {
+                    Code = exp.Message,
+                    Message = $"Error In Sending Push Notification to user , Message = {exp.Message}"
+                }
+            );
+        }
     }
 
     public async Task<Result> SendToTopic(string topicName, string title, string body)
@@ -61,6 +71,16 @@ public class FCMService : IPushNotificationService
                 }
             );
         }
+        catch (Exception exp)
+        {
+            return Result.Fail(
+                new()
+                {
+                    Code = exp.Message,
+                    Message = $"Error In Sending Push Notification to user , Message = {exp.Message}"
+                }
+            );
+        }
     }
 
     public async Task<Result> SendToTokens(IEnumerable<string> tokens, string title, string body)
@@ -88,6 +108,16 @@ public class FCMService : IPushNotificationService
                     Code = exp.ErrorCode.ToString(),
                     Message = $"Error In Sending Push Notification to Tokens , Message = {exp.Message} , Code = {exp.ErrorCode} , Messaging Error Code = {exp.MessagingErrorCode}"
                 });
+        }
+        catch (Exception exp)
+        {
+            return Result.Fail(
+                new()
+                {
+                    Code = exp.Message,
+                    Message = $"Error In Sending Push Notification to user , Message = {exp.Message}"
+                }
+            );
         }
     }
 }
