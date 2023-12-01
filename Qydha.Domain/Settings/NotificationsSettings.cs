@@ -2,5 +2,6 @@
 
 public class NotificationsSettings
 {
-    public string ToAllTopicName { get; set; } = "all";
+    public string ToAllTopicName { get; set; } = "fallback-test";
 }
+

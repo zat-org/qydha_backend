@@ -37,15 +37,15 @@ public class NotificationController : ControllerBase
     [HttpPost("send-to-all-users/")]
     public async Task<IActionResult> SendNotificationToAllUsers([FromBody] NotificationSendDto dto)
     {
-        var effected = await _notificationService.SendToAllUsers(new Notification()
+        return (await _notificationService.SendToAllUsers(new Notification()
         {
             Title = dto.Title!,
             Description = dto.Description!,
             Action_Path = dto.Action_Path!,
             Action_Type = dto.Action_Type,
             Created_At = DateTime.Now,
-        });
-        return Ok(new { Message = $"notification sent to :{effected} users " });
+        }))
+        .Handle<int, IActionResult>((effected) => Ok(new { Message = $"notification sent to : {effected} users " }), BadRequest);
 
     }
 

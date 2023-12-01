@@ -44,26 +44,7 @@ public class EmailSettings
             color: #555;
             text-align: center;
         }
-
-        .btn-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: #007BFF;
-            color: #fff;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-
-        .btn:hover {
-            background-color: #0056b3;
-        }
-
-        #code {
+     #code {
             font-weight: 700;
             letter-spacing: 10px;
             font-size: 2rem;
@@ -77,23 +58,8 @@ public class EmailSettings
         <p id='code'>[code]</p>
         <p> هو كود التحقق الخاص بك.للحفاظ على أمانك، لا تشارك هذا الكود مع أي شخص.
             تنتهي صلاحية هذا الكود خلال 6 دقائق. </p>
-
-        <div class='btn-container'>
-            <button onclick = 'copyToClipboard()' class='btn'>نسخ الرمز</button>
-        </div>
     </div>
-    <>
-        async function copyToClipboard() {
-        var copyText = [code];
-
-        var clipboardItem = new ClipboardItem({ 'text/plain': new Blob([copyText], { type: 'text/plain' }) });
-            try {
-                await navigator.clipboard.write([clipboardItem]);
-        } catch (err) {
-                        console.error('Unable to copy to clipboard', err);
-                    }
-                }
-    </ script >
+    
 </ body >
 </ html >
     ";

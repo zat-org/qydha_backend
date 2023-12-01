@@ -3,6 +3,11 @@ namespace Qydha.API.Controllers.Attributes;
 
 public class AuthFilter : IAuthorizationFilter
 {
+    private readonly IUserRepo _userRepo;
+    public AuthFilter(IUserRepo userRepo)
+    {
+        _userRepo = userRepo;
+    }
     public void OnAuthorization(AuthorizationFilterContext ctx)
     {
         // Console.WriteLine(">>>>>>>>>>>> From AuthFilter <<<<<<<<<<<");
@@ -13,6 +18,8 @@ public class AuthFilter : IAuthorizationFilter
                 Code = ErrorCodes.InvalidToken,
                 Message = "Invalid Token Data"
             });
+
+        // var getUserRes = await _userRepo.GetByIdAsync(userId);
         else
         {
             ctx.HttpContext.Items["UserId"] = userId;

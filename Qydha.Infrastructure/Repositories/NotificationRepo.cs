@@ -33,7 +33,7 @@ public class NotificationRepo : INotificationRepo
 
     public async Task<Result> DeleteByIdAsync(Guid userId, int id)
     {
-        var sql = @$"DELETE FROM {TableName} WHERE id = @Id And User_Id = @userId;";
+        var sql = @$"DELETE FROM {TableName} WHERE Notification_Id = @Id And User_Id = @userId;";
         var effectedRows = await _dbConnection.ExecuteAsync(sql, new { Id = id, userId });
         return effectedRows == 1 ?
             Result.Ok() :
@@ -86,16 +86,12 @@ public class NotificationRepo : INotificationRepo
     public async Task<Result<int>> AddToUsersWithCriteria(Notification notification, string filteringCriteria = "")
     {
         filteringCriteria = string.IsNullOrEmpty(filteringCriteria) ? string.Empty : $" Where  {filteringCriteria}";
-        HashSet<string> excludedProps = new() { "Notification_Id" };
-        var columns = DbColumns(excludedProps);
-        excludedProps.Add("User_id");
-        var values = DbValues(excludedProps);
         var sql = @$"
-        INSERT INTO {TableName} ({columns})
+        INSERT INTO {TableName} (User_Id, Title, Description, Read_At, Created_At, Action_Path, Action_Type)
             SELECT
-            Users.Id ,
-            {values}
+            Users.Id , @Title, @Description, @Read_At, @Created_At, @Action_Path, @Action_Type
             FROM Users {filteringCriteria};";
+
         var effectedRows = await _dbConnection.ExecuteAsync(sql, notification);
         return Result.Ok(effectedRows);
     }
