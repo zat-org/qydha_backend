@@ -165,6 +165,8 @@ builder.Services.AddScoped<IPushNotificationService, FCMService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IPurchaseService, PurchaseService>();
+
 #endregion
 
 #region Add Cors

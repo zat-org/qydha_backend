@@ -11,7 +11,13 @@ public static class ErrorCodes
     public const string RegistrationRequestNotFound = "4043";
     public const string UpdatePhoneRequestNotFound = "4044";
     public const string UpdateEmailRequestNotFound = "4045";
+
     public const string NotificationNotFound = "4046";
+
+    public const string InvalidTokensArray = "4088";
+
+    public const string InvalidTopicName = "4089";
+    public const string InvalidFCMToken = "4090";
     public const string InvalidDeleteOnRegularUser = "4091";
     public const string InvalidIAPHupToken = "4092";
     public const string EmailSendingError = "4093";
