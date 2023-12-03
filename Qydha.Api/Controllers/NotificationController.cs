@@ -8,12 +8,10 @@ namespace Qydha.API.Controllers;
 public class NotificationController : ControllerBase
 {
     private readonly INotificationService _notificationService;
-    private readonly IUserService _userService;
 
-    public NotificationController(IUserService userService, INotificationService notificationService)
+    public NotificationController(INotificationService notificationService)
     {
         _notificationService = notificationService;
-        _userService = userService;
     }
 
     [HttpPost("send-to-user/")]

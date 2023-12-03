@@ -2,6 +2,6 @@
 
 public interface IPurchaseService
 {
-    Task AddPurchase(Purchase purchase);
+    Task<Result<User>> AddPurchase(string purchaseId, Guid userId, string productSku, DateTime created_at);
     Task<Result<User>> SubscribeInFree(Guid userId);
 }

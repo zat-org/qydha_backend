@@ -15,6 +15,7 @@ public static class ErrorCodes
     public const string NotificationNotFound = "4046";
 
     public const string InvalidTokensArray = "4088";
+    public const string InvalidProductSku = "4088";
 
     public const string InvalidTopicName = "4089";
     public const string InvalidFCMToken = "4090";

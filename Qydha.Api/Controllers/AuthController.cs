@@ -31,7 +31,7 @@ public class AuthController : ControllerBase
     [HttpPost("register/")]
     public async Task<IActionResult> Register([FromBody] UserRegisterDTO dto)
     {
-        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCM_Token, null))
+        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, null))
         .Handle<RegistrationOTPRequest, IActionResult>(
             (req) => Ok(
                 new
@@ -53,7 +53,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterAnonymous([FromBody] UserRegisterDTO dto)
     {
         Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCM_Token, userId))
+        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, userId))
         .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
             new
             {
@@ -69,7 +69,7 @@ public class AuthController : ControllerBase
     [HttpPost("login/")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        return (await _authService.Login(dto.Username, dto.Password, dto.FCM_Token))
+        return (await _authService.Login(dto.Username, dto.Password, dto.FCMToken))
         .Handle<Tuple<User, string>, IActionResult>(
             (tuple) =>
             {

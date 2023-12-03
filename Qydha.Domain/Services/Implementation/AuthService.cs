@@ -69,7 +69,7 @@ public class AuthService : IAuthService
         .OnSuccessAsync<User>(async (user) => (await _userRepo.UpdateUserLastLoginToNow(user.Id)).MapTo(user))
         .OnSuccessAsync<User>(async (user) =>
         {
-            if (fcm_token is not null)
+            if (!string.IsNullOrEmpty(fcm_token))
                 return (await _userRepo.UpdateUserFCMToken(user.Id, fcm_token)).MapTo(user);
             return Result.Ok(user);
         })

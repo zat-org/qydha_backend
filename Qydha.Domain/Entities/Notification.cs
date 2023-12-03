@@ -22,5 +22,16 @@ public class Notification
             User_Id = user.Id
         };
     }
+    public static Notification CreatePurchaseNotification(Purchase p)
+    {
+        return new Notification()
+        {
+            Title = "ارحب بالغالي",
+            Description = "يمكنك الان الاستمتاع بجميع مميزات الاشتراك الذهبى",
+            Action_Path = "",
+            Action_Type = NotificationActionType.NoAction,
+            User_Id = p.User_Id
+        };
+    }
 }
 

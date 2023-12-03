@@ -28,14 +28,14 @@ public class NotificationService : INotificationService
         return (await _notificationRepo.AddAsync(notification))
         .OnSuccessAsync(async () =>
         {
-            if (user.FCM_Token is not null)
-                (await _pushNotificationService.SendToToken(user.FCM_Token, notification.Title, notification.Description))
-                .OnFailure((result) =>
-                {
-                    //! Handle Error in send push notification to User with fcm;
-                    _logger.LogError(result.Error.ToString());
 
-                });
+            (await _pushNotificationService.SendToToken(user.FCM_Token, notification.Title, notification.Description))
+            .OnFailure((result) =>
+            {
+                //! Handle Error in send push notification to User with fcm;
+                _logger.LogError(result.Error.ToString());
+
+            });
             return Result.Ok(user);
         });
     }

@@ -6,14 +6,12 @@ public class IAPHubController : ControllerBase
 {
     private readonly IPurchaseService _purchaseService;
     private readonly IAPHubSettings _iAPHubSettings;
-    private readonly ProductsSettings _productsSettings;
     private readonly ILogger<IAPHubController> _logger;
 
-    public IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubController> logger, IOptions<IAPHubSettings> iaphubSettings, IOptions<ProductsSettings> productSettings)
+    public IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubController> logger, IOptions<IAPHubSettings> iaphubSettings)
     {
         _iAPHubSettings = iaphubSettings.Value;
         _purchaseService = purchaseService;
-        _productsSettings = productSettings.Value;
         _logger = logger;
     }
     [HttpPost]
@@ -27,26 +25,20 @@ public class IAPHubController : ControllerBase
         switch (webHookDto.Type)
         {
             case "purchase":
-                if (!_productsSettings.ProductsSku.TryGetValue(webHookDto.Data!.ProductSku, out int numberOfDays))
-                {
-                    _logger.LogWarning($"Invalid ProductSku {webHookDto.Data!.ProductSku} from Purchase ");
-                    // return BadRequest(new Error() { Code = ErrorCodes.InvalidInput, Message = "Invalid Product sku" });
-                }
-
-                var purchase = new Purchase()
-                {
-                    IAPHub_Purchase_Id = webHookDto.Data!.Id,
-                    User_Id = webHookDto.Data!.UserId,
-                    Type = webHookDto.Type,
-                    Purchase_Date = webHookDto.Data!.PurchaseDate,
-                    ProductSku = webHookDto.Data!.ProductSku,
-                    Number_Of_Days = numberOfDays
-                };
-
-                await _purchaseService.AddPurchase(purchase);
-                return Ok();
+                return (await _purchaseService.AddPurchase(webHookDto.Id, webHookDto.Data!.UserId, webHookDto.Data.ProductSku, webHookDto.Data.PurchaseDate)).Handle<User, IActionResult>(
+                    (user) =>
+                    {
+                        var mapper = new UserMapper();
+                        return Ok(new { Data = new { user = mapper.UserToUserDto(user) }, message = "Enjoy your subscription." });
+                    },
+                    (err) =>
+                    {
+                        _logger.LogError(err.ToString());
+                        return BadRequest(err);
+                    }
+                );
             default:
-                _logger.LogWarning($"Unhandled IAPHUB Action Type : {webHookDto.Type}", webHookDto);
+                _logger.LogWarning($"Unhandled IAPHUB Action Type : {webHookDto.Type} , Data => {webHookDto}");
                 return Ok();
         }
     }
