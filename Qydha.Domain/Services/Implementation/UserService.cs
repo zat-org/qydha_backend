@@ -10,11 +10,13 @@ public class UserService : IUserService
     private readonly IUserRepo _userRepo;
     private readonly IUpdateEmailRequestRepo _updateEmailRequestRepo;
     private readonly IUpdatePhoneOTPRequestRepo _updatePhoneOTPRequestRepo;
+    private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo;
+
     private readonly AvatarSettings _avatarSettings;
     private readonly ILogger<UserService> _logger;
     #endregion
 
-    public UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions)
+    public UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo)
     {
         _userRepo = userRepo;
         _updatePhoneOTPRequestRepo = updatePhoneOTPRequestRepo;
@@ -24,6 +26,7 @@ public class UserService : IUserService
         _updateEmailRequestRepo = updateEmailRequestRepo;
         _fileService = fileService;
         _avatarSettings = avatarOptions.Value;
+        _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
         _logger = logger;
     }
 
@@ -45,6 +48,48 @@ public class UserService : IUserService
                 (await _userRepo.UpdateUserPassword(userId, BCrypt.Net.BCrypt.HashPassword(newPassword)))
                 .MapTo(user));
     }
+
+    public async Task<Result<User>> UpdateUserPassword(Guid userId, Guid phoneAuthReqId, string newPassword)
+    {
+        Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
+        return getUserRes
+        .OnSuccessAsync(
+            async (user) =>
+                (await _phoneAuthenticationRequestRepo.GetByIdAsync(phoneAuthReqId))
+                .MapTo((request) => new Tuple<User, PhoneAuthenticationRequest>(user, request)))
+        .OnSuccess((tuple) =>
+        {
+            if (tuple.Item1.Is_Anonymous)
+                return Result.Fail<User>(new()
+                {
+                    Code = ErrorCodes.InvalidOperationOnAnonymousUser,
+                    Message = "Invalid Operation On Anonymous User"
+                });
+
+            if (tuple.Item1.Phone != tuple.Item2.Phone)
+                return Result.Fail<User>(new()
+                {
+                    Code = ErrorCodes.InvalidForgetPasswordRequest,
+                    Message = "User phone is not the same in the phone login request"
+                });
+
+            if (tuple.Item2.Created_On.AddDays(1) < DateTime.UtcNow)
+                return Result.Fail<User>(new()
+                {
+                    Code = ErrorCodes.ForgetPasswordRequestExceedTime,
+                    Message = "Forget Password Request Exceed Time of 1 Day"
+                });
+
+            return Result.Ok(tuple.Item1);
+        })
+        .OnSuccessAsync<User>(async (user) =>
+                (await _userRepo.UpdateUserPassword(userId, BCrypt.Net.BCrypt.HashPassword(newPassword)))
+                .MapTo(user));
+    }
+
+    public async Task<Result> UpdateFCMToken(Guid userId, string token) =>
+      await _userRepo.UpdateUserFCMToken(userId, token);
+
     public async Task<Result<User>> UpdateUserUsername(Guid userId, string password, string newUsername)
     {
         Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, password);
@@ -224,8 +269,7 @@ public class UserService : IUserService
         .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteByIdAsync(user.Id)).MapTo(user));
     }
 
-    public async Task<Result> UpdateFCMToken(Guid userId, string token) =>
-        await _userRepo.UpdateUserFCMToken(userId, token);
+
 
     #endregion
 

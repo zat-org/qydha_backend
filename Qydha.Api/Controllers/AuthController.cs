@@ -106,6 +106,68 @@ public class AuthController : ControllerBase
         );
     }
 
+
+    [HttpPost("forget-password")]
+    public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordDto dto)
+    {
+        return (await _authService.RequestPhoneAuthentication(dto.Phone!))
+        .Handle<PhoneAuthenticationRequest, IActionResult>(
+            (request) => Ok(new { data = new { Request_Id = request.Id }, message = "Otp sent successfully." })
+            , BadRequest);
+    }
+
+    [HttpPost("confirm-forget-password")]
+    public async Task<IActionResult> ConfirmForgetPassword([FromBody] ConfirmForgetPasswordDto dto)
+    {
+        return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code))
+        .Handle<Tuple<User, string>, IActionResult>(
+            (tuple) =>
+            {
+                var mapper = new UserMapper();
+                return Ok(new
+                {
+                    data = new
+                    {
+                        user = mapper.UserToUserDto(tuple.Item1),
+                        token = tuple.Item2
+                    },
+                    message = "user logged in successfully."
+                });
+            }
+            , BadRequest);
+    }
+
+
+    [HttpPost("login-with-phone")]
+    public async Task<IActionResult> LoginWithPhone([FromBody] LoginWithPhoneDto dto)
+    {
+        return (await _authService.RequestPhoneAuthentication(dto.Phone!))
+        .Handle<PhoneAuthenticationRequest, IActionResult>(
+            (request) => Ok(new { data = new { Request_Id = request.Id }, message = "Otp sent successfully." })
+            , BadRequest);
+    }
+
+    [HttpPost("confirm-login-with-phone")]
+    public async Task<IActionResult> ConfirmLoginWithPhone([FromBody] ConfirmLoginWithPhoneDto dto)
+    {
+        return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code))
+        .Handle<Tuple<User, string>, IActionResult>(
+            (tuple) =>
+            {
+                var mapper = new UserMapper();
+                return Ok(new
+                {
+                    data = new
+                    {
+                        user = mapper.UserToUserDto(tuple.Item1),
+                        token = tuple.Item2
+                    },
+                    message = "user logged in successfully."
+                });
+            }
+            , BadRequest);
+    }
+
     [Authorize]
     [TypeFilter(typeof(AuthFilter))]
     [HttpPost("logout/")]
@@ -119,6 +181,7 @@ public class AuthController : ControllerBase
             BadRequest
         );
     }
+
 
     [HttpGet("test")]
     public IActionResult TestDeploy()

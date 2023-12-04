@@ -1,5 +1,5 @@
 ﻿
-namespace Qydha.Api.Validators;
+namespace Qydha.API.Validators;
 public class AvatarValidator : AbstractValidator<IFormFile>
 {
     private readonly AvatarSettings _avatarSettings;

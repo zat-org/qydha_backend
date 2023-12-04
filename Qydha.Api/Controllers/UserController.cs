@@ -60,6 +60,23 @@ public class UserController : ControllerBase
             BadRequest);
     }
 
+    [HttpPatch("me/update-password-from-phone-authentication/")]
+    public async Task<IActionResult> UpdatePhoneAuthorizedUserPassword([FromBody] UpdatePasswordFromPhoneAuthentication dto)
+    {
+        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        return (await _userService.UpdateUserPassword(userId, dto.RequestId, dto.NewPassword))
+        .Handle<User, IActionResult>((user) =>
+            {
+                var mapper = new UserMapper();
+                return Ok(new
+                {
+                    data = new { user = mapper.UserToUserDto(user) },
+                    message = "User updated successfully."
+                });
+            },
+            BadRequest);
+    }
+
     [HttpPatch("me/update-username/")]
     public async Task<IActionResult> UpdateAuthorizedUsername([FromBody] ChangeUsernameDto changeUsernameDto)
     {

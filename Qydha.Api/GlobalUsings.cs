@@ -15,7 +15,7 @@ global using Qydha.Infrastructure.Settings;
 global using Qydha.API.Models;
 global using Qydha.API.Settings;
 global using Qydha.API.Mappers;
-global using Qydha.Api.Validators;
+global using Qydha.API.Validators;
 global using Qydha.API.Controllers.Attributes;
 
 

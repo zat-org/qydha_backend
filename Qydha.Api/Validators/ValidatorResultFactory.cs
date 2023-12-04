@@ -1,6 +1,6 @@
 ﻿using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 
-namespace Qydha.Api.Validators;
+namespace Qydha.API.Validators;
 
 public class ValidatorResultFactory : IFluentValidationAutoValidationResultFactory
 {

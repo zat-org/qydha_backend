@@ -1,4 +1,4 @@
-﻿namespace Qydha.Api.Controllers;
+﻿namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("iaphub/")]

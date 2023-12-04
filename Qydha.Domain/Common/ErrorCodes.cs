@@ -13,10 +13,19 @@ public static class ErrorCodes
     public const string UpdateEmailRequestNotFound = "4045";
 
     public const string NotificationNotFound = "4046";
+    public const string PhoneAuthenticationRequestNotFound = "4047";
+
+
+
+    public const string ForgetPasswordRequestExceedTime = "4085";
+
+    public const string InvalidForgetPasswordRequest = "4086";
+
+    public const string InvalidOperationOnAnonymousUser = "4087";
 
     public const string InvalidTokensArray = "4088";
-    public const string InvalidProductSku = "4088";
 
+    public const string InvalidProductSku = "4088";
     public const string InvalidTopicName = "4089";
     public const string InvalidFCMToken = "4090";
     public const string InvalidDeleteOnRegularUser = "4091";

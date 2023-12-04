@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <None Remove="Migrations\010_alterUserTableToaddNormailizedUsernameAndEmail.sql" />
+    <None Remove="Migrations\011_createPhoneAuthRequestTable.sql" />
   </ItemGroup>
 
   <ItemGroup>

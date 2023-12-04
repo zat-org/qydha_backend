@@ -146,6 +146,9 @@ builder.Services.AddScoped<IDbConnection, NpgsqlConnection>(
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IRegistrationOTPRequestRepo, RegistrationOTPRequestRepo>();
 builder.Services.AddScoped<IUpdatePhoneOTPRequestRepo, UpdatePhoneOTPRequestRepo>();
+builder.Services.AddScoped<IPhoneAuthenticationRequestRepo, PhoneAuthenticationRequestRepo>();
+
+
 builder.Services.AddScoped<IUpdateEmailRequestRepo, UpdateEmailRequestRepo>();
 builder.Services.AddScoped<IPurchaseRepo, PurchaseRepo>();
 builder.Services.AddScoped<INotificationRepo, NotificationRepo>();

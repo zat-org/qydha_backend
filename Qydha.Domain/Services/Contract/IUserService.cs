@@ -7,6 +7,8 @@ public interface IUserService
     Task<Result<User>> UpdateUser(User user);
 
     Task<Result<User>> UpdateUserPassword(Guid userId, string oldPassword, string newPassword);
+    Task<Result<User>> UpdateUserPassword(Guid userId, Guid phoneAuthReqId, string newPassword);
+
     Task<Result<User>> UpdateUserUsername(Guid userId, string password, string newUsername);
     Task<Result<UpdatePhoneRequest>> UpdateUserPhone(Guid userId, string password, string newPhone);
     Task<Result<User>> ConfirmPhoneUpdate(Guid userId, string code, Guid requestId);

@@ -5,11 +5,12 @@ public class AuthService : IAuthService
     #region  injections
     private readonly IUserRepo _userRepo;
     private readonly IRegistrationOTPRequestRepo _registrationOTPRequestRepo;
+    private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo;
     private readonly INotificationService _notificationService;
     private readonly IMessageService _messageService;
     private readonly OtpManager _otpManager;
     private readonly TokenManager _tokenManager;
-    public AuthService(TokenManager tokenManager, INotificationService notificationService, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService)
+    public AuthService(TokenManager tokenManager, INotificationService notificationService, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo)
     {
         _tokenManager = tokenManager;
         _registrationOTPRequestRepo = registrationOTPRequestRepo;
@@ -17,7 +18,7 @@ public class AuthService : IAuthService
         _userRepo = userRepo;
         _messageService = messageService;
         _notificationService = notificationService;
-
+        _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
     }
     #endregion
 
@@ -123,5 +124,42 @@ public class AuthService : IAuthService
                 await _notificationService.SendToUser(user, Notification.CreateRegisterNotification(user));
                 return Result.Ok(user);
             });
+    }
+
+    public async Task<Result<PhoneAuthenticationRequest>> RequestPhoneAuthentication(string phone)
+    {
+        return (await _userRepo.GetByPhoneAsync(phone))
+       .OnSuccessAsync(async (user) =>
+       {
+           string otp = _otpManager.GenerateOTP();
+           return (await _messageService.SendAsync(user.Phone!, otp)).MapTo(new Tuple<User, string>(user, otp));
+       })
+       .OnSuccessAsync(async (tuple) =>
+           await _phoneAuthenticationRequestRepo.AddAsync(new PhoneAuthenticationRequest(tuple.Item1.Phone!, tuple.Item2))
+       );
+    }
+
+    public async Task<Result<Tuple<User, string>>> ConfirmPhoneAuthentication(Guid requestId, string otpCode)
+    {
+        return (await _phoneAuthenticationRequestRepo.GetByIdAsync(requestId))
+        .OnSuccess<PhoneAuthenticationRequest>((otp_request) =>
+        {
+            if (otp_request.Otp != otpCode)
+                return Result.Fail<PhoneAuthenticationRequest>(new()
+                {
+                    Code = ErrorCodes.InvalidOTP,
+                    Message = "Invalid OTP."
+                });
+
+            if (!_otpManager.IsOtpValid(otp_request.Created_On))
+                return Result.Fail<PhoneAuthenticationRequest>(new()
+                {
+                    Code = ErrorCodes.OTPExceededTimeLimit,
+                    Message = "OTP Exceed Time Limit"
+                });
+            return Result.Ok(otp_request);
+        })
+        .OnSuccessAsync(async (request) => await _userRepo.GetByPhoneAsync(request.Phone))
+        .OnSuccess((user) => Result.Ok(new Tuple<User, string>(user, _tokenManager.Generate(user.GetClaims()))));
     }
 }
