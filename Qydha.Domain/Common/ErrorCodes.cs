@@ -14,8 +14,14 @@ public static class ErrorCodes
 
     public const string NotificationNotFound = "4046";
     public const string PhoneAuthenticationRequestNotFound = "4047";
+    public const string UserPromoCodeNotFound = "4048";
 
 
+    public const string AuthenticatedUserDoesNotOwnThisPromoCode = "4082";
+
+    public const string PromoCodeAlreadyUsed = "4083";
+
+    public const string PromoCodeExpired = "4084";
 
     public const string ForgetPasswordRequestExceedTime = "4085";
 

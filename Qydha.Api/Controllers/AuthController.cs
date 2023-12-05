@@ -112,7 +112,7 @@ public class AuthController : ControllerBase
     {
         return (await _authService.RequestPhoneAuthentication(dto.Phone!))
         .Handle<PhoneAuthenticationRequest, IActionResult>(
-            (request) => Ok(new { data = new { Request_Id = request.Id }, message = "Otp sent successfully." })
+            (request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." })
             , BadRequest);
     }
 
@@ -143,7 +143,7 @@ public class AuthController : ControllerBase
     {
         return (await _authService.RequestPhoneAuthentication(dto.Phone!))
         .Handle<PhoneAuthenticationRequest, IActionResult>(
-            (request) => Ok(new { data = new { Request_Id = request.Id }, message = "Otp sent successfully." })
+            (request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." })
             , BadRequest);
     }
 

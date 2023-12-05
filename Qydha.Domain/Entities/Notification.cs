@@ -26,8 +26,8 @@ public class Notification
     {
         return new Notification()
         {
-            Title = "ارحب بالغالي",
-            Description = "يمكنك الان الاستمتاع بجميع مميزات الاشتراك الذهبى",
+            Title = "شكراً لاشتراكك في قيدها",
+            Description = "نتمنى لك تجربة رائعة",
             Action_Path = "",
             Action_Type = NotificationActionType.NoAction,
             User_Id = p.User_Id

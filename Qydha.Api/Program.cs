@@ -152,6 +152,9 @@ builder.Services.AddScoped<IPhoneAuthenticationRequestRepo, PhoneAuthenticationR
 builder.Services.AddScoped<IUpdateEmailRequestRepo, UpdateEmailRequestRepo>();
 builder.Services.AddScoped<IPurchaseRepo, PurchaseRepo>();
 builder.Services.AddScoped<INotificationRepo, NotificationRepo>();
+builder.Services.AddScoped<IUserPromoCodesRepo, UserPromoCodesRepo>();
+
+
 #endregion
 
 
@@ -169,6 +172,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPurchaseService, PurchaseService>();
+builder.Services.AddScoped<IUserPromoCodesService, UserPromoCodesService>();
 
 #endregion
 
