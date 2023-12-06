@@ -33,5 +33,17 @@ public class Notification
             User_Id = p.User_Id
         };
     }
+    public static Notification CreatePromoCodeNotification(UserPromoCode promo)
+    {
+        return new Notification()
+        {
+            Title = "وصلتك هدية !!",
+            Description = "شيك على التذاكر في قسم المتجر🎉",
+            Action_Path = "",
+            Action_Type = NotificationActionType.NoAction,
+            User_Id = promo.User_Id
+        };
+    }
+
 }
 

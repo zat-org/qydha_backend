@@ -39,7 +39,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
             return Ok(new
             {
                 Data = new { promoCodes = promoCodes.Select(promo => mapper.PromoCodeToGetPromoCodeDto(promo)) },
-                message = "Promo Added Successfully."
+                message = "Promo Fetched Successfully."
             });
         }
         , BadRequest);

@@ -18,6 +18,7 @@
     <None Remove="Migrations\010_alterUserTableToaddNormailizedUsernameAndEmail.sql" />
     <None Remove="Migrations\011_createPhoneAuthRequestTable.sql" />
     <None Remove="Migrations\012_createUserPromoCodesTable.sql" />
+    <None Remove="Migrations\013_alterPurchaseTrigger.sql" />
   </ItemGroup>
 
   <ItemGroup>
