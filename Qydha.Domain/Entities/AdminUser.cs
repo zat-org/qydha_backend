@@ -12,12 +12,12 @@ public class AdminUser
     public string Username { get; set; } = null!;
 
     [Column("password_hash")]
-    public string PasswordHash { get; set; } = null!;
+    public string Password_Hash { get; set; } = null!;
     [Column("created_at")]
-    public DateTime CreatedAt { get; set; }
+    public DateTime Created_At { get; set; }
 
     [Column("normalized_username")]
-    public string NormalizedUsername { get { return Username.ToUpper(); } }
+    public string Normalized_Username { get { return Username.ToUpper(); } }
 
     [Column("role")]
     public AdminType Role { get; set; }
