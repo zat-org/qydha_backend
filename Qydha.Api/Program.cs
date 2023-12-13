@@ -16,7 +16,7 @@ var connectionString = builder.Configuration.GetConnectionString("postgres");
 builder.Services.AddControllers((options) =>
 {
     options.Filters.Add<ExceptionHandlerAttribute>();
-    // options.Filters.Add<AuthFilter>();
+    options.Filters.Add<AuthorizationFilter>();
 }).AddNewtonsoftJson();
 
 #region fluent validation
@@ -40,9 +40,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 //defined filters 
 builder.Services.AddScoped<ExceptionHandlerAttribute>();
-builder.Services.AddScoped<AuthFilter>();
-
-
+builder.Services.AddScoped<AuthorizationFilter>();
 #endregion
 
 
@@ -79,8 +77,6 @@ builder.Services.AddSwaggerGen(opt =>
 
 
 #region Serilog
-
-//Add Serilog
 Log.Logger =
     new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration)
     .MinimumLevel.Information()
@@ -133,6 +129,7 @@ builder.Services.AddAuthentication("Bearer")
                 Encoding.ASCII.GetBytes(builder.Configuration["Authentication:SecretForKey"] ?? "MustProvideSecretKeyIn__CONFIGURATION__")
             )
         };
+
     });
 
 // db connection
@@ -153,11 +150,12 @@ builder.Services.AddScoped<IUpdateEmailRequestRepo, UpdateEmailRequestRepo>();
 builder.Services.AddScoped<IPurchaseRepo, PurchaseRepo>();
 builder.Services.AddScoped<INotificationRepo, NotificationRepo>();
 builder.Services.AddScoped<IUserPromoCodesRepo, UserPromoCodesRepo>();
+builder.Services.AddScoped<IAdminUserRepo, AdminUserRepo>();
+builder.Services.AddScoped<IInfluencerCodesRepo, InfluencerCodesRepo>();
+
 
 
 #endregion
-
-
 
 #region DI Services
 builder.Services.AddSingleton<TokenManager>();
@@ -173,6 +171,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPurchaseService, PurchaseService>();
 builder.Services.AddScoped<IUserPromoCodesService, UserPromoCodesService>();
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
+builder.Services.AddScoped<IInfluencerCodesService, InfluencerCodesService>();
+
 
 #endregion
 
@@ -208,12 +209,19 @@ app.UseStaticFiles();
 app.UseSerilogRequestLogging();
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
 
+var configSec = app.Configuration.GetSection("AdminCredentials");
+
+var variables = new Dictionary<string, string>(){
+    {"password",BCrypt.Net.BCrypt.HashPassword(configSec["password"] ?? "") },
+    {"username",configSec["username"] ?? ""},
+    {"capitalUsername" , (configSec["username"] ?? "").ToUpper()}
+};
+
 if (connectionString is not null)
-    DbMigrator.Migrate(connectionString);
+    DbMigrator.Migrate(connectionString, variables);
 
 app.Run();

@@ -8,7 +8,7 @@ public class Notification
     public string Description { get; set; } = string.Empty;
     public DateTime? Read_At { get; set; }
     public DateTime Created_At { get; set; } = DateTime.UtcNow;
-    public string Action_Path { get; set; } = string.Empty;
+    public string Action_Path { get; set; } = string.Empty; 
     public NotificationActionType Action_Type { get; set; } = NotificationActionType.NoAction;
 
     public static Notification CreateRegisterNotification(User user)

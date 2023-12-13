@@ -12,3 +12,8 @@ global using Qydha.Domain.Repositories;
 global using Qydha.Domain.Enums;
 global using Qydha.Domain.Services.Contracts;
 global using Qydha.Domain.Common;
+
+
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;
+global using System.Reflection;

@@ -5,7 +5,7 @@ namespace Qydha.Infrastructure;
 
 public class DbMigrator
 {
-    public static void Migrate(string connectionString)
+    public static void Migrate(string connectionString, Dictionary<string, string> variables)
     {
         EnsureDatabase.For.PostgresqlDatabase(connectionString);
 
@@ -13,6 +13,7 @@ public class DbMigrator
             .PostgresqlDatabase(connectionString)
             .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly())
             .LogToConsole()
+            .WithVariables(variables)
             .Build();
 
         var result = upgrader.PerformUpgrade();

@@ -1,3 +1,8 @@
+UPDATE purchases
+SET type = 'free_30',
+    productsku = ''
+WHERE type = 'purchase' and productsku = 'free_30';
+
 CREATE OR REPLACE FUNCTION calc_expire_Data_and_free_Subscription_after_insert()
   RETURNS TRIGGER 
   LANGUAGE PLPGSQL
@@ -13,7 +18,7 @@ begin
 		where user_id = NEW.user_id
 		order by purchase_date
 		loop 
-			if current_purchase.productsku = 'free_30' then 
+			if current_purchase.type = 'free_30' then 
 					free_used_count = free_used_count + 1;
 			end if ; 
 			

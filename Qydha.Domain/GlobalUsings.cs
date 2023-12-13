@@ -13,4 +13,7 @@ global using Qydha.Domain.Services.Contracts;
 // global using LanguageExt.Common;
 global using Microsoft.Extensions.Logging;
 
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;
 
+global using System.Reflection;

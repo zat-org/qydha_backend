@@ -41,6 +41,7 @@ public class UserRepo : IUserRepo
     #region AddUser
     public async Task<Result<User>> AddAsync(User user)
     {
+        
         var sql = @$"INSERT INTO  {TableName} ({DbColumns(DbAction.Add)})  VALUES ( {DbValues(DbAction.Add)}) RETURNING Id;";
         var userId = await _dbConnection.QuerySingleAsync<Guid>(sql, user);
         user.Id = userId;
@@ -92,6 +93,7 @@ public class UserRepo : IUserRepo
     }
     private async Task<Result<User>> GetByPropAsync<T>(string propName, T propValue)
     {
+
         var parameters = new DynamicParameters();
         parameters.Add($"@{propName}", propValue);
         var sql = $"SELECT *  from {TableName} where {propName} = @{propName};";

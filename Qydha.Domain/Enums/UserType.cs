@@ -5,3 +5,15 @@ public enum UserType
     Anonymous,
     Regular
 }
+
+public enum AuthZUserType
+{
+    Admin,
+    User
+}
+
+public enum AdminType
+{
+    SuperAdmin,
+    StaffAdmin
+}

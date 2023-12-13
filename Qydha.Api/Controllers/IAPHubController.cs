@@ -43,13 +43,12 @@ public class IAPHubController : ControllerBase
         }
     }
 
-    [Authorize]
-    [TypeFilter(typeof(AuthFilter))]
+    [Authorization(AuthZUserType.User)]
     [HttpPost("free_30/")]
     public async Task<IActionResult> SubscribeInFree()
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _purchaseService.SubscribeInFree(userId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _purchaseService.SubscribeInFree(user.Id))
         .Handle<User, IActionResult>(
             (user) =>
             {

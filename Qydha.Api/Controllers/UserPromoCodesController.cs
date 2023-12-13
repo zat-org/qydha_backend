@@ -2,8 +2,6 @@
 
 [ApiController]
 [Route("promo-codes/")]
-[Authorize]
-[TypeFilter(typeof(AuthFilter))]
 public class UserPromoCodesController(IUserPromoCodesService userPromoCodesService) : ControllerBase
 {
     #region injections and ctor
@@ -13,6 +11,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
 
 
     [HttpPost]
+    [Authorization(AuthZUserType.Admin)]
     public async Task<IActionResult> AddPromo(PromoCodesAddingDto dto)
     {
         return (await _userPromoCodesService.AddPromoCode(dto.UserId, dto.Code, dto.NumberOfDays, dto.ExpireAt))
@@ -24,32 +23,37 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
                 expireAt = promo.Expire_At,
                 numberOfDays = promo.Number_Of_Days
             },
-            message = "Promo Added Successfully."
+            message = "Promo Code Added Successfully."
         }), BadRequest);
     }
 
     [HttpGet]
+    [Authorization(AuthZUserType.User)]
+
     public async Task<IActionResult> GetAllUserPromoCodes()
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userPromoCodesService.GetUserPromoCodes(userId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userPromoCodesService.GetUserPromoCodes(user.Id))
         .Handle<IEnumerable<UserPromoCode>, IActionResult>((promoCodes) =>
         {
             var mapper = new UserPromoCodeMapper();
             return Ok(new
             {
                 Data = new { promoCodes = promoCodes.Select(promo => mapper.PromoCodeToGetPromoCodeDto(promo)) },
-                message = "Promo Fetched Successfully."
+                message = "Promo Code Fetched Successfully."
             });
         }
         , BadRequest);
     }
+
     [HttpPost("use")]
+    [Authorization(AuthZUserType.User)]
+
     public async Task<IActionResult> UsePromo(PromoCodesUsingDto dto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _userPromoCodesService.UsePromoCode(userId, dto.PromoCodeId))
+        return (await _userPromoCodesService.UsePromoCode(user.Id, dto.PromoCodeId))
         .Handle<User, IActionResult>((user) =>
         {
             var mapper = new UserMapper();
@@ -58,7 +62,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
             {
                 Data = new { user = mapper.UserToUserDto(user) }
                 ,
-                message = "Promo Used Successfully."
+                message = "Promo Code Used Successfully."
             });
         }, BadRequest);
     }

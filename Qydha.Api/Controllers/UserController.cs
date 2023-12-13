@@ -2,8 +2,6 @@
 
 [ApiController]
 [Route("users/")]
-[Authorize]
-[TypeFilter(typeof(AuthFilter))]
 public class UserController : ControllerBase
 {
     #region injections and ctor
@@ -22,10 +20,11 @@ public class UserController : ControllerBase
 
     #region Get user 
     [HttpGet("me/")]
+    [Authorization(AuthZUserType.User)]
     public async Task<IActionResult> GetUser()
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.GetUserById(userId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userService.GetUserById(user.Id))
         .Handle<User, IActionResult>(
             (user) =>
             {
@@ -44,10 +43,11 @@ public class UserController : ControllerBase
 
     #region update user
     [HttpPatch("me/update-password/")]
+    [Authorization(AuthZUserType.User)]
     public async Task<IActionResult> UpdateAuthorizedUserPassword([FromBody] ChangePasswordDto changePasswordDto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.UpdateUserPassword(userId, changePasswordDto.OldPassword, changePasswordDto.NewPassword))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userService.UpdateUserPassword(user.Id, changePasswordDto.OldPassword, changePasswordDto.NewPassword))
         .Handle<User, IActionResult>((user) =>
             {
                 var mapper = new UserMapper();
@@ -60,11 +60,12 @@ public class UserController : ControllerBase
             BadRequest);
     }
 
+    [Authorization(AuthZUserType.User)]
     [HttpPatch("me/update-password-from-phone-authentication/")]
     public async Task<IActionResult> UpdatePhoneAuthorizedUserPassword([FromBody] UpdatePasswordFromPhoneAuthentication dto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.UpdateUserPassword(userId, dto.RequestId, dto.NewPassword))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userService.UpdateUserPassword(user.Id, dto.RequestId, dto.NewPassword))
         .Handle<User, IActionResult>((user) =>
             {
                 var mapper = new UserMapper();
@@ -77,11 +78,12 @@ public class UserController : ControllerBase
             BadRequest);
     }
 
+    [Authorization(AuthZUserType.User)]
     [HttpPatch("me/update-username/")]
     public async Task<IActionResult> UpdateAuthorizedUsername([FromBody] ChangeUsernameDto changeUsernameDto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.UpdateUserUsername(userId, changeUsernameDto.Password, changeUsernameDto.NewUsername))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userService.UpdateUserUsername(user.Id, changeUsernameDto.Password, changeUsernameDto.NewUsername))
         .Handle<User, IActionResult>((user) =>
             {
                 var mapper = new UserMapper();
@@ -94,11 +96,12 @@ public class UserController : ControllerBase
             BadRequest);
     }
 
+    [Authorization(AuthZUserType.User)]
     [HttpPatch("me/update-phone/")]
     public async Task<IActionResult> UpdateAuthorizedPhone([FromBody] ChangePhoneDto changePhoneDto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.UpdateUserPhone(userId, changePhoneDto.Password, changePhoneDto.NewPhone))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userService.UpdateUserPhone(user.Id, changePhoneDto.Password, changePhoneDto.NewPhone))
         .Handle<UpdatePhoneRequest, IActionResult>((otp_request) =>
             {
                 return Ok(new
@@ -110,12 +113,13 @@ public class UserController : ControllerBase
             BadRequest);
     }
 
+    [Authorization(AuthZUserType.User)]
     [HttpPost("me/confirm-phone-update/")]
     public async Task<IActionResult> ConfirmPhoneUpdate([FromBody] ConfirmPhoneDto confirmPhoneDto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _userService.ConfirmPhoneUpdate(userId, confirmPhoneDto.Code, confirmPhoneDto.RequestId))
+        return (await _userService.ConfirmPhoneUpdate(user.Id, confirmPhoneDto.Code, confirmPhoneDto.RequestId))
         .Handle<User, IActionResult>((user) =>
             {
                 var mapper = new UserMapper();
@@ -128,12 +132,13 @@ public class UserController : ControllerBase
             BadRequest);
     }
 
+    [Authorization(AuthZUserType.User)]
     [HttpPatch("me/update-email")]
     public async Task<IActionResult> UpdateAuthorizedEmail([FromBody] ChangeEmailDto changeEmailDto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _userService.UpdateUserEmail(userId, changeEmailDto.Password, changeEmailDto.NewEmail))
+        return (await _userService.UpdateUserEmail(user.Id, changeEmailDto.Password, changeEmailDto.NewEmail))
         .Handle<UpdateEmailRequest, IActionResult>((otp_request) =>
             {
                 var mapper = new UserMapper();
@@ -145,13 +150,13 @@ public class UserController : ControllerBase
             },
             BadRequest);
     }
-
+    [Authorization(AuthZUserType.User)]
     [HttpPost("me/confirm-email-update/")]
     public async Task<IActionResult> ConfirmEmailUpdate([FromBody] ConfirmEmailDto confirmEmailDto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _userService.ConfirmEmailUpdate(userId, confirmEmailDto.Code, confirmEmailDto.RequestId))
+        return (await _userService.ConfirmEmailUpdate(user.Id, confirmEmailDto.Code, confirmEmailDto.RequestId))
         .Handle<User, IActionResult>((user) =>
         {
             var mapper = new UserMapper();
@@ -163,11 +168,12 @@ public class UserController : ControllerBase
         },
         BadRequest);
     }
+    [Authorization(AuthZUserType.User)]
 
     [HttpPatch("me/update-avatar")]
     public async Task<IActionResult> UpdateUserAvatar([FromForm] IFormFile file)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
         var avatarValidator = new AvatarValidator(_optionsOfPhoto);
         var validationRes = avatarValidator.Validate(file);
@@ -181,7 +187,7 @@ public class UserController : ControllerBase
             });
         }
 
-        return (await _userService.UploadUserPhoto(userId, file))
+        return (await _userService.UploadUserPhoto(user.Id, file))
         .Handle<User, IActionResult>((user) =>
             {
                 var mapper = new UserMapper();
@@ -193,22 +199,23 @@ public class UserController : ControllerBase
             }, BadRequest);
     }
 
+    [Authorization(AuthZUserType.User)]
 
     [HttpPatch("me/update-fcm-token")]
     public async Task<IActionResult> UpdateUsersFCMToken([FromBody] ChangeUserFCMTokenDto changeUserFCMTokenDto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.UpdateFCMToken(userId, changeUserFCMTokenDto.FCM_Token))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userService.UpdateFCMToken(user.Id, changeUserFCMTokenDto.FCM_Token))
         .Handle<IActionResult>(() => Ok(new { data = new { }, Message = "User fcm token Updated Successfully" }), BadRequest);
     }
 
 
-
+    [Authorization(AuthZUserType.User)]
     [HttpPatch("me/")]
     public async Task<IActionResult> UpdateUserData([FromBody] JsonPatchDocument<UpdateUserDto> updateUserDtoPatch)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.GetUserById(userId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userService.GetUserById(user.Id))
         .OnSuccess<User>((user) =>
         {
             if (updateUserDtoPatch is null)
@@ -255,22 +262,24 @@ public class UserController : ControllerBase
     #endregion
 
     #region Delete user
+    [Authorization(AuthZUserType.User)]
     [HttpDelete("me/")]
     public async Task<IActionResult> DeleteUser(DeleteUserDto deleteUserDto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _userService.DeleteUser(userId, deleteUserDto.Password))
+        return (await _userService.DeleteUser(user.Id, deleteUserDto.Password))
         .Handle<User, IActionResult>(
             (user) => Ok(new { data = new { }, message = $"User with username: '{user.Username}' Deleted Successfully." })
             , BadRequest);
     }
 
+    [Authorization(AuthZUserType.User)]
     [HttpDelete("me/delete-anonymous")]
     public async Task<IActionResult> DeleteAnonymousUser()
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _userService.DeleteAnonymousUser(userId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _userService.DeleteAnonymousUser(user.Id))
         .Handle<User, IActionResult>(
             (user) => Ok(new { data = new { }, message = $"Anonymous user deleted successfully." })
             , BadRequest);
@@ -279,42 +288,49 @@ public class UserController : ControllerBase
     #endregion
 
     #region user notifications
+    [Authorization(AuthZUserType.User)]
     [HttpGet("me/notifications")]
     public async Task<IActionResult> GetUserNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1, [FromQuery] bool? isRead = null)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _notificationService.GetAllNotificationsOfUserById(userId, pageSize, pageNumber, isRead))
+        return (await _notificationService.GetAllNotificationsOfUserById(user.Id, pageSize, pageNumber, isRead))
         .Handle<IEnumerable<Notification>, IActionResult>((notifications) =>
-            Ok(
-                new
-                {
-                    data = new { notifications },
-                    message = "Notifications Fetched successfully."
-                })
+            {
+                var mapper = new NotificationMapper();
+
+                return Ok(
+                    new
+                    {
+                        data = new { notifications = notifications.Select(n => mapper.NotificationToGetNotificationDto(n)) },
+                        message = "Notifications Fetched successfully."
+                    });
+            }
          , BadRequest);
     }
 
+    [Authorization(AuthZUserType.User)]
     [HttpPatch("me/notifications/{notificationId}/mark-as-read/")]
     public async Task<IActionResult> MarkNotificationAsRead([FromRoute] int notificationId)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _notificationService.MarkNotificationAsRead(userId, notificationId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _notificationService.MarkNotificationAsRead(user.Id, notificationId))
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
     }
+    [Authorization(AuthZUserType.User)]
     [HttpDelete("me/notifications/{notificationId}")]
     public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _notificationService.DeleteNotification(userId, notificationId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _notificationService.DeleteNotification(user.Id, notificationId))
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification Deleted." }), BadRequest);
     }
-
+    [Authorization(AuthZUserType.User)]
     [HttpDelete("me/notifications/")]
     public async Task<IActionResult> DeleteAllNotifications()
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _notificationService.DeleteAll(userId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _notificationService.DeleteAll(user.Id))
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "All Notifications has been Deleted." }), BadRequest);
     }
     #endregion

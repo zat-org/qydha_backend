@@ -20,6 +20,8 @@
 
 
   <ItemGroup>
+    <Folder Include="Error_logs\" />
+    <Folder Include="info_logs\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

@@ -1,15 +1,12 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INotificationService notificationService, IPurchaseRepo purchaseRepo, IUserRepo userRepo) : IUserPromoCodesService
+public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INotificationService notificationService, IPurchaseService purchaseService, IUserRepo userRepo) : IUserPromoCodesService
 {
     private readonly IUserRepo _userRepo = userRepo;
-    private readonly IPurchaseRepo _purchaseRepo = purchaseRepo;
+    private readonly IPurchaseService _purchaseService = purchaseService;
     private readonly INotificationService _notificationService = notificationService;
-
     private readonly IUserPromoCodesRepo _userPromoCodesRepo = userPromoCodesRepo;
-
-
 
     public async Task<Result<UserPromoCode>> AddPromoCode(Guid userId, string code, int numberOfDays, DateTime expireAt)
     {
@@ -51,21 +48,7 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INoti
                });
            return Result.Ok(tuple);
        })
-       .OnSuccessAsync(async (tuple) =>
-       {
-           UserPromoCode promo = tuple.Item2;
-
-           Purchase purchase = new()
-           {
-               IAPHub_Purchase_Id = promo.Id.ToString(),
-               User_Id = promo.User_Id,
-               Type = "promo_code",
-               Purchase_Date = DateTime.UtcNow,
-               ProductSku = promo.Code,
-               Number_Of_Days = promo.Number_Of_Days
-           };
-           return (await _purchaseRepo.AddAsync(purchase)).MapTo(promo);
-       })
+       .OnSuccessAsync(async (tuple) => await _purchaseService.AddPromoCodePurchase(tuple.Item2))
        .OnSuccessAsync<UserPromoCode>(async promo => (await _userPromoCodesRepo.PatchById(promo.Id, "Used_At", DateTime.UtcNow)).MapTo(promo))
        .OnSuccessAsync(async (promo) => await _userRepo.GetByIdAsync(promo.User_Id));
     }

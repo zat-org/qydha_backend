@@ -19,6 +19,8 @@
     <None Remove="Migrations\011_createPhoneAuthRequestTable.sql" />
     <None Remove="Migrations\012_createUserPromoCodesTable.sql" />
     <None Remove="Migrations\013_alterPurchaseTrigger.sql" />
+    <None Remove="Migrations\014_createAdminTable.sql" />
+    <None Remove="Migrations\015_InfluencersCodesTable.sql" />
   </ItemGroup>
 
   <ItemGroup>

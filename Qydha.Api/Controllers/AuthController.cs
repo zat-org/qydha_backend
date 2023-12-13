@@ -47,13 +47,12 @@ public class AuthController : ControllerBase
     }
 
 
-    [Authorize]
-    [TypeFilter(typeof(AuthFilter))]
+    [Authorization(AuthZUserType.User)]
     [HttpPost("register-anonymous/")]
     public async Task<IActionResult> RegisterAnonymous([FromBody] UserRegisterDTO dto)
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
-        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, userId))
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, user.Id))
         .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
             new
             {
@@ -168,14 +167,13 @@ public class AuthController : ControllerBase
             , BadRequest);
     }
 
-    [Authorize]
-    [TypeFilter(typeof(AuthFilter))]
+    [Authorization(AuthZUserType.User)]
     [HttpPost("logout/")]
     public async Task<IActionResult> Logout()
     {
-        Guid userId = (Guid)HttpContext.Items["UserId"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _authService.Logout(userId))
+        return (await _authService.Logout(user.Id))
         .Handle<IActionResult>(
             () => Ok(new { data = new { }, message = "User logged out successfully." }),
             BadRequest
@@ -183,11 +181,15 @@ public class AuthController : ControllerBase
     }
 
 
+    [Authorization(AuthZUserType.User)]
     [HttpGet("test")]
     public IActionResult TestDeploy()
     {
         return Ok(new { message = "Deployed. ✔️✔️" });
     }
+
+
+
     [HttpGet("throwError")]
     public IActionResult ThrowError()
     {

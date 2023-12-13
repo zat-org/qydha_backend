@@ -1,10 +1,8 @@
 ﻿
 namespace Qydha.API.Controllers;
 
-[Authorize]
-[TypeFilter(typeof(AuthFilter))]
-[Route("notifications/")]
 [ApiController]
+[Route("notifications/")]
 public class NotificationController : ControllerBase
 {
     private readonly INotificationService _notificationService;
@@ -14,6 +12,7 @@ public class NotificationController : ControllerBase
         _notificationService = notificationService;
     }
 
+    [Authorization(AuthZUserType.Admin)]
     [HttpPost("send-to-user/")]
     public async Task<IActionResult> SendNotificationToUser([FromBody] NotificationSendToUserDto notification_request)
     {
@@ -32,6 +31,8 @@ public class NotificationController : ControllerBase
 
     }
 
+    
+    [Authorization(AuthZUserType.Admin)]
     [HttpPost("send-to-all-users/")]
     public async Task<IActionResult> SendNotificationToAllUsers([FromBody] NotificationSendDto dto)
     {
