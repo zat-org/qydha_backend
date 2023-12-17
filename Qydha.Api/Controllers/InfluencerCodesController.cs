@@ -8,7 +8,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
 
     [HttpPost]
     [Authorization(AuthZUserType.Admin)]
-    public async Task<IActionResult> AddPromo(AddInfluencerCodeDto dto)
+    public async Task<IActionResult> AddInfluencerCode(AddInfluencerCodeDto dto)
     {
         return (await _influencerCodesService.AddInfluencerCode(dto.Code, dto.NumberOfDays, dto.ExpireAt))
         .Handle<InfluencerCode, IActionResult>((InfCode) => Ok(new
@@ -26,7 +26,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
     [HttpPost("use")]
     [Authorization(AuthZUserType.User)]
 
-    public async Task<IActionResult> UsePromo(UseInfluencerCodeDto dto)
+    public async Task<IActionResult> UseInfluencerCode(UseInfluencerCodeDto dto)
     {
         User user = (User)HttpContext.Items["User"]!;
 
@@ -37,8 +37,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
 
             return Ok(new
             {
-                Data = new { user = mapper.UserToUserDto(user) }
-                ,
+                Data = new { user = mapper.UserToUserDto(user) },
                 message = "Influencer Code Used Successfully."
             });
         }, BadRequest);

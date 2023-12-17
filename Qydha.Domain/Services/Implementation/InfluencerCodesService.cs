@@ -16,7 +16,6 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
 
     public async Task<Result<User>> UseInfluencerCode(Guid userId, string code)
     {
-
         var getCodeRes = await _influencerCodesRepo.GetByCodeAsync(code);
         return getCodeRes
         .OnSuccess<InfluencerCode>((influencerCode) =>
@@ -29,18 +28,23 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
                 });
             return Result.Ok(influencerCode);
         })
+        .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
+        {
+            Result<int> getUsageNumRes = await _purchaseRepo.GetInfluencerCodeUsageByUserIdCountAsync(userId, influencerCode.Code);
+            return getUsageNumRes.OnSuccess(num =>
+            {
+                if (num > 0)
+                    return Result.Fail<InfluencerCode>(new()
+                    {
+                        Code = ErrorCodes.InfluencerCodeAlreadyUsed,
+                        Message = "Influencer Code Used Before"
+                    });
+                return Result.Ok(influencerCode);
+            });
+        })
         .OnSuccessAsync(async (influencerCode) =>
         {
-            Purchase purchase = new()
-            {
-                IAPHubPurchaseId = influencerCode.Id.ToString(),
-                UserId = userId,
-                Type = "Influencer",
-                PurchaseDate = DateTime.UtcNow,
-                ProductSku = influencerCode.Code,
-                NumberOfDays = influencerCode.NumberOfDays
-            };
-            return (await _purchaseRepo.AddAsync<Guid>(purchase))
+            return (await _purchaseRepo.AddAsync<Guid>(new(influencerCode, userId)))
                     .OnSuccessAsync(async (purchase) =>
                         await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)));
         });

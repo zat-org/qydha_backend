@@ -22,6 +22,8 @@ public static class ErrorCodes
     public const string AuthenticatedUserDoesNotOwnThisPromoCode = "4082";
     public const string PromoCodeAlreadyUsed = "4083";
     public const string PromoCodeExpired = "4084";
+    public const string InfluencerCodeAlreadyUsed = "4085";
+
 
     public const string ForgetPasswordRequestExceedTime = "4085";
 

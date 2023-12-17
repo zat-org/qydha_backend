@@ -14,7 +14,7 @@ public class AddInfluencerCodeDtoValidator : AbstractValidator<AddInfluencerCode
     {
         RuleFor(dto => dto.Code)
         .NotEmpty()
-        .Length(2, 50);
+        .Length(2, 15);
 
         RuleFor(dto => dto.NumberOfDays)
         .NotEmpty()

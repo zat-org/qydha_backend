@@ -18,4 +18,28 @@ public class Purchase
     public string ProductSku { get; set; } = string.Empty;
     [Column("number_of_days")]
     public int NumberOfDays { get; set; }
+    public Purchase()
+    {
+
+    }
+
+    public Purchase(InfluencerCode influencerCode, Guid userId)
+    {
+        IAPHubPurchaseId = influencerCode.Id.ToString();
+        UserId = userId;
+        Type = "Influencer";
+        PurchaseDate = DateTime.UtcNow;
+        ProductSku = influencerCode.Code;
+        NumberOfDays = influencerCode.NumberOfDays;
+    }
+    public Purchase(UserPromoCode promoCode)
+    {
+        IAPHubPurchaseId = promoCode.Id.ToString();
+        UserId = promoCode.UserId;
+        Type = "promo_code";
+        PurchaseDate = DateTime.UtcNow;
+        ProductSku = promoCode.Code;
+        NumberOfDays = promoCode.NumberOfDays;
+    }
+
 }

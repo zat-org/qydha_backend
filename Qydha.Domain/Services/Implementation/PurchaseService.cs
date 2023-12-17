@@ -82,16 +82,7 @@ public class PurchaseService : IPurchaseService
 
     public async Task<Result<UserPromoCode>> AddPromoCodePurchase(UserPromoCode promoCode)
     {
-        Purchase purchase = new()
-        {
-            IAPHubPurchaseId = promoCode.Id.ToString(),
-            UserId = promoCode.UserId,
-            Type = "promo_code",
-            PurchaseDate = DateTime.UtcNow,
-            ProductSku = promoCode.Code,
-            NumberOfDays = promoCode.NumberOfDays
-        };
-        return (await _purchaseRepo.AddAsync<Guid>(purchase))
+        return (await _purchaseRepo.AddAsync<Guid>(new(promoCode)))
                 .OnSuccessAsync(async (purchase) => await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)))
                 .MapTo(promoCode);
     }
