@@ -20,8 +20,8 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
             Data = new
             {
                 code = promo.Code,
-                expireAt = promo.Expire_At,
-                numberOfDays = promo.Number_Of_Days
+                expireAt = promo.ExpireAt,
+                numberOfDays = promo.NumberOfDays
             },
             message = "Promo Code Added Successfully."
         }), BadRequest);

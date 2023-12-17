@@ -1,11 +1,17 @@
 ﻿namespace Qydha.Domain.Entities;
 
+[Table("phone_authentication_requests")]
 public class PhoneAuthenticationRequest
 {
+    [Key]
+    [Column("id")]
     public Guid Id { get; set; }
+    [Column("phone")]
     public string Phone { get; set; } = null!;
+    [Column("otp")]
     public string Otp { get; set; } = null!;
-    public DateTime Created_On { get; set; }
+    [Column("created_on")]
+    public DateTime CreatedAt { get; set; }
     public PhoneAuthenticationRequest()
     {
 
@@ -14,6 +20,6 @@ public class PhoneAuthenticationRequest
     {
         Phone = phone;
         Otp = otp;
-        Created_On = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow;
     }
 }

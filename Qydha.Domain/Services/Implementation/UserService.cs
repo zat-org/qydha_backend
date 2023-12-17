@@ -55,11 +55,11 @@ public class UserService : IUserService
         return getUserRes
         .OnSuccessAsync(
             async (user) =>
-                (await _phoneAuthenticationRequestRepo.GetByIdAsync(phoneAuthReqId))
+                (await _phoneAuthenticationRequestRepo.GetByUniquePropAsync(nameof(PhoneAuthenticationRequest.Id), phoneAuthReqId))
                 .MapTo((request) => new Tuple<User, PhoneAuthenticationRequest>(user, request)))
         .OnSuccess((tuple) =>
         {
-            if (tuple.Item1.Is_Anonymous)
+            if (tuple.Item1.IsAnonymous)
                 return Result.Fail<User>(new()
                 {
                     Code = ErrorCodes.InvalidOperationOnAnonymousUser,
@@ -73,7 +73,7 @@ public class UserService : IUserService
                     Message = "User phone is not the same in the phone login request"
                 });
 
-            if (tuple.Item2.Created_On.AddDays(1) < DateTime.UtcNow)
+            if (tuple.Item2.CreatedAt.AddDays(1) < DateTime.UtcNow)
                 return Result.Fail<User>(new()
                 {
                     Code = ErrorCodes.ForgetPasswordRequestExceedTime,
@@ -113,21 +113,21 @@ public class UserService : IUserService
                 var otp = _otpManager.GenerateOTP();
                 return (await _messageService.SendAsync(newPhone, otp)).MapTo(otp);
             })
-            .OnSuccessAsync(async (otp) => await _updatePhoneOTPRequestRepo.AddAsync(new(newPhone, otp, userId)));
+            .OnSuccessAsync(async (otp) => await _updatePhoneOTPRequestRepo.AddAsync<Guid>(new(newPhone, otp, userId)));
     }
     public async Task<Result<User>> ConfirmPhoneUpdate(Guid userId, string code, Guid requestId)
     {
-        Result<UpdatePhoneRequest> getUPhoneRes = await _updatePhoneOTPRequestRepo.GetByIdAsync(requestId);
+        Result<UpdatePhoneRequest> getUPhoneRes = await _updatePhoneOTPRequestRepo.GetByUniquePropAsync(nameof(UpdatePhoneRequest.Id), requestId);
         return getUPhoneRes.OnSuccess<UpdatePhoneRequest>((otp_request) =>
             {
-                if (!_otpManager.IsOtpValid(otp_request.Created_On))
+                if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                     return Result.Fail<UpdatePhoneRequest>(new()
                     {
                         Code = ErrorCodes.OTPExceededTimeLimit,
                         Message = "OTP Exceed Time Limit"
                     });
 
-                if (otp_request.OTP != code || otp_request.User_Id != userId)
+                if (otp_request.OTP != code || otp_request.UserId != userId)
                     return Result.Fail<UpdatePhoneRequest>(new()
                     {
                         Code = ErrorCodes.InvalidOTP,
@@ -137,8 +137,8 @@ public class UserService : IUserService
                 return Result.Ok(otp_request);
             })
             .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.IsPhoneAvailable(otp_request.Phone)).MapTo(otp_request))
-            .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.UpdateUserPhone(otp_request.User_Id, otp_request.Phone)).MapTo(otp_request))
-            .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.User_Id));
+            .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.UpdateUserPhone(otp_request.UserId, otp_request.Phone)).MapTo(otp_request))
+            .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.UserId));
     }
     public async Task<Result<UpdateEmailRequest>> UpdateUserEmail(Guid userId, string password, string newEmail)
     {
@@ -150,26 +150,26 @@ public class UserService : IUserService
                 string otp = _otpManager.GenerateOTP();
                 Guid requestId = Guid.NewGuid();
                 var emailSubject = "تأكيد البريد الالكتروني لحساب تطبيق قيدها";
-                var emailBody = _mailingService.GenerateConfirmEmailBody(otp, requestId.ToString(), user);
+                var emailBody = await _mailingService.GenerateConfirmEmailBody(otp, requestId.ToString(), user);
                 return (await _mailingService.SendEmailAsync(newEmail, emailSubject, emailBody))
                         .MapTo(new Tuple<string, Guid>(otp, requestId));
             })
-            .OnSuccessAsync(async (tuple) => await _updateEmailRequestRepo.AddAsync(new(tuple.Item2, newEmail, tuple.Item1, userId)));
+            .OnSuccessAsync(async (tuple) => await _updateEmailRequestRepo.AddAsync<Guid>(new(tuple.Item2, newEmail, tuple.Item1, userId)));
     }
     public async Task<Result<User>> ConfirmEmailUpdate(Guid userId, string code, Guid requestId)
     {
 
-        Result<UpdateEmailRequest> getUEmailRes = await _updateEmailRequestRepo.GetByIdAsync(requestId);
+        Result<UpdateEmailRequest> getUEmailRes = await _updateEmailRequestRepo.GetByUniquePropAsync(nameof(UpdateEmailRequest.Id), requestId);
         return getUEmailRes.OnSuccess<UpdateEmailRequest>((otp_request) =>
         {
-            if (!_otpManager.IsOtpValid(otp_request.Created_On))
+            if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                 return Result.Fail<UpdateEmailRequest>(new()
                 {
                     Code = ErrorCodes.OTPExceededTimeLimit,
                     Message = "OTP Exceed Time Limit"
                 });
 
-            if (otp_request.OTP != code || otp_request.User_Id != userId)
+            if (otp_request.OTP != code || otp_request.UserId != userId)
                 return Result.Fail<UpdateEmailRequest>(new()
                 {
                     Code = ErrorCodes.InvalidOTP,
@@ -178,11 +178,11 @@ public class UserService : IUserService
 
             return Result.Ok(otp_request);
         })
-        .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) => (await _userRepo.IsEmailAvailable(otp_request.Email, otp_request.User_Id)).MapTo(otp_request))
+        .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) => (await _userRepo.IsEmailAvailable(otp_request.Email, otp_request.UserId)).MapTo(otp_request))
         .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) =>
-            (await _userRepo.UpdateUserEmail(otp_request.User_Id, otp_request.Email))
+            (await _userRepo.UpdateUserEmail(otp_request.UserId, otp_request.Email))
             .MapTo(otp_request))
-        .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.User_Id));
+        .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.UserId));
     }
 
     public async Task<Result<User>> UploadUserPhoto(Guid userId, IFormFile file)
@@ -191,13 +191,13 @@ public class UserService : IUserService
         return getUserRes
         .OnSuccessAsync(async (user) =>
         {
-            if (user.Avatar_Path is not null)
+            if (user.AvatarPath is not null)
             {
-                (await _fileService.DeleteFile(user.Avatar_Path))
+                (await _fileService.DeleteFile(user.AvatarPath))
                 .OnSuccess(() =>
                 {
-                    user.Avatar_Path = null;
-                    user.Avatar_Url = null;
+                    user.AvatarPath = null;
+                    user.AvatarUrl = null;
                 })
                 .OnFailure((result) =>
                 {
@@ -233,15 +233,15 @@ public class UserService : IUserService
         return getUserRes
         .OnSuccess<User>((user) =>
         {
-            if (!BCrypt.Net.BCrypt.Verify(password, user.Password_Hash))
+            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
                 return Result.Fail<User>(new() { Code = ErrorCodes.InvalidCredentials, Message = "incorrect password" });
             return Result.Ok(user);
         })
         .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteByIdAsync(user.Id)).MapTo(user))
         .OnSuccessAsync<User>(async (user) =>
         {
-            if (user.Avatar_Path is not null)
-                (await _fileService.DeleteFile(user.Avatar_Path))
+            if (user.AvatarPath is not null)
+                (await _fileService.DeleteFile(user.AvatarPath))
                 .OnFailure((result) =>
                 {
                     //! TODO :: Handle Delete File Error 
@@ -258,7 +258,7 @@ public class UserService : IUserService
         return getUserRes
         .OnSuccess<User>((user) =>
         {
-            if (!user.Is_Anonymous)
+            if (!user.IsAnonymous)
                 return Result.Fail<User>(new()
                 {
                     Code = ErrorCodes.InvalidDeleteOnRegularUser,

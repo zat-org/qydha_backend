@@ -1,6 +1,5 @@
 UPDATE purchases
-SET type = 'free_30',
-    productsku = ''
+SET type = 'free_30'
 WHERE type = 'purchase' and productsku = 'free_30';
 
 CREATE OR REPLACE FUNCTION calc_expire_Data_and_free_Subscription_after_insert()

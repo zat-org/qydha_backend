@@ -1,12 +1,26 @@
 namespace Qydha.Domain.Entities;
+[Table("InfluencerCodes")]
 public class InfluencerCode
 {
+    [Key]
+    [Column("id")]
     public Guid Id { get; set; }
+
+    [Column("code")]
     public string Code { get; set; } = null!;
-    public string Normalized_Code { get; set; } = null!;
-    public DateTime Created_At { get; set; }
-    public DateTime? Expire_At { get; set; }
-    public int Number_Of_Days { get; set; }
+
+    [Column("normalized_code")]
+    public string NormalizedCode { get; set; } = null!;
+
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }
+
+    [Column("expire_at")]
+    public DateTime? ExpireAt { get; set; }
+
+    [Column("number_of_days")]
+    public int NumberOfDays { get; set; }
+
 
     public InfluencerCode()
     {
@@ -15,9 +29,9 @@ public class InfluencerCode
     public InfluencerCode(string code, int numOfDays, DateTime? expireDate)
     {
         Code = code;
-        Normalized_Code = code.ToUpper();
-        Created_At = DateTime.UtcNow;
-        Expire_At = expireDate;
-        Number_Of_Days = numOfDays;
+        NormalizedCode = code.ToUpper();
+        CreatedAt = DateTime.UtcNow;
+        ExpireAt = expireDate;
+        NumberOfDays = numOfDays;
     }
 }

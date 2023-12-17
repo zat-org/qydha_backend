@@ -1,35 +1,72 @@
-﻿
-namespace Qydha.Domain.Entities;
-
+﻿namespace Qydha.Domain.Entities;
+[Table("users")]
 public class User
 {
+    [Key]
+    [Column("id")]
     public Guid Id { get; set; }
+
+    [Column("username")]
     public string? Username { get; set; }
+
+    [Column("name")]
     public string? Name { get; set; }
-    public string? Password_Hash { get; set; }
+
+    [Column("password_hash")]
+    public string? PasswordHash { get; set; }
+
+    [Column("phone")]
     public string? Phone { get; set; }
+
+    [Column("email")]
     public string? Email { get; set; }
-    public DateTime? Birth_Date { get; set; }
-    public DateTime Created_On { get; set; }
-    public DateTime? Last_Login { get; set; }
-    public bool Is_Anonymous { get; set; }
-    public bool Is_Phone_Confirmed { get; set; }
-    public bool Is_Email_Confirmed { get; set; }
-    public string? Avatar_Url { get; set; }
-    public string? Avatar_Path { get; set; }
-    public DateTime? Expire_Date { get; set; } = null;
-    public int Free_Subscription_Used { get; set; } = 0;
-    public string FCM_Token { get; set; } = string.Empty;
-    public string? Normalized_Username { get; set; }
-    public string? Normalized_Email { get; set; }
+
+    [Column("birth_date")]
+    public DateTime? BirthDate { get; set; }
+
+    [Column("created_on")]
+    public DateTime CreatedAt { get; set; }
+
+    [Column("last_login")]
+    public DateTime? LastLogin { get; set; }
+
+    [Column("is_anonymous")]
+    public bool IsAnonymous { get; set; }
+
+    [Column("is_phone_confirmed")]
+    public bool IsPhoneConfirmed { get; set; }
+
+    [Column("is_email_confirmed")]
+    public bool IsEmailConfirmed { get; set; }
+
+    [Column("avatar_url")]
+    public string? AvatarUrl { get; set; }
+
+    [Column("avatar_path")]
+    public string? AvatarPath { get; set; }
+
+    [Column("expire_date")]
+    public DateTime? ExpireDate { get; set; } = null;
+
+    [Column("free_subscription_used")]
+    public int FreeSubscriptionUsed { get; set; } = 0;
+
+    [Column("fcm_token")]
+    public string FCMToken { get; set; } = string.Empty;
+
+    [Column("normalized_username")]
+    public string? NormalizedUsername { get; set; }
+
+    [Column("normalized_email")]
+    public string? NormalizedEmail { get; set; }
 
 
     public static User CreateAnonymousUser()
     {
         return new User()
         {
-            Created_On = DateTime.UtcNow,
-            Is_Anonymous = true
+            CreatedAt = DateTime.UtcNow,
+            IsAnonymous = true
         };
     }
     public IEnumerable<Claim> GetClaims()
@@ -40,7 +77,7 @@ public class User
                 new ("userId", Id.ToString()),
                 new ("username", Username ?? "" ),
                 new ("phone", Phone ?? ""),
-                new ("isAnonymous", Is_Anonymous.ToString()),
+                new ("isAnonymous", IsAnonymous.ToString()),
             };
     }
     public static User CreateUserFromRegisterRequest(RegistrationOTPRequest otpRequest)
@@ -48,14 +85,14 @@ public class User
         return new User()
         {
             Username = otpRequest.Username,
-            Normalized_Username = otpRequest.Username.ToUpper(),
-            Password_Hash = otpRequest.Password_Hash,
+            NormalizedUsername = otpRequest.Username.ToUpper(),
+            PasswordHash = otpRequest.PasswordHash,
             Phone = otpRequest.Phone,
-            Created_On = DateTime.UtcNow,
-            Last_Login = DateTime.UtcNow,
-            Is_Phone_Confirmed = true,
-            Is_Anonymous = false,
-            FCM_Token = otpRequest.FCM_Token ?? ""
+            CreatedAt = DateTime.UtcNow,
+            LastLogin = DateTime.UtcNow,
+            IsPhoneConfirmed = true,
+            IsAnonymous = false,
+            FCMToken = otpRequest.FCMToken ?? ""
         };
     }
     public User UpdateUserFromRegisterRequest(RegistrationOTPRequest otpRequest)
@@ -64,14 +101,14 @@ public class User
         {
             Id = Id,
             Username = otpRequest.Username,
-            Normalized_Username = otpRequest.Username.ToUpper(),
-            Password_Hash = otpRequest.Password_Hash,
+            NormalizedUsername = otpRequest.Username.ToUpper(),
+            PasswordHash = otpRequest.PasswordHash,
             Phone = otpRequest.Phone,
-            Created_On = Created_On,
-            Last_Login = DateTime.UtcNow,
-            Is_Phone_Confirmed = true,
-            Is_Anonymous = false,
-            FCM_Token = !string.IsNullOrEmpty(otpRequest.FCM_Token) ? otpRequest.FCM_Token : FCM_Token
+            CreatedAt = CreatedAt,
+            LastLogin = DateTime.UtcNow,
+            IsPhoneConfirmed = true,
+            IsAnonymous = false,
+            FCMToken = !string.IsNullOrEmpty(otpRequest.FCMToken) ? otpRequest.FCMToken : FCMToken
         };
     }
 }

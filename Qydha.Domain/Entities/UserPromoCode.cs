@@ -1,14 +1,29 @@
 ﻿namespace Qydha.Domain.Entities;
-
+[Table("user_promo_codes")]
 public class UserPromoCode
 {
+    [Key]
+    [Column("id")]
     public Guid Id { get; set; }
+
+    [Column("code")]
     public string Code { get; set; } = null!;
-    public int Number_Of_Days { get; set; }
-    public DateTime Created_At { get; set; }
-    public DateTime Expire_At { get; set; }
-    public Guid User_Id { get; set; }
-    public DateTime? Used_At { get; set; }
+
+    [Column("number_of_days")]
+    public int NumberOfDays { get; set; }
+
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }
+
+    [Column("expire_at")]
+    public DateTime ExpireAt { get; set; }
+
+    [Column("user_id")]
+    public Guid UserId { get; set; }
+
+    [Column("used_at")]
+    public DateTime? UsedAt { get; set; }
+
 
     public UserPromoCode()
     {
@@ -16,11 +31,11 @@ public class UserPromoCode
     }
     public UserPromoCode(Guid userId, string code, int numberOfDays, DateTime expireAt)
     {
-        User_Id = userId;
+        UserId = userId;
         Code = code;
-        Number_Of_Days = numberOfDays;
-        Expire_At = expireAt;
-        Created_At = DateTime.UtcNow;
-        Used_At = null;
+        NumberOfDays = numberOfDays;
+        ExpireAt = expireAt;
+        CreatedAt = DateTime.UtcNow;
+        UsedAt = null;
     }
 }

@@ -1,7 +1,6 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IPhoneAuthenticationRequestRepo
+public interface IPhoneAuthenticationRequestRepo : IGenericRepository<PhoneAuthenticationRequest>
 {
-    Task<Result<PhoneAuthenticationRequest>> AddAsync(PhoneAuthenticationRequest phoneAuthenticationRequest);
-    Task<Result<PhoneAuthenticationRequest>> GetByIdAsync(Guid id);
+
 }

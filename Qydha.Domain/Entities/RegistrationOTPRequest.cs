@@ -1,27 +1,37 @@
 ﻿namespace Qydha.Domain.Entities;
 
+[Table("registration_otp_request")]
 public class RegistrationOTPRequest
 {
+    [Key]
+    [Column("id")]
     public Guid Id { get; set; }
+    [Column("username")]
     public string Username { get; set; } = string.Empty;
-    public string Password_Hash { get; set; } = string.Empty;
+    [Column("password_hash")]
+    public string PasswordHash { get; set; } = string.Empty;
+    [Column("phone")]
     public string Phone { get; set; } = string.Empty;
+    [Column("otp")]
     public string OTP { get; set; } = string.Empty;
-    public DateTime Created_On { get; set; } = DateTime.UtcNow;
-    public Guid? User_Id { get; set; }
-    public string? FCM_Token { get; set; }
+    [Column("created_on")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    [Column("user_id")]
+    public Guid? UserId { get; set; }
+    [Column("fcm_token")]
+    public string? FCMToken { get; set; }
 
     public RegistrationOTPRequest()
     {
-        
+
     }
     public RegistrationOTPRequest(string username, string phone, string passwordHash, string otp, Guid? userId, string? fcmToken)
     {
         Username = username;
         Phone = phone;
-        Password_Hash = passwordHash;
+        PasswordHash = passwordHash;
         OTP = otp;
-        User_Id = userId is not null ? userId : null;
-        FCM_Token = fcmToken;
+        UserId = userId is not null ? userId : null;
+        FCMToken = fcmToken;
     }
 }

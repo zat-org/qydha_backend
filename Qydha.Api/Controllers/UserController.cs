@@ -227,7 +227,7 @@ public class UserController : ControllerBase
             var dto = new UpdateUserDto()
             {
                 Name = user.Name ?? string.Empty,
-                BirthDate = user.Birth_Date ?? null
+                BirthDate = user.BirthDate ?? null
             };
             updateUserDtoPatch.ApplyTo(dto);
             var validator = new UpdateUserDtoValidator();
@@ -242,7 +242,7 @@ public class UserController : ControllerBase
             }
 
             user.Name = dto.Name;
-            user.Birth_Date = dto.BirthDate;
+            user.BirthDate = dto.BirthDate;
             return Result.Ok(user);
         })
         .OnSuccessAsync<User>(async (user) => await _userService.UpdateUser(user))

@@ -59,11 +59,18 @@ public class MailingService : IMailingService
         }
     }
 
-    public string GenerateConfirmEmailBody(string otp, string requestId, User user)
+    public async Task<string> GenerateConfirmEmailBody(string otp, string requestId, User user)
     {
-        var mailText = _mailSettings.ConfirmEmailTemplate;
-        mailText = mailText.Replace("[code]", otp);
-        return mailText;
+        string fileName = "confirmEmailCode.html";
+        string path = Path.Combine(Environment.CurrentDirectory, @"Templates", fileName);
+        StreamReader streamReader = new(path);
+        string mailText = await streamReader.ReadToEndAsync();
+        streamReader.Close();
+        string styledOtp = string.Join("", otp.Split("").Select((d) =>
+        {
+            return $"<span class='character'>{d}</span>";
+        }));
+        return mailText.Replace("[code]", otp);
     }
 
 }

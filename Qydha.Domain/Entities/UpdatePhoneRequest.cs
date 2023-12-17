@@ -1,12 +1,22 @@
 ﻿namespace Qydha.Domain.Entities;
-
+[Table("update_phone_requests")]
 public class UpdatePhoneRequest
 {
+    [Key]
+    [Column("id")]
     public Guid Id { get; set; }
+
+    [Column("phone")]
     public string Phone { get; set; } = string.Empty;
+
+    [Column("otp")]
     public string OTP { get; set; } = string.Empty;
-    public DateTime Created_On { get; set; } = DateTime.UtcNow;
-    public Guid User_Id { get; set; }
+
+    [Column("created_on")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [Column("user_id")]
+    public Guid UserId { get; set; }
 
     public UpdatePhoneRequest()
     {
@@ -16,7 +26,7 @@ public class UpdatePhoneRequest
     {
         Phone = phone;
         OTP = otp;
-        User_Id = user_id;
-        Created_On = DateTime.UtcNow;
+        UserId = user_id;
+        CreatedAt = DateTime.UtcNow;
     }
 }

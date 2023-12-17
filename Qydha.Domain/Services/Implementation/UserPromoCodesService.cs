@@ -12,7 +12,7 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INoti
     {
         Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
         return getUserRes
-        .OnSuccessAsync(async (user) => await _userPromoCodesRepo.AddAsync(new UserPromoCode(userId, code, numberOfDays, expireAt)))
+        .OnSuccessAsync(async (user) => await _userPromoCodesRepo.AddAsync<Guid>(new UserPromoCode(userId, code, numberOfDays, expireAt)))
         .OnSuccessAsync<UserPromoCode>(async (promo) =>
             (await _notificationService.SendToUser(Notification.CreatePromoCodeNotification(promo))).MapTo(promo)
         );
@@ -20,27 +20,27 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INoti
 
     public async Task<Result<User>> UsePromoCode(Guid userId, Guid promoId)
     {
-        Result<UserPromoCode> getPromoRes = await _userPromoCodesRepo.GetByIdAsync(promoId);
+        Result<UserPromoCode> getPromoRes = await _userPromoCodesRepo.GetByUniquePropAsync(nameof(UserPromoCode.Id), promoId);
         return getPromoRes.OnSuccessAsync(async (promo) =>
-               (await _userRepo.GetByIdAsync(promo.User_Id))
+               (await _userRepo.GetByIdAsync(promo.UserId))
                .MapTo(user => new Tuple<User, UserPromoCode>(user, promo)))
        .OnSuccess<Tuple<User, UserPromoCode>>((tuple) =>
        {
            UserPromoCode promo = tuple.Item2;
-           if (userId != promo.User_Id)
+           if (userId != promo.UserId)
                return Result.Fail<Tuple<User, UserPromoCode>>(new()
                {
                    Code = ErrorCodes.AuthenticatedUserDoesNotOwnThisPromoCode,
                    Message = "Authenticated User does not own this Promo Code "
                });
-           if (promo.Used_At is not null)
+           if (promo.UsedAt is not null)
                return Result.Fail<Tuple<User, UserPromoCode>>(new()
                {
                    Code = ErrorCodes.PromoCodeAlreadyUsed,
-                   Message = $"Promo Code Already Used before at : {promo.Used_At.Value.ToShortDateString()}"
+                   Message = $"Promo Code Already Used before at : {promo.UsedAt.Value.ToShortDateString()}"
                });
 
-           if (promo.Expire_At.Date < DateTime.UtcNow.Date)
+           if (promo.ExpireAt.Date < DateTime.UtcNow.Date)
                return Result.Fail<Tuple<User, UserPromoCode>>(new()
                {
                    Code = ErrorCodes.PromoCodeExpired,
@@ -49,8 +49,8 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INoti
            return Result.Ok(tuple);
        })
        .OnSuccessAsync(async (tuple) => await _purchaseService.AddPromoCodePurchase(tuple.Item2))
-       .OnSuccessAsync<UserPromoCode>(async promo => (await _userPromoCodesRepo.PatchById(promo.Id, "Used_At", DateTime.UtcNow)).MapTo(promo))
-       .OnSuccessAsync(async (promo) => await _userRepo.GetByIdAsync(promo.User_Id));
+       .OnSuccessAsync<UserPromoCode>(async promo => (await _userPromoCodesRepo.PatchById(promo.Id, nameof(UserPromoCode.UsedAt), DateTime.UtcNow)).MapTo(promo))
+       .OnSuccessAsync(async (promo) => await _userRepo.GetByIdAsync(promo.UserId));
     }
 
     public async Task<Result<IEnumerable<UserPromoCode>>> GetUserPromoCodes(Guid userId)

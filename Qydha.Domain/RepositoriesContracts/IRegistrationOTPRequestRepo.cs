@@ -1,7 +1,6 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IRegistrationOTPRequestRepo
+public interface IRegistrationOTPRequestRepo : IGenericRepository<RegistrationOTPRequest>
 {
-    Task<Result<RegistrationOTPRequest>> AddAsync(RegistrationOTPRequest registrationOTPRequest);
-    Task<Result<RegistrationOTPRequest>> GetByIdAsync(Guid id);
+
 }

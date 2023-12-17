@@ -1,6 +1,5 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IPurchaseRepo
+public interface IPurchaseRepo : IGenericRepository<Purchase>
 {
-    Task<Result<Purchase>> AddAsync(Purchase purchase);
 }

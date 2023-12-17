@@ -16,8 +16,8 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
             Data = new
             {
                 code = InfCode.Code,
-                expireAt = InfCode.Expire_At,
-                numberOfDays = InfCode.Number_Of_Days
+                expireAt = InfCode.ExpireAt,
+                numberOfDays = InfCode.NumberOfDays
             },
             message = "Influencer Code Added Successfully."
         }), BadRequest);

@@ -1,129 +1,81 @@
 ﻿namespace Qydha.Infrastructure.Repositories;
-public class NotificationRepo : INotificationRepo
+public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRepo> logger) : GenericRepository<Notification>(dbConnection, logger), INotificationRepo
 {
-    private readonly IDbConnection _dbConnection;
-
-    public NotificationRepo(IDbConnection dbConnection)
+    public async Task<Result> DeleteByIdAndUserIdAsync(Guid userId, int notificationId)
     {
-        _dbConnection = dbConnection;
-    }
-    private const string TableName = "Notification";
-
-    private string DbColumns(HashSet<string> ExcludedProps)
-    {
-        return string.Join(", ", typeof(Notification).GetProperties()
-                .Where((p) => !ExcludedProps.Contains(p.Name))
-                .Select(p => p.Name));
-    }
-    private string DbValues(HashSet<string> ExcludedProps)
-    {
-        return string.Join(", ", typeof(Notification).GetProperties()
-                .Where((p) => !ExcludedProps.Contains(p.Name))
-                .Select(p => $"@{p.Name}"));
-    }
-
-    public async Task<Result<Notification>> AddAsync(Notification notification)
-    {
-        HashSet<string> excludedProps = new() { "Notification_Id" };
-        var sql = @$"INSERT INTO {TableName} ({DbColumns(excludedProps)}) VALUES ( {DbValues(excludedProps)}) RETURNING Notification_Id;";
-        var notificationId = await _dbConnection.QuerySingleAsync<int>(sql, notification);
-        notification.Notification_Id = notificationId;
-        return Result.Ok(notification);
-    }
-
-    public async Task<Result> DeleteByIdAsync(Guid userId, int id)
-    {
-        var sql = @$"DELETE FROM {TableName} WHERE Notification_Id = @Id And User_Id = @userId;";
-        var effectedRows = await _dbConnection.ExecuteAsync(sql, new { Id = id, userId });
-        return effectedRows == 1 ?
-            Result.Ok() :
-            Result.Fail(new() { Code = ErrorCodes.NotificationNotFound, Message = "Notification Not Found" });
+        string colName = GetColumnName(nameof(Notification.UserId));
+        string criteria = $"{colName} = @userId";
+        return await DeleteByIdAsync(notificationId, criteria, new { userId });
     }
 
     public async Task<Result<int>> DeleteAllByUserIdAsync(Guid userId)
     {
-        var sql = @$"DELETE FROM {TableName} WHERE user_id = @UserId;";
-        var effectedRows = await _dbConnection.ExecuteAsync(sql, new { UserId = userId });
-        return Result.Ok(effectedRows);
+        try
+        {
+            var sql = @$"DELETE FROM {GetTableName()} WHERE user_id = @UserId;";
+            var effectedRows = await _dbConnection.ExecuteAsync(sql, new { UserId = userId });
+            return Result.Ok(effectedRows);
+        }
+        catch (Exception exp)
+        {
+            return Result.Fail<int>(new() { Code = ErrorCodes.ServerErrorOnDB, Message = exp.Message });
+        }
     }
 
-    public async Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, Func<Notification, bool> filterCriteria, int pageSize = 10, int pageNumber = 1)
+    public async Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null)
     {
-        var parameters = new DynamicParameters();
-        parameters.Add("@userId", userId);
-        parameters.Add("@limit", pageSize);
-        parameters.Add("@offset", (pageNumber - 1) * pageSize);
-        var sql = @$"
-                    SELECT * FROM {TableName} 
-                    WHERE user_id = @userId 
-                    order by created_at desc 
-                    LIMIT @limit OFFSET @offset ;
-                    ";
-        var notifications = await _dbConnection.QueryAsync<Notification>(sql, parameters);
-        return Result.Ok(notifications.Where(filterCriteria));
-    }
-
-    public async Task<Result> PatchById<T>(Guid userId, int id, string propName, T propValue)
-    {
-        var parameters = new DynamicParameters();
-        parameters.Add("@id", id);
-        parameters.Add("@userId", userId);
-        parameters.Add($"@{propName}", propValue);
-        var sql = @$"UPDATE {TableName} 
-                     SET {propName} = @{propName}
-                     WHERE Notification_Id = @id And User_Id = @userId ;";
-        var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
-        return effectedRows == 1 ?
-            Result.Ok() :
-            Result.Fail(new() { Code = ErrorCodes.NotificationNotFound, Message = "Notification Not Found" });
+        string isReadCondition = isRead switch
+        {
+            null => "",
+            true => $"AND {GetColumnName(nameof(Notification.ReadAt))} is not null",
+            false => $"AND {GetColumnName(nameof(Notification.ReadAt))} is null"
+        };
+        return (await GetAllAsync(
+                @$"{GetColumnName(nameof(Notification.UserId))} = @userId 
+                    {isReadCondition} ",
+                new { userId }, pageSize, pageNumber, $" {GetColumnName(nameof(Notification.CreatedAt))} Desc "))
+                .OnSuccess<IEnumerable<Notification>>((notifications) =>
+                {
+                    notifications = notifications.OrderByDescending(n => n.CreatedAt);
+                    return Result.Ok(notifications);
+                });
     }
 
     public Task<Result> MarkNotificationAsRead(Guid userId, int notificationId)
     {
-        return PatchById(userId, notificationId, "Read_At", DateTime.UtcNow);
+        string colName = GetColumnName(nameof(Notification.UserId));
+        string criteria = $"{colName} = @userId";
+        return PatchById(notificationId, nameof(Notification.ReadAt), DateTime.UtcNow, criteria, new { userId });
     }
 
-    public async Task<Result<int>> AddToUsersWithCriteria(Notification notification, string filteringCriteria = "")
+    public async Task<Result<int>> AddToUsersWithCriteria(Notification notification, string filteringCriteria = "", object? filterParams = null)
     {
-        filteringCriteria = string.IsNullOrEmpty(filteringCriteria) ? string.Empty : $" Where  {filteringCriteria}";
-        var sql = @$"
-        INSERT INTO {TableName} (User_Id, Title, Description, Read_At, Created_At, Action_Path, Action_Type)
-            SELECT
-            Users.Id , @Title, @Description, @Read_At, @Created_At, @Action_Path, @Action_Type
-            FROM Users {filteringCriteria};";
+        var parameters = new DynamicParameters(notification);
+        if (filterParams is not null)
+            parameters.AddDynamicParams(filterParams);
 
-        var effectedRows = await _dbConnection.ExecuteAsync(sql, notification);
+        string criteria = string.IsNullOrWhiteSpace(filteringCriteria) ? "" : $" WHERE  {filteringCriteria}";
+        var sql = @$"
+        INSERT INTO {GetTableName()} (User_Id, Title, Description, Read_At, Created_At, Action_Path, Action_Type)
+            SELECT Users.Id , @Title, @Description, @Read_At, @Created_At, @Action_Path, @Action_Type
+            FROM Users {criteria} ;";
+        _logger.LogInformation(sql);
+        var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
         return Result.Ok(effectedRows);
     }
 
     public async Task<Result<int>> AddToUsersWithByIds(Notification notification, IEnumerable<Guid> ids)
     {
-        var parameters = new DynamicParameters();
-        HashSet<string> excludedProps = new() { "Notification_Id" };
-        var columns = DbColumns(excludedProps);
-        excludedProps.Add("User_id");
-        var valuesArr = new List<string>();
-
-        foreach (var prop in typeof(Notification).GetProperties()
-                .Where((p) => !excludedProps.Contains(p.Name)))
-        {
-            parameters.Add($"@{prop.Name}", prop.GetValue(notification));
-            valuesArr.Add($"@{prop.Name}");
-        }
-
-        var values = string.Join(" , ", valuesArr);
+        var parameters = new DynamicParameters(notification);
         parameters.Add("@Ids", ids);
-
         var sql = @$"
-        INSERT INTO {TableName} ({columns})
+        INSERT INTO {GetTableName()} (User_Id, Title, Description, Read_At, Created_At, Action_Path, Action_Type)
             SELECT
             Users.Id ,
-            {values}
-            FROM Users WHERE users.Id IN (@Ids);";
-        var effectedRows = await _dbConnection.ExecuteAsync(sql, notification);
+            Users.Id , @Title, @Description, @Read_At, @Created_At, @Action_Path, @Action_Type
+            FROM Users WHERE users.Id IN ( @Ids );";
+        _logger.LogInformation(sql);
+        var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
         return Result.Ok(effectedRows);
     }
-
-
 }
-

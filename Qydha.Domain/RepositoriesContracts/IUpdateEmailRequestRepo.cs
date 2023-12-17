@@ -1,7 +1,6 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IUpdateEmailRequestRepo
+public interface IUpdateEmailRequestRepo : IGenericRepository<UpdateEmailRequest>
 {
-    Task<Result<UpdateEmailRequest>> AddAsync(UpdateEmailRequest updateEmailRequest);
-    Task<Result<UpdateEmailRequest>> GetByIdAsync(Guid id);
+
 }

@@ -1,15 +1,24 @@
 ﻿namespace Qydha.Domain.Entities;
-
+[Table("notification")]
 public class Notification
 {
-    public int Notification_Id { get; set; }
-    public Guid User_Id { get; set; }
+    [Key]
+    [Column("notification_id")]
+    public int Id { get; set; }
+    [Column("user_id")]
+    public Guid UserId { get; set; }
+    [Column("title")]
     public string Title { get; set; } = string.Empty;
+    [Column("description")]
     public string Description { get; set; } = string.Empty;
-    public DateTime? Read_At { get; set; }
-    public DateTime Created_At { get; set; } = DateTime.UtcNow;
-    public string Action_Path { get; set; } = string.Empty; 
-    public NotificationActionType Action_Type { get; set; } = NotificationActionType.NoAction;
+    [Column("read_at")]
+    public DateTime? ReadAt { get; set; }
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    [Column("action_path")]
+    public string ActionPath { get; set; } = string.Empty;
+    [Column("action_type")]
+    public NotificationActionType ActionType { get; set; } = NotificationActionType.NoAction;
 
     public static Notification CreateRegisterNotification(User user)
     {
@@ -17,9 +26,9 @@ public class Notification
         {
             Title = "مرحبا بك في تطبيق قيدها",
             Description = "يمكنك الان الاستمتاع بجميع مميزات الاشتراك الذهبى مجانا ولمدة شهر كامل. سارع بالانضمام الان.",
-            Action_Path = "",
-            Action_Type = NotificationActionType.NoAction,
-            User_Id = user.Id
+            ActionPath = "",
+            ActionType = NotificationActionType.NoAction,
+            UserId = user.Id
         };
     }
     public static Notification CreatePurchaseNotification(Purchase p)
@@ -28,9 +37,9 @@ public class Notification
         {
             Title = "شكراً لاشتراكك في قيدها",
             Description = "نتمنى لك تجربة رائعة",
-            Action_Path = "",
-            Action_Type = NotificationActionType.NoAction,
-            User_Id = p.User_Id
+            ActionPath = "",
+            ActionType = NotificationActionType.NoAction,
+            UserId = p.UserId
         };
     }
     public static Notification CreatePromoCodeNotification(UserPromoCode promo)
@@ -38,10 +47,10 @@ public class Notification
         return new Notification()
         {
             Title = "وصلتك هدية !!",
-            Description = "شيك على التذاكر في قسم المتجر🎉",
-            Action_Path = "",
-            Action_Type = NotificationActionType.NoAction,
-            User_Id = promo.User_Id
+            Description = "شيك على التذاكر في قسم المتجر 🎉",
+            ActionPath = "",
+            ActionType = NotificationActionType.NoAction,
+            UserId = promo.UserId
         };
     }
 

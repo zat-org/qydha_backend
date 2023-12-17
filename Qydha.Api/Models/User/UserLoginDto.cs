@@ -2,9 +2,10 @@
 
 public class UserLoginDto
 {
+    
     public string Username { get; set; } = null!;
     public string Password { get; set; } = null!;
-    public string? FCMToken { get; set; }
+    public string? FCM_Token { get; set; }
 
 }
 public class UserLoginDtoValidator : AbstractValidator<UserLoginDto>
@@ -30,9 +31,9 @@ public class UserLoginDtoValidator : AbstractValidator<UserLoginDto>
         .Matches(@"^(?=.*[a-zA-Z])(?=.*\d).{6,}$")
         .WithMessage(msg);
 
-        When(r => r.FCMToken is not null, () =>
+        When(r => r.FCM_Token is not null, () =>
         {
-            RuleFor(r => r.FCMToken).FCM_Token("FCM_Token");
+            RuleFor(r => r.FCM_Token).FCM_Token("FCM_Token");
         });
     }
 }

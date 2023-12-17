@@ -1,8 +1,6 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IUpdatePhoneOTPRequestRepo
+public interface IUpdatePhoneOTPRequestRepo : IGenericRepository<UpdatePhoneRequest>
 {
-    Task<Result<UpdatePhoneRequest>> AddAsync(UpdatePhoneRequest updatePhoneRequest);
-    Task<Result<UpdatePhoneRequest>> GetByIdAsync(Guid id);
 
 }

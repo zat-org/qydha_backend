@@ -25,8 +25,8 @@ public class AuthService : IAuthService
 
     public async Task<Result<Tuple<User, string>>> LoginAsAnonymousAsync()
     {
-        var user = User.CreateAnonymousUser();
-        return (await _userRepo.AddAsync(user))
+        User user = User.CreateAnonymousUser();
+        return (await _userRepo.AddAsync<Guid>(user))
             .OnSuccess((user) =>
             {
                 return Result.Ok<Tuple<User, string>>(new(user, _tokenManager.Generate(user.GetClaims())));
@@ -36,7 +36,7 @@ public class AuthService : IAuthService
     public async Task<Result<Tuple<User, string>>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId)
     {
 
-        return (await _registrationOTPRequestRepo.GetByIdAsync(requestId))
+        return (await _registrationOTPRequestRepo.GetByUniquePropAsync(nameof(RegistrationOTPRequest.Id), requestId))
         .OnSuccess<RegistrationOTPRequest>(otp_request =>
         {
             if (otp_request.OTP != otpCode)
@@ -46,7 +46,7 @@ public class AuthService : IAuthService
                     Message = "Invalid OTP."
                 });
 
-            if (!_otpManager.IsOtpValid(otp_request.Created_On))
+            if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                 return Result.Fail<RegistrationOTPRequest>(new()
                 {
                     Code = ErrorCodes.OTPExceededTimeLimit,
@@ -101,7 +101,8 @@ public class AuthService : IAuthService
         .OnSuccessAsync(async (otp) =>
         {
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-            return await _registrationOTPRequestRepo.AddAsync(new(username, phone, passwordHash, otp, userId, fcmToken));
+            RegistrationOTPRequest registrationOTP = new(username, phone, passwordHash, otp, userId, fcmToken);
+            return await _registrationOTPRequestRepo.AddAsync<Guid>(registrationOTP);
         });
     }
 
@@ -112,12 +113,12 @@ public class AuthService : IAuthService
     private async Task<Result<User>> SaveUserFromRegistrationOTPRequest(RegistrationOTPRequest otpRequest)
     {
         Result<User> saveUserRes;
-        if (otpRequest.User_Id.HasValue)
-            saveUserRes = (await _userRepo.GetByIdAsync(otpRequest.User_Id.Value))
+        if (otpRequest.UserId.HasValue)
+            saveUserRes = (await _userRepo.GetByIdAsync(otpRequest.UserId.Value))
                                 .OnSuccess<User>((user) => Result.Ok(user.UpdateUserFromRegisterRequest(otpRequest)))
                                 .OnSuccessAsync<User>(async (user) => await _userRepo.PutByIdAsync(user));
         else
-            saveUserRes = await _userRepo.AddAsync(User.CreateUserFromRegisterRequest(otpRequest));
+            saveUserRes = await _userRepo.AddAsync<Guid>(User.CreateUserFromRegisterRequest(otpRequest));
 
         return saveUserRes.OnSuccessAsync<User>(async (user) =>
             {
@@ -135,13 +136,13 @@ public class AuthService : IAuthService
            return (await _messageService.SendAsync(user.Phone!, otp)).MapTo(new Tuple<User, string>(user, otp));
        })
        .OnSuccessAsync(async (tuple) =>
-           await _phoneAuthenticationRequestRepo.AddAsync(new PhoneAuthenticationRequest(tuple.Item1.Phone!, tuple.Item2))
+           await _phoneAuthenticationRequestRepo.AddAsync<Guid>(new PhoneAuthenticationRequest(tuple.Item1.Phone!, tuple.Item2))
        );
     }
 
-    public async Task<Result<Tuple<User, string>>> ConfirmPhoneAuthentication(Guid requestId, string otpCode)
+    public async Task<Result<Tuple<User, string>>> ConfirmPhoneAuthentication(Guid requestId, string otpCode, string? fcmToken)
     {
-        return (await _phoneAuthenticationRequestRepo.GetByIdAsync(requestId))
+        return (await _phoneAuthenticationRequestRepo.GetByUniquePropAsync(nameof(PhoneAuthenticationRequest.Id), requestId))
         .OnSuccess<PhoneAuthenticationRequest>((otp_request) =>
         {
             if (otp_request.Otp != otpCode)
@@ -151,7 +152,7 @@ public class AuthService : IAuthService
                     Message = "Invalid OTP."
                 });
 
-            if (!_otpManager.IsOtpValid(otp_request.Created_On))
+            if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                 return Result.Fail<PhoneAuthenticationRequest>(new()
                 {
                     Code = ErrorCodes.OTPExceededTimeLimit,
@@ -160,6 +161,12 @@ public class AuthService : IAuthService
             return Result.Ok(otp_request);
         })
         .OnSuccessAsync(async (request) => await _userRepo.GetByPhoneAsync(request.Phone))
+        .OnSuccessAsync<User>(async (user) =>
+        {
+            if (!string.IsNullOrWhiteSpace(fcmToken))
+                return (await _userRepo.UpdateUserFCMToken(user.Id, fcmToken)).MapTo(user);
+            return Result.Ok(user);
+        })
         .OnSuccess((user) => Result.Ok(new Tuple<User, string>(user, _tokenManager.Generate(user.GetClaims()))));
     }
 }

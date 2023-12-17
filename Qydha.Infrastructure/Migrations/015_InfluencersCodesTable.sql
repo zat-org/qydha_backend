@@ -4,5 +4,5 @@ CREATE TABLE InfluencerCodes (
     normalized_code VARCHAR(100) UNIQUE NOT NULL,
     created_at TIMESTAMP NOT NULL, 
     expire_at TIMESTAMP , 
-    number_of_days INT NOT NULL,
+    number_of_days INT NOT NULL
 );

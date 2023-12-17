@@ -1,12 +1,20 @@
 ﻿namespace Qydha.Domain.Entities;
 
+[Table("update_email_requests")]
 public class UpdateEmailRequest
 {
+    [Key]
+    [Column("id")]
     public Guid Id { get; set; }
+    [Column("email")]
     public string Email { get; set; } = string.Empty;
+    [Column("otp")]
     public string OTP { get; set; } = string.Empty;
-    public DateTime Created_On { get; set; } = DateTime.UtcNow;
-    public Guid User_Id { get; set; }
+    [Column("created_on")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    [Column("user_id")]
+    public Guid UserId { get; set; }
+
     public UpdateEmailRequest()
     {
 
@@ -16,7 +24,7 @@ public class UpdateEmailRequest
         Id = id;
         Email = email;
         OTP = otp;
-        User_Id = userId;
-        Created_On = DateTime.UtcNow;
+        UserId = userId;
+        CreatedAt = DateTime.UtcNow;
     }
 }

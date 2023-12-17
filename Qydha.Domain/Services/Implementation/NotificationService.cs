@@ -20,16 +20,16 @@ public class NotificationService : INotificationService
 
     public async Task<Result<User>> SendToUser(Notification notification)
     {
-        Result<User> getUserRes = await _userRepo.GetByIdAsync(notification.User_Id);
+        Result<User> getUserRes = await _userRepo.GetByIdAsync(notification.UserId); 
         return getUserRes.OnSuccessAsync<User>(async (user) => await SendToUser(user, notification));
     }
     public async Task<Result<User>> SendToUser(User user, Notification notification)
     {
-        return (await _notificationRepo.AddAsync(notification))
+        return (await _notificationRepo.AddAsync<int>(notification))
         .OnSuccessAsync(async () =>
         {
 
-            (await _pushNotificationService.SendToToken(user.FCM_Token, notification.Title, notification.Description))
+            (await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description))
             .OnFailure((result) =>
             {
                 //! Handle Error in send push notification to User with fcm;
@@ -57,13 +57,13 @@ public class NotificationService : INotificationService
 
     public async Task<Result<int>> SendToGroupOfUsers(Notification notification, Func<User, bool> criteriaFunc)
     {
-        return (await _userRepo.GetAsync(criteriaFunc))
+        return (await _userRepo.GetAllAsync())
         .OnSuccessAsync(async (users) =>
-            (await _notificationRepo.AddToUsersWithByIds(notification, users.Select(u => u.Id)))
+            (await _notificationRepo.AddToUsersWithByIds(notification, users.Where(criteriaFunc).Select(u => u.Id)))
                 .MapTo<int, Tuple<IEnumerable<User>, int>>((effected) => new(users, effected)))
         .OnSuccessAsync(async (tuple) =>
         {
-            (await _pushNotificationService.SendToTokens(tuple.Item1.Select(u => u.FCM_Token), notification.Title, notification.Description))
+            (await _pushNotificationService.SendToTokens(tuple.Item1.Where(criteriaFunc).Select(u => u.FCMToken), notification.Title, notification.Description))
             .OnFailure((result) =>
             {
                 //! TODO Handle Error In Send Tokens
@@ -77,25 +77,10 @@ public class NotificationService : INotificationService
         await _notificationRepo.MarkNotificationAsRead(userId, notificationId);
 
     public async Task<Result> DeleteNotification(Guid userId, int notificationId) =>
-        await _notificationRepo.DeleteByIdAsync(userId, notificationId);
+        await _notificationRepo.DeleteByIdAndUserIdAsync(userId, notificationId);
     public async Task<Result> DeleteAll(Guid userId) =>
         await _notificationRepo.DeleteAllByUserIdAsync(userId);
-    public async Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null)
-    {
-        bool filter(Notification n)
-        {
-            switch (isRead)
-            {
-                case null:
-                    return true;
-                case true:
-                    return n.Read_At is not null;
-                case false:
-                    return n.Read_At is null;
-            }
-        }
-        return await _notificationRepo.GetAllNotificationsOfUserById(userId, filter, pageSize, pageNumber);
-    }
-
+    public async Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null) =>
+        await _notificationRepo.GetAllNotificationsOfUserById(userId, pageSize, pageNumber, isRead);
 
 }

@@ -20,10 +20,10 @@ public class NotificationController : ControllerBase
         {
             Title = notification_request.Title!,
             Description = notification_request.Description!,
-            Action_Path = notification_request.Action_Path!,
-            Action_Type = notification_request.Action_Type,
-            Created_At = DateTime.Now,
-            User_Id = notification_request.UserId
+            ActionPath = notification_request.Action_Path!,
+            ActionType = notification_request.Action_Type,
+            CreatedAt = DateTime.Now,
+            UserId = notification_request.UserId
         }))
         .Handle<User, IActionResult>((user) =>
             Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" })
@@ -40,9 +40,9 @@ public class NotificationController : ControllerBase
         {
             Title = dto.Title!,
             Description = dto.Description!,
-            Action_Path = dto.Action_Path!,
-            Action_Type = dto.Action_Type,
-            Created_At = DateTime.Now,
+            ActionPath = dto.Action_Path!,
+            ActionType = dto.Action_Type,
+            CreatedAt = DateTime.Now,
         }))
         .Handle<int, IActionResult>((effected) => Ok(new { Message = $"notification sent to : {effected} users " }), BadRequest);
 

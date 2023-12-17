@@ -41,47 +41,40 @@ public class PurchaseService : IPurchaseService
         {
             Purchase purchase = new()
             {
-                IAPHub_Purchase_Id = purchaseId,
-                User_Id = tuple.Item1.Id,
+                IAPHubPurchaseId = purchaseId,
+                UserId = tuple.Item1.Id,
                 Type = "purchase",
-                Purchase_Date = created_at,
+                PurchaseDate = created_at,
                 ProductSku = productSku,
-                Number_Of_Days = tuple.Item2
+                NumberOfDays = tuple.Item2
             };
-            return await _purchaseRepo.AddAsync(purchase);
+            return await _purchaseRepo.AddAsync<Guid>(purchase);
         })
-        .OnSuccessAsync(async (purchase) => await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)));
+        .OnSuccessAsync(async (purchase) =>
+            await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)));
     }
 
-    public async Task<Result<User>> SubscribeInFree(Guid userId, InfluencerCode? influencerCode)
+    public async Task<Result<User>> SubscribeInFree(Guid userId)
     {
         return (await _userRepo.GetByIdAsync(userId))
         .OnSuccessAsync(async (user) =>
         {
-            if (user.Free_Subscription_Used >= _subscriptionSetting.FreeSubscriptionsAllowed)
+            if (user.FreeSubscriptionUsed >= _subscriptionSetting.FreeSubscriptionsAllowed)
                 return Result.Fail<Purchase>(new()
                 {
                     Code = ErrorCodes.FreeSubscriptionUsedExceededTheAllowedNumber,
                     Message = "Free Subscription Used by user Exceeded The Allowed Number"
                 });
-
-            if (influencerCode is not null && influencerCode.Expire_At is not null && influencerCode.Expire_At > DateTime.UtcNow)
-                return Result.Fail<Purchase>(new()
-                {
-                    Code = ErrorCodes.InfluencerCodeExpired,
-                    Message = "Influencer Code Expired"
-                });
-
             var purchase = new Purchase()
             {
-                IAPHub_Purchase_Id = Guid.NewGuid().ToString(),
-                User_Id = userId,
+                IAPHubPurchaseId = Guid.NewGuid().ToString(),
+                UserId = userId,
                 Type = "free_30",
-                Purchase_Date = DateTime.Now,
-                ProductSku = influencerCode is null ? "" : influencerCode.Normalized_Code,
-                Number_Of_Days = influencerCode is null ? _subscriptionSetting.NumberOfDaysInOneSubscription : influencerCode.Number_Of_Days
+                PurchaseDate = DateTime.Now,
+                ProductSku = "free_30",
+                NumberOfDays = _subscriptionSetting.NumberOfDaysInOneSubscription
             };
-            return await _purchaseRepo.AddAsync(purchase);
+            return await _purchaseRepo.AddAsync<Guid>(purchase);
         })
         .OnSuccessAsync(async (purchase) =>
             await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)));
@@ -91,15 +84,16 @@ public class PurchaseService : IPurchaseService
     {
         Purchase purchase = new()
         {
-            IAPHub_Purchase_Id = promoCode.Id.ToString(),
-            User_Id = promoCode.User_Id,
+            IAPHubPurchaseId = promoCode.Id.ToString(),
+            UserId = promoCode.UserId,
             Type = "promo_code",
-            Purchase_Date = DateTime.UtcNow,
+            PurchaseDate = DateTime.UtcNow,
             ProductSku = promoCode.Code,
-            Number_Of_Days = promoCode.Number_Of_Days
+            NumberOfDays = promoCode.NumberOfDays
         };
-        return (await _purchaseRepo.AddAsync(purchase))
+        return (await _purchaseRepo.AddAsync<Guid>(purchase))
                 .OnSuccessAsync(async (purchase) => await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)))
                 .MapTo(promoCode);
     }
+
 }
