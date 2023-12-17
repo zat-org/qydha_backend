@@ -53,11 +53,11 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
         var parameters = new DynamicParameters(notification);
         if (filterParams is not null)
             parameters.AddDynamicParams(filterParams);
-
+        
         string criteria = string.IsNullOrWhiteSpace(filteringCriteria) ? "" : $" WHERE  {filteringCriteria}";
         var sql = @$"
-        INSERT INTO {GetTableName()} (User_Id, Title, Description, Read_At, Created_At, Action_Path, Action_Type)
-            SELECT Users.Id , @Title, @Description, @Read_At, @Created_At, @Action_Path, @Action_Type
+        INSERT INTO {GetTableName()} (User_Id, Title, Description,  Created_At, Action_Path, Action_Type)
+            SELECT Users.Id , @Title, @Description, @CreatedAt, @ActionPath, @ActionType
             FROM Users {criteria} ;";
         _logger.LogInformation(sql);
         var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
@@ -69,10 +69,10 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
         var parameters = new DynamicParameters(notification);
         parameters.Add("@Ids", ids);
         var sql = @$"
-        INSERT INTO {GetTableName()} (User_Id, Title, Description, Read_At, Created_At, Action_Path, Action_Type)
+        INSERT INTO {GetTableName()} (User_Id, Title, Description, Created_At, Action_Path, Action_Type)
             SELECT
             Users.Id ,
-            Users.Id , @Title, @Description, @Read_At, @Created_At, @Action_Path, @Action_Type
+            Users.Id , @Title, @Description, @CreatedAt, @ActionPath, @ActionType
             FROM Users WHERE users.Id IN ( @Ids );";
         _logger.LogInformation(sql);
         var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
