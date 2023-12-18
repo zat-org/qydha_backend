@@ -39,6 +39,23 @@ public class UserController : ControllerBase
         );
     }
 
+    [HttpGet("is-username-available")]
+    public async Task<IActionResult> IsUserNameAvailable([FromBody] string username)
+    {
+        return (await _userService.IsUserNameAvailable(username))
+        .Handle<IActionResult>(
+            () =>
+            {
+                return Ok(new
+                {
+                    data = new { IsAvailable = true },
+                    message = "usernames is available."
+                });
+            },
+            BadRequest
+        );
+    }
+
     #endregion
 
     #region update user
@@ -256,8 +273,6 @@ public class UserController : ControllerBase
             });
         }, BadRequest);
     }
-
-
 
     #endregion
 

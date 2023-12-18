@@ -178,18 +178,19 @@ builder.Services.AddScoped<IInfluencerCodesService, InfluencerCodesService>();
 #endregion
 
 #region Add Cors
-// string MyAllowSpecificOrigins = "_MyAllowSpecificOrigins";
+string MyAllowSpecificOrigins = "_MyAllowSpecificOrigins";
 
-// builder.Services.AddCors(options =>
-// {
-//     options.AddPolicy(name: MyAllowSpecificOrigins, builder =>
-//     {
-//         builder.WithOrigins("http://localhost:5173")
-//         .AllowAnyMethod()
-//         .AllowAnyHeader()
-//         .AllowCredentials();
-//     });
-// });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins, builder =>
+    {
+        builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+    });
+});
 #endregion
 
 
@@ -202,7 +203,7 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
     app.UseSwaggerUI();
 }
 
-// app.UseCors(MyAllowSpecificOrigins);
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseStaticFiles();
 
@@ -216,9 +217,9 @@ app.MapControllers();
 var configSec = app.Configuration.GetSection("AdminCredentials");
 
 var variables = new Dictionary<string, string>(){
-    {"password",BCrypt.Net.BCrypt.HashPassword(configSec["password"] ?? "") },
-    {"username",configSec["username"] ?? ""},
-    {"capitalUsername" , (configSec["username"] ?? "").ToUpper()}
+    {"password",BCrypt.Net.BCrypt.HashPassword(configSec["password"] ?? "admin@123") },
+    {"username",configSec["username"] ?? "admin"},
+    {"capitalUsername" , (configSec["username"] ?? "admin").ToUpper()}
 };
 
 if (connectionString is not null)

@@ -3,7 +3,7 @@ public interface IUserService
 {
 
     Task<Result<User>> GetUserById(Guid userId);
-
+    Task<Result> IsUserNameAvailable(string username);
     Task<Result<User>> UpdateUser(User user);
 
     Task<Result<User>> UpdateUserPassword(Guid userId, string oldPassword, string newPassword);

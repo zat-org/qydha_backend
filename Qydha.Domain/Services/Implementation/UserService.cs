@@ -32,6 +32,8 @@ public class UserService : IUserService
 
     #region Get User 
     public async Task<Result<User>> GetUserById(Guid userId) => await _userRepo.GetByIdAsync(userId);
+    public async Task<Result> IsUserNameAvailable(string username) => await _userRepo.IsUsernameAvailable(username);
+
 
     #endregion
 

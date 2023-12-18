@@ -21,8 +21,8 @@ public class DbMigrator
         if (!result.Successful)
         {
             // Handle migration failure (e.g., log error, throw exception)
-            Console.WriteLine("Database migration failed:");
-            Console.WriteLine(result.Error);
+            // Console.WriteLine("Database migration failed:");
+            // Console.WriteLine(result.Error);
             throw new Exception("Database migration failed.");
         }
         else
