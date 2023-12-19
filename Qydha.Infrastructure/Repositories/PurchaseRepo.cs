@@ -24,7 +24,7 @@ public class PurchaseRepo(IDbConnection dbConnection, ILogger<PurchaseRepo> logg
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail<int>(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }

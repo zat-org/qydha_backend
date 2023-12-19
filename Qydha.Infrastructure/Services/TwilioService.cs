@@ -22,7 +22,7 @@ public class SMSService : IMessageService
         {
             return Result.Fail(new()
             {
-                Code = ErrorCodes.OTPSendingError,
+                Code = ErrorType.OTPPhoneSendingError,
                 Message = $"can't send the SMS using Twilio with code =  {result.ErrorCode} , and Message = {result.ErrorMessage}"
             });
         }

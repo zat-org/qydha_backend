@@ -20,7 +20,11 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
     {
         Result<User> getUserRes = await GetByUsernameAsync(username);
         if (getUserRes.IsSuccess && ((userId is null) || (userId is not null && getUserRes.Value.Id != userId)))
-            return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "اسم المستخدم موجود بالفعل" });
+            return Result.Fail(new Error
+            {
+                Code = ErrorType.DbUniqueViolation,
+                Message = "اسم المستخدم موجود بالفعل"
+            });
         return Result.Ok();
     }
 
@@ -28,7 +32,11 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
     {
         Result<User> getUserRes = await GetByPhoneAsync(phone);
         if (getUserRes.IsSuccess)
-            return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "رقم الجوال موجود بالفعل" });
+            return Result.Fail(new Error
+            {
+                Code = ErrorType.DbUniqueViolation,
+                Message = "رقم الجوال موجود بالفعل"
+            });
         return Result.Ok();
     }
 
@@ -36,7 +44,11 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
     {
         Result<User> getUserRes = await GetByEmailAsync(email);
         if (getUserRes.IsSuccess && ((userId is null) || (userId is not null && getUserRes.Value.Id != userId)))
-            return Result.Fail(new Error { Code = ErrorCodes.DbUniqueViolation, Message = "البريد الالكتروني موجود بالفعل." });
+            return Result.Fail(new Error
+            {
+                Code = ErrorType.DbUniqueViolation,
+                Message = "البريد الالكتروني موجود بالفعل."
+            });
         return Result.Ok();
     }
 
@@ -92,7 +104,11 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
         return getUserRes.OnSuccess<User>((user) =>
         {
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<User>(new() { Code = ErrorCodes.InvalidCredentials, Message = "incorrect password" });
+                return Result.Fail<User>(new()
+                {
+                    Code = ErrorType.InvalidCredentials,
+                    Message = "incorrect password"
+                });
             return Result.Ok(user);
         });
     }
@@ -103,7 +119,11 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
         return getUserRes.OnSuccess<User>((user) =>
         {
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<User>(new() { Code = ErrorCodes.InvalidCredentials, Message = "incorrect password" });
+                return Result.Fail<User>(new()
+                {
+                    Code = ErrorType.InvalidCredentials,
+                    Message = "incorrect password"
+                });
             return Result.Ok(user);
         });
     }

@@ -53,7 +53,7 @@ public class MailingService : IMailingService
         {
             return Result.Fail(new()
             {
-                Code = ErrorCodes.EmailSendingError,
+                Code = ErrorType.OTPEmailSendingError,
                 Message = $"can't send the email using mailKit with message : {e.Message}"
             });
         }

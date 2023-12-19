@@ -18,7 +18,11 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
         }
         catch (Exception exp)
         {
-            return Result.Fail<int>(new() { Code = ErrorCodes.ServerErrorOnDB, Message = exp.Message });
+            return Result.Fail<int>(new()
+            {
+                Code = ErrorType.ServerErrorOnDB,
+                Message = exp.Message
+            });
         }
     }
 

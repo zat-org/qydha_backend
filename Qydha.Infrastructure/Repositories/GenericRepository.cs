@@ -1,12 +1,25 @@
-﻿
-namespace Qydha.Infrastructure.Repositories;
+﻿namespace Qydha.Infrastructure.Repositories;
 
-public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRepository<T>> logger) : IGenericRepository<T> where T : class
+public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
-    protected readonly IDbConnection _dbConnection = dbConnection;
-    protected readonly ILogger<GenericRepository<T>> _logger = logger;
+    protected readonly IDbConnection _dbConnection;
+    protected readonly ILogger<GenericRepository<T>> _logger;
+    protected readonly Type _type;
+    protected readonly ErrorType _notFoundError;
 
-    protected readonly Type _type = typeof(T);
+
+    public GenericRepository(IDbConnection dbConnection, ILogger<GenericRepository<T>> logger)
+    {
+        _dbConnection = dbConnection;
+        _logger = logger;
+        _type = typeof(T);
+        NotFoundErrorAttribute? notFoundErrorAttribute = _type.GetCustomAttribute<NotFoundErrorAttribute>();
+        if (notFoundErrorAttribute is not null)
+            _notFoundError = notFoundErrorAttribute.NotFoundErrorType;
+        else
+            _notFoundError = ErrorType.EntityNotFound;
+
+    }
 
     #region handle reflection of entities
     protected static string GetTableName()
@@ -114,7 +127,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail<T>(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }
@@ -135,8 +148,8 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
                 Result.Ok() :
                 Result.Fail(new()
                 {
-                    Code = ErrorCodes.NotFound,
-                    Message = "Entity not found"
+                    Code = _notFoundError,
+                    Message = $"{_notFoundError} :: Entity not found"
                 });
         }
         catch (Exception exp)
@@ -144,7 +157,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }
@@ -166,7 +179,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail<IEnumerable<T>>(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }
@@ -193,7 +206,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail<IEnumerable<T>>(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }
@@ -222,7 +235,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail<IEnumerable<T>>(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }
@@ -253,8 +266,8 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             if (entity is null)
                 return Result.Fail<T>(new()
                 {
-                    Code = ErrorCodes.NotFound,
-                    Message = "Entity Not Found"
+                    Code = _notFoundError,
+                    Message = $"{_notFoundError} :: Entity not found"
                 });
             return Result.Ok(entity);
         }
@@ -263,7 +276,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail<T>(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }
@@ -283,8 +296,8 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
                 Result.Ok(entity) :
                 Result.Fail<T>(new Error
                 {
-                    Code = ErrorCodes.NotFound,
-                    Message = "Entity not Found"
+                    Code = _notFoundError,
+                    Message = $"{_notFoundError} :: Entity not found"
                 });
         }
         catch (Exception exp)
@@ -292,7 +305,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail<T>(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }
@@ -337,8 +350,8 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
                Result.Ok() :
                Result.Fail(new Error
                {
-                   Code = ErrorCodes.NotFound,
-                   Message = "Entity not Found"
+                   Code = _notFoundError,
+                   Message = $"{_notFoundError} :: Entity not found"
                });
         }
         catch (Exception exp)
@@ -346,7 +359,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }
@@ -381,8 +394,8 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
               Result.Ok() :
               Result.Fail(new()
               {
-                  Code = ErrorCodes.NotFound,
-                  Message = "Entity not Found"
+                  Code = _notFoundError,
+                  Message = $"{_notFoundError} :: Entity not found"
               });
         }
         catch (Exception exp)
@@ -390,7 +403,7 @@ public class GenericRepository<T>(IDbConnection dbConnection, ILogger<GenericRep
             _logger.LogError(exp, $"error from db : {exp.Message} ");
             return Result.Fail<T>(new()
             {
-                Code = ErrorCodes.ServerErrorOnDB,
+                Code = ErrorType.ServerErrorOnDB,
                 Message = exp.Message
             });
         }

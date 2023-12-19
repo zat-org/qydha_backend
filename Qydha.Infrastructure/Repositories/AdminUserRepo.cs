@@ -17,7 +17,7 @@ public class AdminUserRepo(IDbConnection dbConnection, ILogger<AdminUserRepo> lo
         if (getUserRes.IsSuccess && ((userId is null) || (userId is not null && getUserRes.Value.Id != userId)))
             return Result.Fail(new()
             {
-                Code = ErrorCodes.DbUniqueViolation,
+                Code = ErrorType.DbUniqueViolation,
                 Message = "اسم المستخدم موجود بالفعل"
             });
         return Result.Ok();
@@ -49,7 +49,7 @@ public class AdminUserRepo(IDbConnection dbConnection, ILogger<AdminUserRepo> lo
         return getUserRes.OnSuccess<AdminUser>((user) =>
         {
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<AdminUser>(new() { Code = ErrorCodes.InvalidCredentials, Message = "incorrect password" });
+                return Result.Fail<AdminUser>(new() { Code = ErrorType.InvalidCredentials, Message = "incorrect password" });
             return Result.Ok(user);
         });
     }
@@ -60,7 +60,7 @@ public class AdminUserRepo(IDbConnection dbConnection, ILogger<AdminUserRepo> lo
         return getUserRes.OnSuccess<AdminUser>((user) =>
         {
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<AdminUser>(new() { Code = ErrorCodes.InvalidCredentials, Message = "incorrect password" });
+                return Result.Fail<AdminUser>(new() { Code = ErrorType.InvalidCredentials, Message = "incorrect password" });
             return Result.Ok(user);
         });
     }

@@ -65,7 +65,7 @@ public class WhatsAppService : IMessageService
             return Result.Fail(
                 new()
                 {
-                    Code = ErrorCodes.OTPSendingError,
+                    Code = ErrorType.OTPPhoneSendingError,
                     Message = $"Failure From WhatsApp Service with status Code = {response.StatusCode} and content =  {response.Content.ToString() ?? "unknown Error from whatsapp."} "
                 }
             );

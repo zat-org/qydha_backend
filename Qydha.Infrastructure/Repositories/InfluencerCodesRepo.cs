@@ -14,7 +14,7 @@ public class InfluencerCodesRepo(IDbConnection dbConnection, ILogger<InfluencerC
         if (getCodeRes.IsSuccess)
             return Result.Fail(new()
             {
-                Code = ErrorCodes.DbUniqueViolation,
+                Code = ErrorType.DbUniqueViolation,
                 Message = "هذا الكود موجود بالفعل"
             });
         return Result.Ok();

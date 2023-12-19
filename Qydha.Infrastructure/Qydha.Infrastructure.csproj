@@ -22,7 +22,6 @@
     <PackageReference Include="dbup-postgresql" Version="5.0.37" />
     <PackageReference Include="FirebaseAdmin" Version="2.4.0" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.7.0" />
-    <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
     <PackageReference Include="MailKit" Version="4.3.0" />
     <PackageReference Include="MimeKit" Version="4.3.0" />
     <PackageReference Include="Npgsql" Version="8.0.0" />

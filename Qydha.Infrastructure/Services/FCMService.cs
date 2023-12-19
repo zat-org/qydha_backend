@@ -7,7 +7,11 @@ public class FCMService : IPushNotificationService
     public async Task<Result> SendToToken(string userToken, string title, string body)
     {
         if (string.IsNullOrEmpty(userToken))
-            return Result.Fail(new() { Code = ErrorCodes.InvalidFCMToken, Message = $" Invalid FCM Token Value : '{userToken}' " });
+            return Result.Fail(new()
+            {
+                Code = ErrorType.InvalidFCMToken,
+                Message = $" Invalid FCM Token Value : '{userToken}' "
+            });
         var msg = new Message()
         {
             Token = userToken,
@@ -28,7 +32,7 @@ public class FCMService : IPushNotificationService
             return Result.Fail(
                 new()
                 {
-                    Code = exp.ErrorCode.ToString(),
+                    Code = ErrorType.FcmMessagingException,
                     Message = $"Error [FirebaseMessagingException] In Sending Push Notification to user , Message = {exp.Message} , Code = {exp.ErrorCode} , Messaging Error Code = {exp.MessagingErrorCode}"
                 }
             );
@@ -38,7 +42,7 @@ public class FCMService : IPushNotificationService
             return Result.Fail(
                 new()
                 {
-                    Code = exp.Message,
+                    Code = ErrorType.FcmRegularException,
                     Message = $"Error [Exception] In Sending Push Notification to user , Message = {exp.Message} , with FCM Token Value = {userToken}"
                 }
             );
@@ -48,7 +52,11 @@ public class FCMService : IPushNotificationService
     public async Task<Result> SendToTopic(string topicName, string title, string body)
     {
         if (string.IsNullOrEmpty(topicName))
-            return Result.Fail(new() { Code = ErrorCodes.InvalidTopicName, Message = $" Invalid Topic Name Value : '{topicName}' " });
+            return Result.Fail(new()
+            {
+                Code = ErrorType.InvalidTopicName,
+                Message = $" Invalid Topic Name Value : '{topicName}' "
+            });
         var msg = new Message()
         {
             Topic = topicName,
@@ -70,7 +78,7 @@ public class FCMService : IPushNotificationService
             return Result.Fail(
                 new()
                 {
-                    Code = exp.ErrorCode.ToString(),
+                    Code = ErrorType.FcmMessagingException,
                     Message = $"Error [FirebaseMessagingException] In Sending Push Notification to topic , Message = {exp.Message} , Code = {exp.ErrorCode} , Messaging Error Code = {exp.MessagingErrorCode} , with Topic Name Value = '{topicName}'"
                 }
             );
@@ -80,7 +88,7 @@ public class FCMService : IPushNotificationService
             return Result.Fail(
                 new()
                 {
-                    Code = exp.Message,
+                    Code = ErrorType.FcmRegularException,
                     Message = $"Error [exception] In Sending Push Notification to user , Message = {exp.Message} , with Topic Name Value = '{topicName}'"
                 }
             );
@@ -90,7 +98,11 @@ public class FCMService : IPushNotificationService
     public async Task<Result> SendToTokens(IEnumerable<string> tokens, string title, string body)
     {
         if (tokens.Count() > 0)
-            return Result.Fail(new() { Code = ErrorCodes.InvalidTokensArray, Message = $" Invalid Tokens Array  : '{tokens}' " });
+            return Result.Fail(new()
+            {
+                Code = ErrorType.InvalidFCMTokensArray,
+                Message = $" Invalid Tokens Array  : '{tokens}' "
+            });
 
         var msg = new MulticastMessage()
         {
@@ -112,7 +124,7 @@ public class FCMService : IPushNotificationService
             return Result.Fail(
                 new()
                 {
-                    Code = exp.ErrorCode.ToString(),
+                    Code = ErrorType.FcmMessagingException,
                     Message = $"Error [FirebaseMessagingException] In Sending Push Notification to Tokens , Message = {exp.Message} , Code = {exp.ErrorCode} , Messaging Error Code = {exp.MessagingErrorCode}"
                 });
         }
@@ -121,7 +133,7 @@ public class FCMService : IPushNotificationService
             return Result.Fail(
                 new()
                 {
-                    Code = exp.Message,
+                    Code = ErrorType.FcmRegularException,
                     Message = $"Error [Exception] In Sending Push Notification to user , Message = {exp.Message}"
                 }
             );

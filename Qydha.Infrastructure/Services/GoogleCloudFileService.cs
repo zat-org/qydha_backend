@@ -22,7 +22,7 @@ public class GoogleCloudFileService : IFileService
         {
             return Result.Fail(new Error()
             {
-                Code = ErrorCodes.FileDeleteError,
+                Code = ErrorType.FileDeleteError,
                 Message = $"Google Cloud File ERROR : Can't Delete File , with message : {e.Message}"
             });
         }
@@ -51,7 +51,7 @@ public class GoogleCloudFileService : IFileService
         {
             return Result.Fail<FileData>(new()
             {
-                Code = ErrorCodes.FileUploadError,
+                Code = ErrorType.FileUploadError,
                 Message = $"Google Cloud File ERROR : Can't Upload File , With Message = {e.Message}"
             });
         }
