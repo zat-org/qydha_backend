@@ -1,5 +1,8 @@
 ﻿namespace Qydha.Domain.Entities;
+
 [Table("update_phone_requests")]
+[NotFoundError(ErrorType.UpdatePhoneRequestNotFound)]
+
 public class UpdatePhoneRequest
 {
     [Key]

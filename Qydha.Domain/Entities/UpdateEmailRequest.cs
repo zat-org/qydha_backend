@@ -1,6 +1,7 @@
 ﻿namespace Qydha.Domain.Entities;
 
 [Table("update_email_requests")]
+[NotFoundError(ErrorType.UpdateEmailRequestNotFound)]
 public class UpdateEmailRequest
 {
     [Key]

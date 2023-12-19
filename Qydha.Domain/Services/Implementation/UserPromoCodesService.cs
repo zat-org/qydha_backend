@@ -30,20 +30,20 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INoti
            if (userId != promo.UserId)
                return Result.Fail<Tuple<User, UserPromoCode>>(new()
                {
-                   Code = ErrorCodes.AuthenticatedUserDoesNotOwnThisPromoCode,
+                   Code = ErrorType.UserDoesNotOwnThePromoCode,
                    Message = "Authenticated User does not own this Promo Code "
                });
            if (promo.UsedAt is not null)
                return Result.Fail<Tuple<User, UserPromoCode>>(new()
                {
-                   Code = ErrorCodes.PromoCodeAlreadyUsed,
+                   Code = ErrorType.PromoCodeAlreadyUsed,
                    Message = $"Promo Code Already Used before at : {promo.UsedAt.Value.ToShortDateString()}"
                });
 
            if (promo.ExpireAt.Date < DateTime.UtcNow.Date)
                return Result.Fail<Tuple<User, UserPromoCode>>(new()
                {
-                   Code = ErrorCodes.PromoCodeExpired,
+                   Code = ErrorType.PromoCodeExpired,
                    Message = "Promo Code Expired"
                });
            return Result.Ok(tuple);

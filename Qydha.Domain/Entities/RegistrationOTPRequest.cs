@@ -1,6 +1,8 @@
 ﻿namespace Qydha.Domain.Entities;
 
 [Table("registration_otp_request")]
+[NotFoundError(ErrorType.RegistrationOTPRequestNotFound)]
+
 public class RegistrationOTPRequest
 {
     [Key]

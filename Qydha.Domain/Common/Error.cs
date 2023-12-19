@@ -1,8 +1,9 @@
-﻿namespace Qydha.Domain.Common;
+﻿
+namespace Qydha.Domain.Common;
 
 public class Error
 {
-    public string Code { get; set; } = ErrorCodes.UnknownError;
+    public ErrorType Code { get; set; } = ErrorType.UnknownServerError;
     public string Message { get; set; } = string.Empty;
     public override string ToString()
     {

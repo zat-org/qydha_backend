@@ -20,7 +20,7 @@ public class ExceptionHandlerAttribute : ExceptionFilterAttribute
         var res = new ObjectResult(new Error()
         {
             Message = Exception.Message,
-            Code = ErrorCodes.ServerError
+            Code = ErrorType.UnknownServerError
         })
         {
             StatusCode = 500

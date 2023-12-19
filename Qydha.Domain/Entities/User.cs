@@ -1,5 +1,6 @@
 ﻿namespace Qydha.Domain.Entities;
 [Table("users")]
+[NotFoundError(ErrorType.UserNotFound)]
 public class User
 {
     [Key]

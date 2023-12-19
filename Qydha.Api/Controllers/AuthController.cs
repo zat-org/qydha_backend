@@ -79,9 +79,9 @@ public class AuthController : ControllerBase
                     message = "Logged in successfully."
                 });
             },
-            (result) => BadRequest(new
+            (result) => BadRequest(new Error()
             {
-                Code = ErrorCodes.InvalidCredentials,
+                Code = ErrorType.InvalidCredentials,
                 Message = "اسم المستخدم او كلمة السر غير صحيحة"
             })
         );

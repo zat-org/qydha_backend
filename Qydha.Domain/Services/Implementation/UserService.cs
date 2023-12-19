@@ -64,21 +64,21 @@ public class UserService : IUserService
             if (tuple.Item1.IsAnonymous)
                 return Result.Fail<User>(new()
                 {
-                    Code = ErrorCodes.InvalidOperationOnAnonymousUser,
+                    Code = ErrorType.InvalidActionByAnonymousUser,
                     Message = "Invalid Operation On Anonymous User"
                 });
 
             if (tuple.Item1.Phone != tuple.Item2.Phone)
                 return Result.Fail<User>(new()
                 {
-                    Code = ErrorCodes.InvalidForgetPasswordRequest,
+                    Code = ErrorType.InvalidForgetPasswordRequest,
                     Message = "User phone is not the same in the phone login request"
                 });
 
             if (tuple.Item2.CreatedAt.AddDays(1) < DateTime.UtcNow)
                 return Result.Fail<User>(new()
                 {
-                    Code = ErrorCodes.ForgetPasswordRequestExceedTime,
+                    Code = ErrorType.ForgetPasswordRequestExceedTime,
                     Message = "Forget Password Request Exceed Time of 1 Day"
                 });
 
@@ -125,15 +125,15 @@ public class UserService : IUserService
                 if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                     return Result.Fail<UpdatePhoneRequest>(new()
                     {
-                        Code = ErrorCodes.OTPExceededTimeLimit,
+                        Code = ErrorType.OTPExceededTimeLimit,
                         Message = "OTP Exceed Time Limit"
                     });
 
                 if (otp_request.OTP != code || otp_request.UserId != userId)
                     return Result.Fail<UpdatePhoneRequest>(new()
                     {
-                        Code = ErrorCodes.InvalidOTP,
-                        Message = "Invalid OTP."
+                        Code = ErrorType.IncorrectOTP,
+                        Message = "Incorrect OTP."
                     });
 
                 return Result.Ok(otp_request);
@@ -167,15 +167,15 @@ public class UserService : IUserService
             if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                 return Result.Fail<UpdateEmailRequest>(new()
                 {
-                    Code = ErrorCodes.OTPExceededTimeLimit,
+                    Code = ErrorType.OTPExceededTimeLimit,
                     Message = "OTP Exceed Time Limit"
                 });
 
             if (otp_request.OTP != code || otp_request.UserId != userId)
                 return Result.Fail<UpdateEmailRequest>(new()
                 {
-                    Code = ErrorCodes.InvalidOTP,
-                    Message = "Invalid OTP."
+                    Code = ErrorType.IncorrectOTP,
+                    Message = "Incorrect OTP."
                 });
 
             return Result.Ok(otp_request);
@@ -214,7 +214,7 @@ public class UserService : IUserService
                         _logger.LogError(err.ToString());
                         return new()
                         {
-                            Code = ErrorCodes.FileUploadError,
+                            Code = ErrorType.FileUploadError,
                             Message = "حدث عطل اثناء حفظ الصورة برجاء المحاولة مرة اخري"
                         };
                     });
@@ -236,7 +236,7 @@ public class UserService : IUserService
         .OnSuccess<User>((user) =>
         {
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<User>(new() { Code = ErrorCodes.InvalidCredentials, Message = "incorrect password" });
+                return Result.Fail<User>(new() { Code = ErrorType.InvalidCredentials, Message = "incorrect password" });
             return Result.Ok(user);
         })
         .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteByIdAsync(user.Id)).MapTo(user))
@@ -263,7 +263,7 @@ public class UserService : IUserService
             if (!user.IsAnonymous)
                 return Result.Fail<User>(new()
                 {
-                    Code = ErrorCodes.InvalidDeleteOnRegularUser,
+                    Code = ErrorType.InvalidActionByRegularUser,
                     Message = "Can't Delete that Regular User"
                 });
             return Result.Ok(user);

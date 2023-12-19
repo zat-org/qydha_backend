@@ -16,10 +16,10 @@ public class ValidatorResultFactory : IFluentValidationAutoValidationResultFacto
             });
         });
 
-        return new BadRequestObjectResult(new
+        return new BadRequestObjectResult(new Error()
         {
-            code = ErrorCodes.InvalidBodyInput,
-            message = string.Join(" ;", errors!)
+            Code = ErrorType.InvalidBodyInput,
+            Message = string.Join(" ;", errors!)
         });
     }
 }

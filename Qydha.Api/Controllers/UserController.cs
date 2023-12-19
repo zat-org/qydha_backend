@@ -197,10 +197,10 @@ public class UserController : ControllerBase
 
         if (!validationRes.IsValid)
         {
-            return BadRequest(new
+            return BadRequest(new Error()
             {
-                code = ErrorCodes.InvalidBodyInput,
-                message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
+                Code = ErrorType.InvalidBodyInput,
+                Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
             });
         }
 
@@ -238,7 +238,7 @@ public class UserController : ControllerBase
             if (updateUserDtoPatch is null)
                 return Result.Fail<User>(new()
                 {
-                    Code = ErrorCodes.InvalidBodyInput,
+                    Code = ErrorType.InvalidBodyInput,
                     Message = ".لا يوجد بيانات لتحديثها"
                 });
             var dto = new UpdateUserDto()
@@ -253,7 +253,7 @@ public class UserController : ControllerBase
             {
                 return Result.Fail<User>(new()
                 {
-                    Code = ErrorCodes.InvalidBodyInput,
+                    Code = ErrorType.InvalidBodyInput,
                     Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
                 });
             }

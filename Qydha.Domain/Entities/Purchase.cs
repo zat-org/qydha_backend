@@ -1,6 +1,8 @@
 ﻿namespace Qydha.Domain.Entities;
 
 [Table("purchases")]
+[NotFoundError(ErrorType.PurchaseNotFound)]
+
 public class Purchase
 {
     [Key]

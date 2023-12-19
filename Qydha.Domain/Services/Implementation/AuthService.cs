@@ -42,14 +42,14 @@ public class AuthService : IAuthService
             if (otp_request.OTP != otpCode)
                 return Result.Fail<RegistrationOTPRequest>(new()
                 {
-                    Code = ErrorCodes.InvalidOTP,
-                    Message = "Invalid OTP."
+                    Code = ErrorType.IncorrectOTP,
+                    Message = "InCorrect OTP."
                 });
 
             if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                 return Result.Fail<RegistrationOTPRequest>(new()
                 {
-                    Code = ErrorCodes.OTPExceededTimeLimit,
+                    Code = ErrorType.OTPExceededTimeLimit,
                     Message = "OTP Exceed Time Limit"
                 });
             return Result.Ok(otp_request);
@@ -148,14 +148,14 @@ public class AuthService : IAuthService
             if (otp_request.Otp != otpCode)
                 return Result.Fail<PhoneAuthenticationRequest>(new()
                 {
-                    Code = ErrorCodes.InvalidOTP,
-                    Message = "Invalid OTP."
+                    Code = ErrorType.IncorrectOTP,
+                    Message = "InCorrect OTP."
                 });
 
             if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                 return Result.Fail<PhoneAuthenticationRequest>(new()
                 {
-                    Code = ErrorCodes.OTPExceededTimeLimit,
+                    Code = ErrorType.OTPExceededTimeLimit,
                     Message = "OTP Exceed Time Limit"
                 });
             return Result.Ok(otp_request);

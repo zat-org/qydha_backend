@@ -2,6 +2,8 @@
 namespace Qydha.Domain.Entities;
 
 [Table("Admins")]
+[NotFoundError(ErrorType.AdminUserNotFound)]
+
 public class AdminUser
 {
     [Key]

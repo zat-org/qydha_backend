@@ -10,7 +10,7 @@ global using Qydha.Domain.Enums;
 global using Qydha.Domain.Common;
 global using Qydha.Domain.Settings;
 global using Qydha.Domain.Services.Contracts;
-// global using LanguageExt.Common;
+global using Qydha.Domain.Attributes;
 global using Microsoft.Extensions.Logging;
 
 global using System.ComponentModel.DataAnnotations;

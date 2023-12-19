@@ -1,6 +1,7 @@
 
 using System.Globalization;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Converters;
 
 
 FirebaseApp.Create(new AppOptions()
@@ -17,7 +18,10 @@ builder.Services.AddControllers((options) =>
 {
     options.Filters.Add<ExceptionHandlerAttribute>();
     options.Filters.Add<AuthorizationFilter>();
-}).AddNewtonsoftJson();
+}).AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.Converters.Add(new StringEnumConverter());
+});
 
 #region fluent validation
 builder.Services.AddValidatorsFromAssemblyContaining<NotificationSendDtoValidator>();

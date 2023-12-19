@@ -23,7 +23,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
             if (influencerCode.ExpireAt > DateTime.UtcNow)
                 return Result.Fail<InfluencerCode>(new()
                 {
-                    Code = ErrorCodes.InfluencerCodeExpired,
+                    Code = ErrorType.InfluencerCodeExpired,
                     Message = "Influencer Code Expired"
                 });
             return Result.Ok(influencerCode);
@@ -36,7 +36,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
                 if (num > 0)
                     return Result.Fail<InfluencerCode>(new()
                     {
-                        Code = ErrorCodes.InfluencerCodeAlreadyUsed,
+                        Code = ErrorType.InfluencerCodeAlreadyUsed,
                         Message = "Influencer Code Used Before"
                     });
                 return Result.Ok(influencerCode);

@@ -1,6 +1,8 @@
 ﻿namespace Qydha.Domain.Entities;
 
 [Table("phone_authentication_requests")]
+[NotFoundError(ErrorType.PhoneAuthenticationRequestNotFound)]
+
 public class PhoneAuthenticationRequest
 {
     [Key]

@@ -14,9 +14,9 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
         #region AuthN
         if (ctx.HttpContext.User.Identity is null || !ctx.HttpContext.User.Identity.IsAuthenticated)
         {
-            ctx.Result = new UnauthorizedObjectResult(new
+            ctx.Result = new UnauthorizedObjectResult(new Error()
             {
-                Code = ErrorCodes.InvalidToken,
+                Code = ErrorType.InvalidAuthToken,
                 Message = "Invalid Token"
             });
             return;
@@ -25,9 +25,9 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
         var userIdStr = ctx.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
         if (userIdStr is null || !Guid.TryParse(userIdStr, out Guid userId))
         {
-            ctx.Result = new UnauthorizedObjectResult(new
+            ctx.Result = new UnauthorizedObjectResult(new Error()
             {
-                Code = ErrorCodes.InvalidToken,
+                Code = ErrorType.InvalidAuthToken,
                 Message = "Invalid Token User ID"
             });
             return;

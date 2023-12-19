@@ -1,5 +1,7 @@
 namespace Qydha.Domain.Entities;
 [Table("InfluencerCodes")]
+[NotFoundError(ErrorType.InfluencerCodeNotFound)]
+
 public class InfluencerCode
 {
     [Key]

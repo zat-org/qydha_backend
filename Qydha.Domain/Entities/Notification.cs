@@ -1,5 +1,7 @@
 ﻿namespace Qydha.Domain.Entities;
 [Table("notification")]
+[NotFoundError(ErrorType.NotificationNotFound)]
+
 public class Notification
 {
     [Key]

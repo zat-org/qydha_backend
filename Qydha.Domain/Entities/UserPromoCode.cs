@@ -1,5 +1,6 @@
 ﻿namespace Qydha.Domain.Entities;
 [Table("user_promo_codes")]
+[NotFoundError(ErrorType.UserPromoCodeNotFound)]
 public class UserPromoCode
 {
     [Key]

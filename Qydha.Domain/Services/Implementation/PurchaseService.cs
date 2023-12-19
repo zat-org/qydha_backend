@@ -31,7 +31,7 @@ public class PurchaseService : IPurchaseService
             {
                 return Result.Fail<Tuple<User, int>>(new()
                 {
-                    Code = ErrorCodes.InvalidProductSku,
+                    Code = ErrorType.InvalidProductSku,
                     Message = $"Invalid ProductSku : '{productSku}' from Purchase with Id :{purchaseId}"
                 });
             }
@@ -62,7 +62,7 @@ public class PurchaseService : IPurchaseService
             if (user.FreeSubscriptionUsed >= _subscriptionSetting.FreeSubscriptionsAllowed)
                 return Result.Fail<Purchase>(new()
                 {
-                    Code = ErrorCodes.FreeSubscriptionUsedExceededTheAllowedNumber,
+                    Code = ErrorType.FreeSubscriptionExceededTheLimit,
                     Message = "Free Subscription Used by user Exceeded The Allowed Number"
                 });
             var purchase = new Purchase()

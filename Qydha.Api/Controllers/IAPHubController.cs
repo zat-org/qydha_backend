@@ -18,9 +18,9 @@ public class IAPHubController : ControllerBase
     public async Task<IActionResult> IApHubWebHook([FromBody] WebHookDto webHookDto)
     {
         if (!Request.Headers.TryGetValue("x-auth-token", out var authToken))
-            return Unauthorized(new { Error = new Error() { Code = ErrorCodes.InvalidIAPHupToken, Message = "x-auth-token header is Missing" } });
+            return Unauthorized(new { Error = new Error() { Code = ErrorType.InvalidIAPHupToken, Message = "x-auth-token header is Missing" } });
         string tokenValue = authToken.ToString();
-        if (tokenValue != _iAPHubSettings.XAuthToken) return Unauthorized(new { Error = new Error() { Code = ErrorCodes.InvalidIAPHupToken, Message = "x-auth-token header is wrong." } });
+        if (tokenValue != _iAPHubSettings.XAuthToken) return Unauthorized(new { Error = new Error() { Code = ErrorType.InvalidIAPHupToken, Message = "x-auth-token header is wrong." } });
 
         switch (webHookDto.Type)
         {
