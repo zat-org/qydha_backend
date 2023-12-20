@@ -5,7 +5,7 @@ public class UserRegisterDTO
     public string Username { get; set; } = null!;
     public string Password { get; set; } = null!;
     public string Phone { get; set; } = null!;
-    public string? FCM_Token { get; set; }
+    public string? FCMToken { get; set; }
 
 }
 public class UserRegisterDTOValidator : AbstractValidator<UserRegisterDTO>
@@ -15,9 +15,9 @@ public class UserRegisterDTOValidator : AbstractValidator<UserRegisterDTO>
         RuleFor(r => r.Username).Username("اسم المتسخدم");
         RuleFor(r => r.Password).Password("كلمة المرور");
         RuleFor(r => r.Phone).Phone("رقم الجوال");
-        When(r => r.FCM_Token is not null, () =>
+        When(r => r.FCMToken is not null, () =>
         {
-            RuleFor(r => r.FCM_Token).FCM_Token("FCM_Token");
+            RuleFor(r => r.FCMToken).FCM_Token("FCM_Token");
         });
     }
 }

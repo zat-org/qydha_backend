@@ -2,7 +2,7 @@
 
 public interface IGenericRepository<T>
 {
-    Task<Result<T>> AddAsync<IdT>(T entity);
+    Task<Result<T>> AddAsync<IdT>(T entity, bool excludeKey = true);
     Task<Result> DeleteByIdAsync<IdT>(IdT entityId, string filterCriteria = "", object? filterParams = null);
     Task<Result<IEnumerable<T>>> GetAllAsync();
     Task<Result<IEnumerable<T>>> GetAllAsync(string filterCriteria, object parameters, string orderCriteria = "");

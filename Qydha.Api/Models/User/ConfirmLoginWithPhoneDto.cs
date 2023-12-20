@@ -4,7 +4,7 @@ public class ConfirmLoginWithPhoneDto
 {
     public string Code { get; set; } = null!;
     public Guid RequestId { get; set; }
-    public string? FCM_Token { get; set; }
+    public string? FCMToken { get; set; }
 
 }
 
@@ -14,9 +14,9 @@ public class ConfirmLoginWithPhoneDtoValidator : AbstractValidator<ConfirmLoginW
     {
         RuleFor(r => r.Code).OTPCode("كود التحقق");
         RuleFor(r => r.RequestId).GuidId("رقم الطلب");
-        When(r => r.FCM_Token is not null, () =>
+        When(r => r.FCMToken is not null, () =>
        {
-           RuleFor(r => r.FCM_Token).FCM_Token("FCM_Token");
+           RuleFor(r => r.FCMToken).FCM_Token("FCM_Token");
        });
     }
 }

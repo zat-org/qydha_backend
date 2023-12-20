@@ -14,6 +14,10 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Migrations\016_AddUsersGeneralSettingsTable.sql" />
+  </ItemGroup>
+
   
 
   <ItemGroup>

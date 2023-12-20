@@ -1,35 +1,32 @@
 ﻿namespace Qydha.Domain.Services.Implementation;
 
-public class AuthService : IAuthService
+public class AuthService(TokenManager tokenManager, INotificationService notificationService, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, IUserGeneralSettingsRepo userGeneralSettingsRepo) : IAuthService
 {
     #region  injections
-    private readonly IUserRepo _userRepo;
-    private readonly IRegistrationOTPRequestRepo _registrationOTPRequestRepo;
-    private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo;
-    private readonly INotificationService _notificationService;
-    private readonly IMessageService _messageService;
-    private readonly OtpManager _otpManager;
-    private readonly TokenManager _tokenManager;
-    public AuthService(TokenManager tokenManager, INotificationService notificationService, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo)
-    {
-        _tokenManager = tokenManager;
-        _registrationOTPRequestRepo = registrationOTPRequestRepo;
-        _otpManager = otpManager;
-        _userRepo = userRepo;
-        _messageService = messageService;
-        _notificationService = notificationService;
-        _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
-    }
+    private readonly IUserRepo _userRepo = userRepo;
+    private readonly IRegistrationOTPRequestRepo _registrationOTPRequestRepo = registrationOTPRequestRepo;
+    private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
+    private readonly IUserGeneralSettingsRepo _userGeneralSettingsRepo = userGeneralSettingsRepo;
+    private readonly INotificationService _notificationService = notificationService;
+    private readonly IMessageService _messageService = messageService;
+    private readonly OtpManager _otpManager = otpManager;
+    private readonly TokenManager _tokenManager = tokenManager;
     #endregion
 
 
-    public async Task<Result<Tuple<User, string>>> LoginAsAnonymousAsync()
+    public async Task<Result<Tuple<User, UserGeneralSettings, string>>> LoginAsAnonymousAsync()
     {
         User user = User.CreateAnonymousUser();
         return (await _userRepo.AddAsync<Guid>(user))
-            .OnSuccess((user) =>
+            .OnSuccessAsync(async (user) =>
+                (await _userGeneralSettingsRepo.AddAsync<Guid>(new UserGeneralSettings() { UserId = user.Id }, false))
+                .MapTo(settings => new Tuple<User, UserGeneralSettings>(user, settings)))
+            .OnSuccess((tuple) =>
             {
-                return Result.Ok<Tuple<User, string>>(new(user, _tokenManager.Generate(user.GetClaims())));
+                User user = tuple.Item1;
+                UserGeneralSettings settings = tuple.Item2;
+                string token = _tokenManager.Generate(user.GetClaims());
+                return Result.Ok<Tuple<User, UserGeneralSettings, string>>(new(user, settings, token));
             });
     }
 
@@ -64,7 +61,7 @@ public class AuthService : IAuthService
         });
     }
 
-    public async Task<Result<Tuple<User, string>>> Login(string username, string password, string? fcm_token)
+    public async Task<Result<Tuple<User, UserGeneralSettings, string>>> Login(string username, string password, string? fcm_token)
     {
         return (await _userRepo.CheckUserCredentials(username, password))
         .OnSuccessAsync<User>(async (user) => (await _userRepo.UpdateUserLastLoginToNow(user.Id)).MapTo(user))
@@ -74,10 +71,15 @@ public class AuthService : IAuthService
                 return (await _userRepo.UpdateUserFCMToken(user.Id, fcm_token)).MapTo(user);
             return Result.Ok(user);
         })
-        .OnSuccess((user) =>
+        .OnSuccessAsync(async (user) =>
+                (await _userGeneralSettingsRepo.GetByUniquePropAsync(nameof(UserGeneralSettings.UserId), user.Id))
+                .MapTo(settings => new Tuple<User, UserGeneralSettings>(user, settings)))
+        .OnSuccess((tuple) =>
         {
+            User user = tuple.Item1;
+            UserGeneralSettings settings = tuple.Item2;
             var jwtToken = _tokenManager.Generate(user.GetClaims());
-            return Result.Ok(new Tuple<User, string>(user, jwtToken));
+            return Result.Ok(new Tuple<User, UserGeneralSettings, string>(user, settings, jwtToken));
         });
     }
 
@@ -116,9 +118,12 @@ public class AuthService : IAuthService
         if (otpRequest.UserId.HasValue)
             saveUserRes = (await _userRepo.GetByIdAsync(otpRequest.UserId.Value))
                                 .OnSuccess<User>((user) => Result.Ok(user.UpdateUserFromRegisterRequest(otpRequest)))
-                                .OnSuccessAsync<User>(async (user) => await _userRepo.PutByIdAsync(user));
+                                .OnSuccessAsync<User>(_userRepo.PutByIdAsync);
         else
-            saveUserRes = await _userRepo.AddAsync<Guid>(User.CreateUserFromRegisterRequest(otpRequest));
+            saveUserRes = (await _userRepo.AddAsync<Guid>(User.CreateUserFromRegisterRequest(otpRequest)))
+                            .OnSuccessAsync<User>(async (user) =>
+                                (await _userGeneralSettingsRepo.AddAsync<Guid>(new UserGeneralSettings() { UserId = user.Id }, false))
+                                .MapTo(user));
 
         return saveUserRes.OnSuccessAsync<User>(async (user) =>
             {

@@ -7,11 +7,11 @@ public class UserGeneralSettings
     [Column("user_id")]
     public Guid UserId { get; set; }
     [Column("enable_vibration")]
-    public bool EnableVibration { get; set; }
-    [Column("enable_notifications")]
-    public bool EnableNotifications { get; set; }
+    public bool EnableVibration { get; set; } = true;
+    [JsonField]
     [Column("players_names")]
-    public IEnumerable<string> PlayersNames { get; set; } = new List<string>();
+    public Json<IEnumerable<string>> PlayersNames { get; set; } = new List<string>();
+    [JsonField]
     [Column("teams_names")]
-    public IEnumerable<string> TeamsNames { get; set; } = new List<string>();
+    public Json<IEnumerable<string>> TeamsNames { get; set; } = new List<string>();
 }

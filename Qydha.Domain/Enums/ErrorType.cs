@@ -4,6 +4,8 @@ public enum ErrorType
 {
     #region input errors
     InvalidBodyInput = 4001,
+    InvalidPatchBodyInput = 4002,
+
     #endregion
 
     #region AuthN , AuthZ errors

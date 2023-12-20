@@ -1,20 +1,14 @@
-﻿namespace Qydha.API.Controllers;
+﻿
+namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("users/")]
-public class UserController : ControllerBase
+public class UserController(IUserService userService, INotificationService notificationService, IOptions<AvatarSettings> optionsOfPhoto) : ControllerBase
 {
     #region injections and ctor
-    private readonly IUserService _userService;
-    private readonly INotificationService _notificationService;
-    private readonly IOptions<AvatarSettings> _optionsOfPhoto;
-
-    public UserController(IUserService userService, INotificationService notificationService, IOptions<AvatarSettings> optionsOfPhoto)
-    {
-        _userService = userService;
-        _notificationService = notificationService;
-        _optionsOfPhoto = optionsOfPhoto;
-    }
+    private readonly IUserService _userService = userService;
+    private readonly INotificationService _notificationService = notificationService;
+    private readonly IOptions<AvatarSettings> _optionsOfPhoto = optionsOfPhoto;
 
     #endregion
 
@@ -24,19 +18,23 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetUser()
     {
         User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.GetUserById(user.Id))
-        .Handle<User, IActionResult>(
-            (user) =>
-            {
-                var mapper = new UserMapper();
-                return Ok(new
-                {
-                    data = new { user = mapper.UserToUserDto(user) },
-                    message = "User fetched successfully."
-                });
-            },
-            NotFound
-        );
+        return (await _userService.GetUserGeneralSettings(user.Id))
+       .Handle<UserGeneralSettings, IActionResult>(
+           (settings) =>
+           {
+               var mapper = new UserMapper();
+               return Ok(new
+               {
+                   data = new
+                   {
+                       user = mapper.UserToUserDto(user),
+                       generalSettings = mapper.UserGeneralSettingsToDto(settings)
+                   },
+                   message = "User fetched successfully."
+               });
+           },
+           NotFound
+       );
     }
 
     [HttpGet("is-username-available")]
@@ -222,7 +220,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> UpdateUsersFCMToken([FromBody] ChangeUserFCMTokenDto changeUserFCMTokenDto)
     {
         User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.UpdateFCMToken(user.Id, changeUserFCMTokenDto.FCM_Token))
+        return (await _userService.UpdateFCMToken(user.Id, changeUserFCMTokenDto.FCMToken))
         .Handle<IActionResult>(() => Ok(new { data = new { }, Message = "User fcm token Updated Successfully" }), BadRequest);
     }
 
@@ -302,7 +300,7 @@ public class UserController : ControllerBase
 
     #endregion
 
-    #region user notifications
+    #region users notifications
     [Authorization(AuthZUserType.User)]
     [HttpGet("me/notifications")]
     public async Task<IActionResult> GetUserNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1, [FromQuery] bool? isRead = null)
@@ -349,4 +347,57 @@ public class UserController : ControllerBase
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "All Notifications has been Deleted." }), BadRequest);
     }
     #endregion
+
+    #region General Settings
+
+    [HttpPatch("me/general-settings")]
+    [Authorization(AuthZUserType.User)]
+    public async Task<IActionResult> UpdateUserGeneralSettings([FromBody] JsonPatchDocument<UserGeneralSettingsDto> generalSettingsDtoPatch)
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        var mapper = new UserMapper();
+
+        return (await _userService.GetUserGeneralSettings(user.Id))
+         .OnSuccess<UserGeneralSettings>((settings) =>
+        {
+            if (generalSettingsDtoPatch is null)
+                return Result.Fail<UserGeneralSettings>(new()
+                {
+                    Code = ErrorType.InvalidBodyInput,
+                    Message = ".لا يوجد بيانات لتحديثها"
+                });
+
+            var dto = mapper.UserGeneralSettingsToDto(settings);
+            try
+            {
+                generalSettingsDtoPatch.ApplyTo(dto);
+            }
+            catch (JsonPatchException exp)
+            {
+                return Result.Fail<UserGeneralSettings>(new()
+                {
+                    Code = ErrorType.InvalidPatchBodyInput,
+                    Message = exp.Message
+                });
+            }
+            // validate here
+            settings.PlayersNames = new Json<IEnumerable<string>>(dto.PlayersNames);
+            settings.TeamsNames = new Json<IEnumerable<string>>(dto.TeamsNames);
+            settings.EnableVibration = dto.EnableVibration;
+            return Result.Ok(settings);
+        })
+        .OnSuccessAsync<UserGeneralSettings>(_userService.UpdateUserGeneralSettings)
+        .Handle<UserGeneralSettings, IActionResult>((settings) =>
+        {
+            return Ok(new
+            {
+                data = new { user = mapper.UserToUserDto(user), generalSettings = mapper.UserGeneralSettingsToDto(settings) },
+                message = "User's General settings updated successfully."
+            });
+        }, BadRequest);
+    }
+
+
+    #endregion
+
 }

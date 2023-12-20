@@ -21,6 +21,8 @@ public interface IUserService
     Task<Result<User>> DeleteUser(Guid userId, string password);
     Task<Result<User>> DeleteAnonymousUser(Guid userId);
 
+    Task<Result<UserGeneralSettings>> GetUserGeneralSettings(Guid userId);
+    Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(UserGeneralSettings settings);
 
 
 }

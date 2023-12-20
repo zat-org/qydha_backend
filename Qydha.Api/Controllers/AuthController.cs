@@ -15,13 +15,21 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> LoginAsAnonymous()
     {
         return (await _authService.LoginAsAnonymousAsync())
-        .Handle<Tuple<User, string>, IActionResult>(
+        .Handle<Tuple<User, UserGeneralSettings, string>, IActionResult>(
             (tuple) =>
             {
+                User user = tuple.Item1;
+                UserGeneralSettings settings = tuple.Item2;
+                string token = tuple.Item3;
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { user = mapper.UserToUserDto(tuple.Item1), token = tuple.Item2 },
+                    data = new
+                    {
+                        user = mapper.UserToUserDto(user),
+                        generalSettings = mapper.UserGeneralSettingsToDto(settings),
+                        token
+                    },
                     message = "Anonymous account created successfully."
                 });
             }
@@ -31,7 +39,7 @@ public class AuthController : ControllerBase
     [HttpPost("register/")]
     public async Task<IActionResult> Register([FromBody] UserRegisterDTO dto)
     {
-        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCM_Token, null))
+        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, null))
         .Handle<RegistrationOTPRequest, IActionResult>(
             (req) => Ok(
                 new
@@ -52,7 +60,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterAnonymous([FromBody] UserRegisterDTO dto)
     {
         User user = (User)HttpContext.Items["User"]!;
-        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCM_Token, user.Id))
+        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, user.Id))
         .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
             new
             {
@@ -68,15 +76,23 @@ public class AuthController : ControllerBase
     [HttpPost("login/")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        return (await _authService.Login(dto.Username, dto.Password, dto.FCM_Token))
-        .Handle<Tuple<User, string>, IActionResult>(
+        return (await _authService.Login(dto.Username, dto.Password, dto.FCMToken))
+        .Handle<Tuple<User, UserGeneralSettings, string>, IActionResult>(
             (tuple) =>
             {
+                User user = tuple.Item1;
+                UserGeneralSettings settings = tuple.Item2;
+                string token = tuple.Item3;
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { user = mapper.UserToUserDto(tuple.Item1), token = tuple.Item2 },
-                    message = "Logged in successfully."
+                    data = new
+                    {
+                        user = mapper.UserToUserDto(user),
+                        generalSettings = mapper.UserGeneralSettingsToDto(settings),
+                        token
+                    },
+                    message = "Logged In successfully."
                 });
             },
             (result) => BadRequest(new Error()
@@ -118,7 +134,7 @@ public class AuthController : ControllerBase
     [HttpPost("confirm-forget-password")]
     public async Task<IActionResult> ConfirmForgetPassword([FromBody] ConfirmForgetPasswordDto dto)
     {
-        return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCM_Token))
+        return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCMToken))
         .Handle<Tuple<User, string>, IActionResult>(
             (tuple) =>
             {
@@ -150,7 +166,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ConfirmLoginWithPhone([FromBody] ConfirmLoginWithPhoneDto dto)
     {
 
-        return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCM_Token))
+        return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCMToken))
         .Handle<Tuple<User, string>, IActionResult>(
             (tuple) =>
             {

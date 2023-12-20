@@ -1,39 +1,24 @@
 ﻿namespace Qydha.Domain.Services.Implementation;
 
-public class UserService : IUserService
+public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, IUserGeneralSettingsRepo userGeneralSettingsRepo) : IUserService
 {
     #region  injections
-    private readonly OtpManager _otpManager;
-    private readonly IMessageService _messageService;
-    private readonly IFileService _fileService;
-    private readonly IMailingService _mailingService;
-    private readonly IUserRepo _userRepo;
-    private readonly IUpdateEmailRequestRepo _updateEmailRequestRepo;
-    private readonly IUpdatePhoneOTPRequestRepo _updatePhoneOTPRequestRepo;
-    private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo;
-
-    private readonly AvatarSettings _avatarSettings;
-    private readonly ILogger<UserService> _logger;
+    private readonly OtpManager _otpManager = otpManager;
+    private readonly IMessageService _messageService = messageService;
+    private readonly IFileService _fileService = fileService;
+    private readonly IMailingService _mailingService = mailingService;
+    private readonly IUserRepo _userRepo = userRepo;
+    private readonly IUpdateEmailRequestRepo _updateEmailRequestRepo = updateEmailRequestRepo;
+    private readonly IUpdatePhoneOTPRequestRepo _updatePhoneOTPRequestRepo = updatePhoneOTPRequestRepo;
+    private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
+    private readonly IUserGeneralSettingsRepo _userGeneralSettingsRepo = userGeneralSettingsRepo;
+    private readonly AvatarSettings _avatarSettings = avatarOptions.Value;
+    private readonly ILogger<UserService> _logger = logger;
     #endregion
-
-    public UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo)
-    {
-        _userRepo = userRepo;
-        _updatePhoneOTPRequestRepo = updatePhoneOTPRequestRepo;
-        _messageService = messageService;
-        _otpManager = otpManager;
-        _mailingService = mailingService;
-        _updateEmailRequestRepo = updateEmailRequestRepo;
-        _fileService = fileService;
-        _avatarSettings = avatarOptions.Value;
-        _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
-        _logger = logger;
-    }
 
     #region Get User 
     public async Task<Result<User>> GetUserById(Guid userId) => await _userRepo.GetByIdAsync(userId);
     public async Task<Result> IsUserNameAvailable(string username) => await _userRepo.IsUsernameAvailable(username);
-
 
     #endregion
 
@@ -270,11 +255,15 @@ public class UserService : IUserService
         })
         .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteByIdAsync(user.Id)).MapTo(user));
     }
+    #endregion
+
+    #region user general settings
+    public async Task<Result<UserGeneralSettings>> GetUserGeneralSettings(Guid userId) =>
+        await _userGeneralSettingsRepo.GetByUniquePropAsync(nameof(UserGeneralSettings.UserId), userId);
+    public async Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(UserGeneralSettings settings) =>
+           await _userGeneralSettingsRepo.PutByIdAsync(settings);
 
 
 
     #endregion
-
-
-
 }

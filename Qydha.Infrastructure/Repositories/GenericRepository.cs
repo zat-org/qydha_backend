@@ -1,6 +1,6 @@
 ﻿namespace Qydha.Infrastructure.Repositories;
 
-public class GenericRepository<T> : IGenericRepository<T> where T : class
+public abstract class GenericRepository<T> : IGenericRepository<T> where T : class
 {
     protected readonly IDbConnection _dbConnection;
     protected readonly ILogger<GenericRepository<T>> _logger;
@@ -70,7 +70,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
                 type.GetProperties()
                     .Where(p => !excludeKey || !p.IsDefined(typeof(KeyAttribute)))
                     .Where(p => p.GetCustomAttribute<ColumnAttribute>() is not null)
-                    .Select(p => $"@{p.Name}"));
+                    .Select(p =>
+                    {
+                        string jsonb = p.GetCustomAttribute<JsonFieldAttribute>() is not null ? " ::jsonb" : "";
+                        return $"@{p.Name} {jsonb} ";
+                    }));
     }
 
     protected static string GetColumnsAndPropsForPut(bool excludeKey = false)
@@ -83,7 +87,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
                     {
                         string? dbName = p.GetCustomAttribute<ColumnAttribute>()?.Name;
                         if (dbName is null) return null;
-                        return $"{dbName} = @{p.Name}";
+                        string jsonb = p.GetCustomAttribute<JsonFieldAttribute>() is not null ? " ::jsonb" : "";
+                        return $"{dbName} = @{p.Name} {jsonb} ";
                     }).Where(name => name is not null));
     }
     protected static string GetColumnsAndPropsForGet(bool excludeKey = false)
@@ -107,14 +112,14 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     #endregion
 
-    public async Task<Result<T>> AddAsync<IdT>(T entity)
+    public virtual async Task<Result<T>> AddAsync<IdT>(T entity, bool excludeKey = true)
     {
         var keyProp = GetKeyProperty() ?? throw new InvalidOperationException("Can't Add Entity In Column Without Key");
         try
         {
             string tableName = GetTableName();
-            string columns = GetColumns(excludeKey: true);
-            string properties = GetPropertyNames(excludeKey: true);
+            string columns = GetColumns(excludeKey);
+            string properties = GetPropertyNames(excludeKey);
 
             string query = $"INSERT INTO {tableName} ({columns}) VALUES ({properties}) RETURNING {GetKeyColumnName()};";
             _logger.LogInformation($"Before Execute Query :: {query}");
@@ -132,7 +137,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             });
         }
     }
-    public async Task<Result> DeleteByIdAsync<IdT>(IdT entityId, string filterCriteria = "", object? filterParams = null)
+    public virtual async Task<Result> DeleteByIdAsync<IdT>(IdT entityId, string filterCriteria = "", object? filterParams = null)
     {
         var parameters = filterParams is null ? new DynamicParameters() : new DynamicParameters(filterParams);
         parameters.Add("@Id", entityId);
@@ -241,7 +246,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         }
     }
     #endregion
-    public async Task<Result<T>> GetByUniquePropAsync<IdT>(string propName, IdT propValue)
+    public virtual async Task<Result<T>> GetByUniquePropAsync<IdT>(string propName, IdT propValue)
     {
         PropertyInfo propertyInfo = _type.GetProperty(propName) ?? throw new InvalidOperationException("Invalid property. there is no Property provided!");
 
@@ -282,7 +287,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         }
     }
 
-    public async Task<Result<T>> PutByIdAsync(T entity)
+    public virtual async Task<Result<T>> PutByIdAsync(T entity)
     {
         try
         {
@@ -311,7 +316,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         }
     }
 
-    public async Task<Result> PatchById<IdT>(IdT entityId, Dictionary<string, object> properties, string filterCriteria = "", object? filterParams = null)
+    public virtual async Task<Result> PatchById<IdT>(IdT entityId, Dictionary<string, object> properties, string filterCriteria = "", object? filterParams = null)
     {
         var parameters = filterParams is null ? new DynamicParameters() : new DynamicParameters(filterParams);
         parameters.Add("@id", entityId);
@@ -334,7 +339,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
                 throw new InvalidOperationException("Invalid property value.");
 
             parameters.Add($"@{prop.Name}", propValue);
-            propsNamesInQueryList.Add($"{columnAttribute.Name} = @{prop.Name}");
+            string jsonb = prop.GetCustomAttribute<JsonFieldAttribute>() is not null ? " ::jsonb" : "";
+            propsNamesInQueryList.Add($"{columnAttribute.Name} = @{prop.Name} {jsonb}");
 
         }
         string criteria = string.IsNullOrWhiteSpace(filterCriteria) ? "" : $" AND {filterCriteria}";
@@ -365,7 +371,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         }
     }
 
-    public async Task<Result> PatchById<IdT, PropT>(IdT entityId, string propName, PropT propValue, string filterCriteria = "", object? filterParams = null)
+    public virtual async Task<Result> PatchById<IdT, PropT>(IdT entityId, string propName, PropT propValue, string filterCriteria = "", object? filterParams = null)
     {
         PropertyInfo propertyInfo = _type.GetProperty(propName) ?? throw new InvalidOperationException("Invalid property. there is no Property provided!");
 
@@ -378,6 +384,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             throw new InvalidOperationException("Invalid property value.");
 
         string criteria = !string.IsNullOrWhiteSpace(filterCriteria) ? $" And {filterCriteria} " : "";
+
+        string jsonb = propertyInfo.GetCustomAttribute<JsonFieldAttribute>() is not null ? " ::jsonb" : "";
         try
         {
             string tableName = GetTableName();
@@ -385,7 +393,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             parameters.Add("@Id", entityId);
             parameters.Add("@PropVariable", propValue);
             var sql = @$"UPDATE {tableName} 
-                     SET {columnAttribute.Name} = @PropVariable
+                     SET {columnAttribute.Name} = @PropVariable {jsonb}
                      WHERE {GetKeyColumnName()} = @Id {criteria} ;";
             _logger.LogInformation($"Before Execute Query :: {sql}");
 

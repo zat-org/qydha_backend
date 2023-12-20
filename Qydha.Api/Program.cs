@@ -1,5 +1,6 @@
 
 using System.Globalization;
+using Dapper;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 
@@ -156,8 +157,12 @@ builder.Services.AddScoped<INotificationRepo, NotificationRepo>();
 builder.Services.AddScoped<IUserPromoCodesRepo, UserPromoCodesRepo>();
 builder.Services.AddScoped<IAdminUserRepo, AdminUserRepo>();
 builder.Services.AddScoped<IInfluencerCodesRepo, InfluencerCodesRepo>();
+builder.Services.AddScoped<IUserGeneralSettingsRepo, UserGeneralSettingsRepo>();
 
+#endregion
 
+#region SQL Mappers for json
+SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
 
 #endregion
 
