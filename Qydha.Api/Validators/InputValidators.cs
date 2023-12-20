@@ -80,9 +80,9 @@ public static class InputValidators
         return ruleBuilder
         .NotEmpty()
         .WithName(propName)
-        .LessThanOrEqualTo(DateTime.Now.AddYears(-7))
+        .LessThanOrEqualTo(DateTime.UtcNow.AddYears(-7))
         .WithMessage("برجاء ادخال {PropertyName} صحيح.")
-        .GreaterThanOrEqualTo(DateTime.Now.AddYears(-150))
+        .GreaterThanOrEqualTo(DateTime.UtcNow.AddYears(-150))
         .WithMessage("برجاء ادخال {PropertyName} صحيح.");
     }
     public static IRuleBuilderOptions<T, string?> Phone<T>(this IRuleBuilder<T, string?> ruleBuilder, string propName)

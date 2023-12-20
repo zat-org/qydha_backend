@@ -13,7 +13,7 @@ public class OtpManager
 
     public string GenerateOTP() => _tOtp.ComputeTotp();
 
-    public bool IsOtpValid(DateTime createOn) => (DateTime.Now - createOn).TotalSeconds <= _otpSettings.TimeInSec;
+    public bool IsOtpValid(DateTime createOn) => (DateTime.UtcNow - createOn).TotalSeconds <= _otpSettings.TimeInSec;
 
 
 }

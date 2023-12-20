@@ -22,7 +22,7 @@ public class NotificationController : ControllerBase
             Description = notification_request.Description!,
             ActionPath = notification_request.Action_Path!,
             ActionType = notification_request.Action_Type,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             UserId = notification_request.UserId
         }))
         .Handle<User, IActionResult>((user) =>
@@ -31,7 +31,7 @@ public class NotificationController : ControllerBase
 
     }
 
-    
+
     [Authorization(AuthZUserType.Admin)]
     [HttpPost("send-to-all-users/")]
     public async Task<IActionResult> SendNotificationToAllUsers([FromBody] NotificationSendDto dto)
@@ -42,7 +42,7 @@ public class NotificationController : ControllerBase
             Description = dto.Description!,
             ActionPath = dto.Action_Path!,
             ActionType = dto.Action_Type,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
         }))
         .Handle<int, IActionResult>((effected) => Ok(new { Message = $"notification sent to : {effected} users " }), BadRequest);
 

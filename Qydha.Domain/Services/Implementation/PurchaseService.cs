@@ -70,7 +70,7 @@ public class PurchaseService : IPurchaseService
                 IAPHubPurchaseId = Guid.NewGuid().ToString(),
                 UserId = userId,
                 Type = "free_30",
-                PurchaseDate = DateTime.Now,
+                PurchaseDate = DateTime.UtcNow,
                 ProductSku = "free_30",
                 NumberOfDays = _subscriptionSetting.NumberOfDaysInOneSubscription
             };
