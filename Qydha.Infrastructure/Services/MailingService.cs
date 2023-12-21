@@ -66,11 +66,12 @@ public class MailingService : IMailingService
         StreamReader streamReader = new(path);
         string mailText = await streamReader.ReadToEndAsync();
         streamReader.Close();
-        string styledOtp = string.Join("", otp.Split("").Select((d) =>
+        string styledOtp = string.Join("", otp.ToCharArray().Select((d) =>
         {
             return $"<span class='character'>{d}</span>";
         }));
-        return mailText.Replace("[code]", otp);
+        Console.WriteLine(styledOtp);
+        return mailText.Replace("[code]", styledOtp);
     }
 
 }
