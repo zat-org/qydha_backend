@@ -3,14 +3,10 @@ namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("notifications/")]
-public class NotificationController : ControllerBase
+public class NotificationController(INotificationService notificationService, IOptions<NotificationImageSettings> optionsOfPhoto) : ControllerBase
 {
-    private readonly INotificationService _notificationService;
-
-    public NotificationController(INotificationService notificationService)
-    {
-        _notificationService = notificationService;
-    }
+    private readonly INotificationService _notificationService = notificationService;
+    private readonly IOptions<NotificationImageSettings> _optionsOfPhoto = optionsOfPhoto;
 
     [Authorization(AuthZUserType.Admin)]
     [HttpPost("send-to-user/")]
@@ -46,6 +42,34 @@ public class NotificationController : ControllerBase
         }))
         .Handle<int, IActionResult>((effected) => Ok(new { Message = $"notification sent to : {effected} users " }), BadRequest);
 
+    }
+
+    [Authorization(AuthZUserType.Admin)]
+    [HttpPost("upload-notification-image/")]
+    public async Task<IActionResult> UploadNotificationImage([FromForm] IFormFile file)
+    {
+
+        var avatarValidator = new NotificationImageValidator(_optionsOfPhoto);
+        var validationRes = avatarValidator.Validate(file);
+
+        if (!validationRes.IsValid)
+        {
+            return BadRequest(new Error()
+            {
+                Code = ErrorType.InvalidBodyInput,
+                Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
+            });
+        }
+
+        return (await _notificationService.UploadNotificationImage(file))
+        .Handle<FileData, IActionResult>((imageUrl) =>
+            {
+                return Ok(new
+                {
+                    data = imageUrl,
+                    message = "Image updated successfully."
+                });
+            }, BadRequest);
     }
 
 }

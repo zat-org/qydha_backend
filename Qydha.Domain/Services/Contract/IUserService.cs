@@ -1,14 +1,13 @@
 ﻿namespace Qydha.Domain.Services.Contracts;
 public interface IUserService
 {
-
+    Task<Result<IEnumerable<User>>> GetAllRegularUsers();
     Task<Result<User>> GetUserById(Guid userId);
     Task<Result> IsUserNameAvailable(string username);
-    Task<Result<User>> UpdateUser(User user);
 
+    Task<Result<User>> UpdateUser(User user);
     Task<Result<User>> UpdateUserPassword(Guid userId, string oldPassword, string newPassword);
     Task<Result<User>> UpdateUserPassword(Guid userId, Guid phoneAuthReqId, string newPassword);
-
     Task<Result<User>> UpdateUserUsername(Guid userId, string password, string newUsername);
     Task<Result<UpdatePhoneRequest>> UpdateUserPhone(Guid userId, string password, string newPhone);
     Task<Result<User>> ConfirmPhoneUpdate(Guid userId, string code, Guid requestId);
@@ -23,6 +22,5 @@ public interface IUserService
 
     Task<Result<UserGeneralSettings>> GetUserGeneralSettings(Guid userId);
     Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(UserGeneralSettings settings);
-
 
 }

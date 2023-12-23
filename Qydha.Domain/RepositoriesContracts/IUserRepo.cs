@@ -1,6 +1,7 @@
 ﻿namespace Qydha.Domain.Repositories;
 public interface IUserRepo : IGenericRepository<User>
 {
+    Task<Result<IEnumerable<User>>> GetAllRegularUsers();
     Task<Result<User>> GetByIdAsync(Guid id);
     Task<Result<User>> GetByPhoneAsync(string phone);
     Task<Result<User>> GetByEmailAsync(string email);
@@ -16,7 +17,7 @@ public interface IUserRepo : IGenericRepository<User>
     Task<Result> UpdateUserPhone(Guid userId, string phone);
     Task<Result> UpdateUserEmail(Guid userId, string email);
     Task<Result> UpdateUserAvatarData(Guid userId, string avatarPath, string avatarUrl);
-    
+
     Task<Result<User>> CheckUserCredentials(Guid userId, string password);
     Task<Result<User>> CheckUserCredentials(string username, string password);
 }

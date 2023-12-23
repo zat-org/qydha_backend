@@ -114,6 +114,9 @@ builder.Services.Configure<ProductsSettings>(builder.Configuration.GetSection("P
 builder.Services.Configure<SubscriptionSetting>(builder.Configuration.GetSection("SubscriptionSetting"));
 // Notifications Settings
 builder.Services.Configure<NotificationsSettings>(builder.Configuration.GetSection("NotificationsSettings"));
+// Notification Image Settings
+builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetSection("NotificationImageSettings"));
+
 
 // Authentication 
 builder.Services.AddAuthentication("Bearer")

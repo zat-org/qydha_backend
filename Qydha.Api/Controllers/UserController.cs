@@ -13,6 +13,22 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
     #region Get user 
+    [HttpGet]
+    [Authorization(AuthZUserType.Admin)]
+    public async Task<IActionResult> GetUsers()
+    {
+        return (await _userService.GetAllRegularUsers())
+              .Handle<IEnumerable<User>, IActionResult>((users) =>
+            {
+                var mapper = new UserMapper();
+                return Ok(new
+                {
+                    data = new { users = users.Select(u => mapper.UserToUserDto(u)) },
+                    message = "users fetched successfully."
+                });
+            }, BadRequest);
+    }
+
     [HttpGet("me/")]
     [Authorization(AuthZUserType.User)]
     public async Task<IActionResult> GetUser()

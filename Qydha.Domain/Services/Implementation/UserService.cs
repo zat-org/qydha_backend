@@ -20,6 +20,8 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     public async Task<Result<User>> GetUserById(Guid userId) => await _userRepo.GetByIdAsync(userId);
     public async Task<Result> IsUserNameAvailable(string username) => await _userRepo.IsUsernameAvailable(username);
 
+    public async Task<Result<IEnumerable<User>>> GetAllRegularUsers() =>
+      await _userRepo.GetAllRegularUsers();
     #endregion
 
     #region Update User

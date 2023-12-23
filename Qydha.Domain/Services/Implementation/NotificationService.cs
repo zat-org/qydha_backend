@@ -1,26 +1,21 @@
-﻿namespace Qydha.Domain.Services.Implementation;
+﻿
+namespace Qydha.Domain.Services.Implementation;
 
-public class NotificationService : INotificationService
+public class NotificationService(INotificationRepo notificationRepo, ILogger<NotificationService> logger, IPushNotificationService pushNotificationService, IUserRepo userRepo, IOptions<NotificationsSettings> notificationOptions, IFileService fileService, IOptions<NotificationImageSettings> imageSettings) : INotificationService
 {
-    private readonly INotificationRepo _notificationRepo;
-    private readonly IPushNotificationService _pushNotificationService;
-    private readonly IUserRepo _userRepo;
-    private readonly NotificationsSettings _notificationsSettings;
-    private readonly ILogger<NotificationService> _logger;
+    private readonly INotificationRepo _notificationRepo = notificationRepo;
+    private readonly IPushNotificationService _pushNotificationService = pushNotificationService;
+    private readonly IUserRepo _userRepo = userRepo;
+    private readonly NotificationsSettings _notificationsSettings = notificationOptions.Value;
+    private readonly NotificationImageSettings _imageSettings = imageSettings.Value;
 
-    public NotificationService(INotificationRepo notificationRepo, ILogger<NotificationService> logger, IPushNotificationService pushNotificationService, IUserRepo userRepo, IOptions<NotificationsSettings> notificationOptions)
-    {
-        _notificationRepo = notificationRepo;
-        _pushNotificationService = pushNotificationService;
-        _userRepo = userRepo;
-        _notificationsSettings = notificationOptions.Value;
-        _logger = logger;
-    }
+    private readonly IFileService _fileService = fileService;
 
+    private readonly ILogger<NotificationService> _logger = logger;
 
     public async Task<Result<User>> SendToUser(Notification notification)
     {
-        Result<User> getUserRes = await _userRepo.GetByIdAsync(notification.UserId); 
+        Result<User> getUserRes = await _userRepo.GetByIdAsync(notification.UserId);
         return getUserRes.OnSuccessAsync<User>(async (user) => await SendToUser(user, notification));
     }
     public async Task<Result<User>> SendToUser(User user, Notification notification)
@@ -83,4 +78,18 @@ public class NotificationService : INotificationService
     public async Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null) =>
         await _notificationRepo.GetAllNotificationsOfUserById(userId, pageSize, pageNumber, isRead);
 
+    public async Task<Result<FileData>> UploadNotificationImage(IFormFile file)
+    {
+        return (await _fileService.UploadFile(_imageSettings.FolderPath, file))
+                    .OnFailure((err) =>
+                    {
+                        //! TODO :: Handle upload File Error
+                        _logger.LogError(err.ToString());
+                        return new()
+                        {
+                            Code = ErrorType.FileUploadError,
+                            Message = "حدث عطل اثناء حفظ الصورة برجاء المحاولة مرة اخري"
+                        };
+                    });
+    }
 }

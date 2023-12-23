@@ -1,8 +1,13 @@
+
 namespace Qydha.Infrastructure.Repositories;
 
 public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : GenericRepository<User>(dbConnection, logger), IUserRepo
 {
     #region getUser
+    public async Task<Result<IEnumerable<User>>> GetAllRegularUsers() =>
+         await GetAllAsync(filterCriteria: $"{GetColumnName(nameof(User.IsAnonymous))} = false",
+                                parameters: new { },
+                                orderCriteria: "");
 
     public async Task<Result<User>> GetByIdAsync(Guid id) =>
         await GetByUniquePropAsync(nameof(User.Id), id);
@@ -127,4 +132,6 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
             return Result.Ok(user);
         });
     }
+
+
 }
