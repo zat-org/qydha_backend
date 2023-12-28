@@ -49,7 +49,8 @@ public class AdminUserRepo(IDbConnection dbConnection, ILogger<AdminUserRepo> lo
         return getUserRes.OnSuccess<AdminUser>((user) =>
         {
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<AdminUser>(new() { Code = ErrorType.InvalidCredentials, Message = "incorrect password" });
+                return Result.Fail<AdminUser>(new() { 
+                    Code = ErrorType.InvalidCredentials, Message = "كلمة المرور غير صحيحة" });
             return Result.Ok(user);
         });
     }
@@ -60,7 +61,7 @@ public class AdminUserRepo(IDbConnection dbConnection, ILogger<AdminUserRepo> lo
         return getUserRes.OnSuccess<AdminUser>((user) =>
         {
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<AdminUser>(new() { Code = ErrorType.InvalidCredentials, Message = "incorrect password" });
+                return Result.Fail<AdminUser>(new() { Code = ErrorType.InvalidCredentials, Message = "كلمة المرور غير صحيحة" });
             return Result.Ok(user);
         });
     }

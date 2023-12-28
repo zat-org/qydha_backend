@@ -10,7 +10,7 @@ public class ChangePhoneDtoValidator : AbstractValidator<ChangePhoneDto>
 {
     public ChangePhoneDtoValidator()
     {
-        RuleFor(r => r.Password).Password("كلمة المرور");
+        RuleFor(r => r.Password).NotEmpty().WithName("كلمة المرور");
         RuleFor(r => r.NewPhone).Phone("رقم الجوال");
     }
 }

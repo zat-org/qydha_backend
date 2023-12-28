@@ -45,7 +45,11 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
                 Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
                 if (getUserRes.IsFailure)
                 {
-                    ctx.Result = new UnauthorizedObjectResult(getUserRes.Error);
+                    ctx.Result = new UnauthorizedObjectResult(new Error()
+                    {
+                        Code = ErrorType.InvalidAuthToken,
+                        Message = getUserRes.Error.Message
+                    });
                     return;
                 }
                 ctx.HttpContext.Items["User"] = getUserRes.Value;
@@ -54,7 +58,11 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
                 Result<AdminUser> getAdminUserRes = await _adminUserRepo.GetByIdAsync(userId);
                 if (getAdminUserRes.IsFailure)
                 {
-                    ctx.Result = new UnauthorizedObjectResult(getAdminUserRes.Error);
+                    ctx.Result = new UnauthorizedObjectResult(new Error()
+                    {
+                        Code = ErrorType.InvalidAuthToken,
+                        Message = getAdminUserRes.Error.Message
+                    });
                     return;
                 }
                 ctx.HttpContext.Items["User"] = getAdminUserRes.Value;

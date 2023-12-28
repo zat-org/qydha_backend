@@ -3,16 +3,15 @@
 public enum ErrorType
 {
     #region input errors
-    InvalidBodyInput = 4001,
-    InvalidPatchBodyInput = 4002,
-
+    InvalidBodyInput = 4001, //400
+    InvalidPatchBodyInput = 4002, //400
     #endregion
 
     #region AuthN , AuthZ errors
-    InvalidAuthToken = 4010,
-    InvalidCredentials = 4011,
-    InvalidActionByAnonymousUser = 4012,
-    InvalidActionByRegularUser = 4013,
+    InvalidAuthToken = 4010, // 401
+    InvalidCredentials = 4011, // 400
+    InvalidActionByAnonymousUser = 4012, // 400
+    InvalidActionByRegularUser = 4013, // 400
     #endregion
 
     #region influencer codes errors
@@ -41,13 +40,10 @@ public enum ErrorType
     UserPromoCodeNotFound = 4050,
     #endregion
 
-
     #region forget password errors
     InvalidForgetPasswordRequest = 4080,
     ForgetPasswordRequestExceedTime = 4081,
     #endregion
-
-
 
     #region Purchase Errors
     InvalidIAPHupToken = 4090,

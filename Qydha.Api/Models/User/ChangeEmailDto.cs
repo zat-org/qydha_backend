@@ -11,7 +11,8 @@ public class ChangeEmailDtoValidator : AbstractValidator<ChangeEmailDto>
 {
     public ChangeEmailDtoValidator()
     {
-        RuleFor(r => r.Password).Password("كلمة المرور");
+        RuleFor(r => r.Password).NotEmpty().WithName("كلمة المرور");
+
         RuleFor(r => r.NewEmail).NotEmpty().WithName("البريد الالكترونى").EmailAddress();
     }
 }

@@ -13,9 +13,7 @@ public class ChangePasswordDtoValidator : AbstractValidator<ChangePasswordDto>
 {
     public ChangePasswordDtoValidator()
     {
-        RuleFor(r => r.OldPassword)
-                .Password("كلمة المرور القديمة");
-
+        RuleFor(r => r.OldPassword).NotEmpty().WithName("كلمة المرور");
         RuleFor(r => r.NewPassword)
                 .Password("كلمة المرور الجديدة");
 

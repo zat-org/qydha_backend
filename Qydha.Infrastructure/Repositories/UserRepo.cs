@@ -112,7 +112,7 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
                 return Result.Fail<User>(new()
                 {
                     Code = ErrorType.InvalidCredentials,
-                    Message = "incorrect password"
+                    Message = "كلمة المرور غير صحيحة"
                 });
             return Result.Ok(user);
         });
@@ -127,7 +127,7 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
                 return Result.Fail<User>(new()
                 {
                     Code = ErrorType.InvalidCredentials,
-                    Message = "incorrect password"
+                    Message = "كلمة المرور غير صحيحة"
                 });
             return Result.Ok(user);
         });

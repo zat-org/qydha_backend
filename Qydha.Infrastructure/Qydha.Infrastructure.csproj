@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <None Remove="Migrations\016_AddUsersGeneralSettingsTable.sql" />
+    <None Remove="Migrations\017_notificationChangesToManytoManyRelation.sql" />
   </ItemGroup>
 
   

@@ -223,7 +223,11 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
         .OnSuccess<User>((user) =>
         {
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<User>(new() { Code = ErrorType.InvalidCredentials, Message = "incorrect password" });
+                return Result.Fail<User>(new()
+                {
+                    Code = ErrorType.InvalidCredentials,
+                    Message = "كلمة المرور غير صحيحة"
+                });
             return Result.Ok(user);
         })
         .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteByIdAsync(user.Id)).MapTo(user))

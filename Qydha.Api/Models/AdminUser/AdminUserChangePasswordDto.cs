@@ -13,11 +13,7 @@ public class AdminUserChangePasswordDtoValidator : AbstractValidator<AdminUserCh
 {
     public AdminUserChangePasswordDtoValidator()
     {
-        RuleFor(r => r.OldPassword)
-                .Password("كلمة المرور القديمة");
-
-        RuleFor(r => r.NewPassword)
-                .Password("كلمة المرور الجديدة");
-
+        RuleFor(r => r.OldPassword).NotEmpty().WithName("كلمة المرور");
+        RuleFor(r => r.NewPassword).Password("كلمة المرور الجديدة");
     }
 }

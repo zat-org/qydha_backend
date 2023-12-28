@@ -10,6 +10,6 @@ public class DeleteUserDtoValidator : AbstractValidator<DeleteUserDto>
 {
     public DeleteUserDtoValidator()
     {
-        RuleFor(r => r.Password).Password("كلمة المرور");
+        RuleFor(r => r.Password).NotEmpty().WithName("كلمة المرور");
     }
 }

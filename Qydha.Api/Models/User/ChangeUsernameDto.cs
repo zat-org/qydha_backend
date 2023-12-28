@@ -11,7 +11,7 @@ public class ChangeUsernameDtoValidator : AbstractValidator<ChangeUsernameDto>
 {
     public ChangeUsernameDtoValidator()
     {
-        RuleFor(r => r.Password).Password("كلمة المرور");
+        RuleFor(r => r.Password).NotEmpty().WithName("كلمة المرور");
         RuleFor(r => r.NewUsername).Username("اسم المستخدم");
     }
 }

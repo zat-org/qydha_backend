@@ -122,14 +122,14 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
             string properties = GetPropertyNames(excludeKey);
 
             string query = $"INSERT INTO {tableName} ({columns}) VALUES ({properties}) RETURNING {GetKeyColumnName()};";
-            _logger.LogInformation($"Before Execute Query :: {query}");
+            _logger.LogTrace($"Before Execute Query :: {query}");
             var entityId = await _dbConnection.QuerySingleAsync<IdT>(query, entity);
             keyProp.SetValue(entity, entityId);
             return Result.Ok(entity);
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail<T>(new()
             {
                 Code = ErrorType.ServerErrorOnDB,
@@ -147,7 +147,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
             string tableName = GetTableName();
             string keyColumn = GetKeyColumnName();
             string query = $"DELETE FROM {tableName} WHERE {keyColumn} = @Id {criteria} ;";
-            _logger.LogInformation($"Before Execute Query :: {query}");
+            _logger.LogTrace($"Before Execute Query :: {query}");
             int effectedRows = await _dbConnection.ExecuteAsync(query, parameters);
             return effectedRows == 1 ?
                 Result.Ok() :
@@ -159,7 +159,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail(new()
             {
                 Code = ErrorType.ServerErrorOnDB,
@@ -175,13 +175,13 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         try
         {
             var sql = @$"SELECT {GetColumnsAndPropsForGet(excludeKey: false)} FROM {GetTableName()};";
-            _logger.LogInformation($"Before Execute Query :: {sql}");
+            _logger.LogTrace($"Before Execute Query :: {sql}");
             IEnumerable<T> entities = await _dbConnection.QueryAsync<T>(sql);
             return Result.Ok(entities);
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail<IEnumerable<T>>(new()
             {
                 Code = ErrorType.ServerErrorOnDB,
@@ -201,14 +201,14 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
                          FROM {GetTableName()}
                          {criteria}
                          {orderString} ;";
-            _logger.LogInformation($"Before Execute Query :: {sql}");
+            _logger.LogTrace($"Before Execute Query :: {sql}");
 
             IEnumerable<T> entities = await _dbConnection.QueryAsync<T>(sql, parameters);
             return Result.Ok(entities);
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail<IEnumerable<T>>(new()
             {
                 Code = ErrorType.ServerErrorOnDB,
@@ -230,14 +230,14 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
                          {criteria}
                          {orderString}
                          LIMIT @Limit OFFSET @Offset ;";
-            _logger.LogInformation($"Before Execute Query :: {sql}");
+            _logger.LogTrace($"Before Execute Query :: {sql}");
 
             IEnumerable<T> entities = await _dbConnection.QueryAsync<T>(sql, dynamicParameters);
             return Result.Ok(entities);
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail<IEnumerable<T>>(new()
             {
                 Code = ErrorType.ServerErrorOnDB,
@@ -265,7 +265,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
             string tableName = GetTableName();
             var sql = @$"SELECT {GetColumnsAndPropsForGet(excludeKey: false)} from {tableName}
                          where {columnAttribute.Name} = @PropVariable;";
-            _logger.LogInformation($"Before Execute Query :: {sql}");
+            _logger.LogTrace($"Before Execute Query :: {sql}");
 
             T? entity = await _dbConnection.QuerySingleOrDefaultAsync<T>(sql, parameters);
             if (entity is null)
@@ -278,7 +278,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail<T>(new()
             {
                 Code = ErrorType.ServerErrorOnDB,
@@ -294,7 +294,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
             var sql = @$"UPDATE {GetTableName()} 
                     SET {GetColumnsAndPropsForPut(excludeKey: true)}
                     WHERE {GetKeyColumnName()} = @{GetKeyPropertyName()};";
-            _logger.LogInformation($"Before Execute Query :: {sql}");
+            _logger.LogTrace($"Before Execute Query :: {sql}");
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, entity);
             return effectedRows == 1 ?
@@ -307,7 +307,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail<T>(new()
             {
                 Code = ErrorType.ServerErrorOnDB,
@@ -349,7 +349,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
             var sql = @$"UPDATE {GetTableName()} 
                      SET {string.Join(",", propsNamesInQueryList)} 
                      WHERE {GetKeyColumnName()} = @id {criteria} ;";
-            _logger.LogInformation($"Before Execute Query :: {sql}");
+            _logger.LogTrace($"Before Execute Query :: {sql}");
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
             return effectedRows == 1 ?
@@ -362,7 +362,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail(new()
             {
                 Code = ErrorType.ServerErrorOnDB,
@@ -395,7 +395,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
             var sql = @$"UPDATE {tableName} 
                      SET {columnAttribute.Name} = @PropVariable {jsonb}
                      WHERE {GetKeyColumnName()} = @Id {criteria} ;";
-            _logger.LogInformation($"Before Execute Query :: {sql}");
+            _logger.LogTrace($"Before Execute Query :: {sql}");
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
             return effectedRows == 1 ?
@@ -408,7 +408,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         }
         catch (Exception exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
             return Result.Fail<T>(new()
             {
                 Code = ErrorType.ServerErrorOnDB,

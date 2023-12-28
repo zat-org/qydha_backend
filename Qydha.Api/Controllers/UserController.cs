@@ -49,7 +49,7 @@ public class UserController(IUserService userService, INotificationService notif
                    message = "User fetched successfully."
                });
            },
-           NotFound
+           BadRequest
        );
     }
 
@@ -260,7 +260,18 @@ public class UserController(IUserService userService, INotificationService notif
                 Name = user.Name ?? string.Empty,
                 BirthDate = user.BirthDate ?? null
             };
-            updateUserDtoPatch.ApplyTo(dto);
+            try
+            {
+                updateUserDtoPatch.ApplyTo(dto);
+            }
+            catch (JsonPatchException exp)
+            {
+                return Result.Fail<User>(new()
+                {
+                    Code = ErrorType.InvalidPatchBodyInput,
+                    Message = exp.Message
+                });
+            }
             var validator = new UpdateUserDtoValidator();
             var validationRes = validator.Validate(dto);
             if (!validationRes.IsValid)
@@ -276,7 +287,7 @@ public class UserController(IUserService userService, INotificationService notif
             user.BirthDate = dto.BirthDate;
             return Result.Ok(user);
         })
-        .OnSuccessAsync<User>(async (user) => await _userService.UpdateUser(user))
+        .OnSuccessAsync<User>(_userService.UpdateUser)
         .Handle<User, IActionResult>((user) =>
         {
             var mapper = new UserMapper();
@@ -374,7 +385,7 @@ public class UserController(IUserService userService, INotificationService notif
         var mapper = new UserMapper();
 
         return (await _userService.GetUserGeneralSettings(user.Id))
-         .OnSuccess<UserGeneralSettings>((settings) =>
+        .OnSuccess<UserGeneralSettings>((settings) =>
         {
             if (generalSettingsDtoPatch is null)
                 return Result.Fail<UserGeneralSettings>(new()
