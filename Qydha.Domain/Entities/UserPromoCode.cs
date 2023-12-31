@@ -1,7 +1,7 @@
 ﻿namespace Qydha.Domain.Entities;
 [Table("user_promo_codes")]
 [NotFoundError(ErrorType.UserPromoCodeNotFound)]
-public class UserPromoCode
+public class UserPromoCode : DbEntity<UserPromoCode>
 {
     [Key]
     [Column("id")]

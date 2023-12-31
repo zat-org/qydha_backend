@@ -1,6 +1,6 @@
 ﻿namespace Qydha.Infrastructure.Repositories;
 
-public abstract class GenericRepository<T> : IGenericRepository<T> where T : class
+public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbEntity<T>
 {
     protected readonly IDbConnection _dbConnection;
     protected readonly ILogger<GenericRepository<T>> _logger;
@@ -21,107 +21,17 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
 
     }
 
-    #region handle reflection of entities
-    protected static string GetTableName()
-    {
-        Type type = typeof(T);
-        TableAttribute? tableAttr = type.GetCustomAttribute<TableAttribute>();
-        return tableAttr?.Name ?? type.Name + "s";
-    }
-    protected static string GetColumnName(string propName)
-    {
-        PropertyInfo prop = typeof(T).GetProperty(propName) ?? throw new InvalidOperationException("Invalid property. there is no Property provided!");
-        ColumnAttribute? columnAttr = prop.GetCustomAttribute<ColumnAttribute>();
-        return columnAttr?.Name ?? prop.Name;
-    }
-    protected static string GetKeyColumnName()
-    {
-        PropertyInfo? keyProperty = typeof(T).GetProperties()
-                .FirstOrDefault(p => p.GetCustomAttributes(typeof(KeyAttribute), false).FirstOrDefault() is KeyAttribute);
-
-        if (keyProperty is null) return "Id";
-
-        ColumnAttribute? columnAttr = keyProperty.GetCustomAttribute<ColumnAttribute>();
-        return columnAttr?.Name ?? keyProperty.Name;
-    }
-    protected static PropertyInfo? GetKeyProperty()
-    {
-        PropertyInfo? keyProperty = typeof(T).GetProperties()
-            .FirstOrDefault(p => p.GetCustomAttributes(typeof(KeyAttribute), false).FirstOrDefault() is KeyAttribute);
-        return keyProperty;
-    }
-    protected static string GetKeyPropertyName() => GetKeyProperty()?.Name ?? "Id";
-
-
-    protected static string GetColumns(bool excludeKey = false)
-    {
-        Type type = typeof(T);
-        return string.Join(", ",
-                type.GetProperties()
-                    .Where(p => !excludeKey || !p.IsDefined(typeof(KeyAttribute)))
-                    .Select(p => p.GetCustomAttribute<ColumnAttribute>()?.Name)
-                    .Where(name => name is not null));
-    }
-
-    protected static string GetPropertyNames(bool excludeKey = false)
-    {
-        Type type = typeof(T);
-        return string.Join(", ",
-                type.GetProperties()
-                    .Where(p => !excludeKey || !p.IsDefined(typeof(KeyAttribute)))
-                    .Where(p => p.GetCustomAttribute<ColumnAttribute>() is not null)
-                    .Select(p =>
-                    {
-                        string jsonb = p.GetCustomAttribute<JsonFieldAttribute>() is not null ? " ::jsonb" : "";
-                        return $"@{p.Name} {jsonb} ";
-                    }));
-    }
-
-    protected static string GetColumnsAndPropsForPut(bool excludeKey = false)
-    {
-        Type type = typeof(T);
-        return string.Join(", ",
-                type.GetProperties()
-                    .Where(p => !excludeKey || !p.IsDefined(typeof(KeyAttribute)))
-                    .Select(p =>
-                    {
-                        string? dbName = p.GetCustomAttribute<ColumnAttribute>()?.Name;
-                        if (dbName is null) return null;
-                        string jsonb = p.GetCustomAttribute<JsonFieldAttribute>() is not null ? " ::jsonb" : "";
-                        return $"{dbName} = @{p.Name} {jsonb} ";
-                    }).Where(name => name is not null));
-    }
-    protected static string GetColumnsAndPropsForGet(bool excludeKey = false)
-    {
-        Type type = typeof(T);
-        return string.Join(", ",
-                type.GetProperties()
-                    .Where(p => !excludeKey || !p.IsDefined(typeof(KeyAttribute)))
-                    .Select(p =>
-                    {
-                        string? dbName = p.GetCustomAttribute<ColumnAttribute>()?.Name;
-                        if (dbName is null) return null;
-                        return $"{dbName} as {p.Name}";
-                    }).Where(name => name is not null));
-    }
-
-
-    protected static IEnumerable<PropertyInfo> GetProperties(bool excludeKey = false) =>
-        typeof(T).GetProperties()
-            .Where(p => !excludeKey || !p.IsDefined(typeof(KeyAttribute)));
-
-    #endregion
-
     public virtual async Task<Result<T>> AddAsync<IdT>(T entity, bool excludeKey = true)
     {
-        var keyProp = GetKeyProperty() ?? throw new InvalidOperationException("Can't Add Entity In Column Without Key");
+
+        var keyProp = DbEntity<T>.GetKeyProperty() ?? throw new InvalidOperationException("Can't Add Entity In Column Without Key");
         try
         {
-            string tableName = GetTableName();
-            string columns = GetColumns(excludeKey);
-            string properties = GetPropertyNames(excludeKey);
+            string tableName = DbEntity<T>.GetTableName();
+            string columns = DbEntity<T>.GetColumns(excludeKey);
+            string properties = DbEntity<T>.GetPropertyNames(excludeKey);
 
-            string query = $"INSERT INTO {tableName} ({columns}) VALUES ({properties}) RETURNING {GetKeyColumnName()};";
+            string query = $"INSERT INTO {tableName} ({columns}) VALUES ({properties}) RETURNING {DbEntity<T>.GetKeyColumnName()};";
             _logger.LogTrace($"Before Execute Query :: {query}");
             var entityId = await _dbConnection.QuerySingleAsync<IdT>(query, entity);
             keyProp.SetValue(entity, entityId);
@@ -144,8 +54,8 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         string criteria = string.IsNullOrWhiteSpace(filterCriteria) ? "" : $"AND {filterCriteria}";
         try
         {
-            string tableName = GetTableName();
-            string keyColumn = GetKeyColumnName();
+            string tableName = DbEntity<T>.GetTableName();
+            string keyColumn = DbEntity<T>.GetKeyColumnName();
             string query = $"DELETE FROM {tableName} WHERE {keyColumn} = @Id {criteria} ;";
             _logger.LogTrace($"Before Execute Query :: {query}");
             int effectedRows = await _dbConnection.ExecuteAsync(query, parameters);
@@ -174,7 +84,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
     {
         try
         {
-            var sql = @$"SELECT {GetColumnsAndPropsForGet(excludeKey: false)} FROM {GetTableName()};";
+            var sql = @$"SELECT {DbEntity<T>.GetColumnsAndPropsForGet(excludeKey: false)} FROM {DbEntity<T>.GetTableName()};";
             _logger.LogTrace($"Before Execute Query :: {sql}");
             IEnumerable<T> entities = await _dbConnection.QueryAsync<T>(sql);
             return Result.Ok(entities);
@@ -197,8 +107,8 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         string orderString = string.IsNullOrWhiteSpace(orderCriteria) ? "" : $" ORDER BY  {orderCriteria}";
         try
         {
-            var sql = @$"SELECT {GetColumnsAndPropsForGet(excludeKey: false)}
-                         FROM {GetTableName()}
+            var sql = @$"SELECT {DbEntity<T>.GetColumnsAndPropsForGet(excludeKey: false)}
+                         FROM {DbEntity<T>.GetTableName()}
                          {criteria}
                          {orderString} ;";
             _logger.LogTrace($"Before Execute Query :: {sql}");
@@ -225,8 +135,8 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         dynamicParameters.Add("@Offset", (pageNumber - 1) * pageSize);
         try
         {
-            var sql = @$"SELECT {GetColumnsAndPropsForGet(excludeKey: false)}
-                         FROM {GetTableName()} 
+            var sql = @$"SELECT {DbEntity<T>.GetColumnsAndPropsForGet(excludeKey: false)}
+                         FROM {DbEntity<T>.GetTableName()} 
                          {criteria}
                          {orderString}
                          LIMIT @Limit OFFSET @Offset ;";
@@ -262,11 +172,10 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         {
             var parameters = new DynamicParameters();
             parameters.Add("@PropVariable", propValue);
-            string tableName = GetTableName();
-            var sql = @$"SELECT {GetColumnsAndPropsForGet(excludeKey: false)} from {tableName}
+            string tableName = DbEntity<T>.GetTableName();
+            var sql = @$"SELECT {DbEntity<T>.GetColumnsAndPropsForGet(excludeKey: false)} from {tableName}
                          where {columnAttribute.Name} = @PropVariable;";
             _logger.LogTrace($"Before Execute Query :: {sql}");
-
             T? entity = await _dbConnection.QuerySingleOrDefaultAsync<T>(sql, parameters);
             if (entity is null)
                 return Result.Fail<T>(new()
@@ -291,9 +200,9 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
     {
         try
         {
-            var sql = @$"UPDATE {GetTableName()} 
-                    SET {GetColumnsAndPropsForPut(excludeKey: true)}
-                    WHERE {GetKeyColumnName()} = @{GetKeyPropertyName()};";
+            var sql = @$"UPDATE {DbEntity<T>.GetTableName()} 
+                    SET {DbEntity<T>.GetColumnsAndPropsForPut(excludeKey: true)}
+                    WHERE {DbEntity<T>.GetKeyColumnName()} = @{DbEntity<T>.GetKeyPropertyName()};";
             _logger.LogTrace($"Before Execute Query :: {sql}");
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, entity);
@@ -346,9 +255,9 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         string criteria = string.IsNullOrWhiteSpace(filterCriteria) ? "" : $" AND {filterCriteria}";
         try
         {
-            var sql = @$"UPDATE {GetTableName()} 
+            var sql = @$"UPDATE {DbEntity<T>.GetTableName()} 
                      SET {string.Join(",", propsNamesInQueryList)} 
-                     WHERE {GetKeyColumnName()} = @id {criteria} ;";
+                     WHERE {DbEntity<T>.GetKeyColumnName()} = @id {criteria} ;";
             _logger.LogTrace($"Before Execute Query :: {sql}");
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
@@ -388,13 +297,13 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         string jsonb = propertyInfo.GetCustomAttribute<JsonFieldAttribute>() is not null ? " ::jsonb" : "";
         try
         {
-            string tableName = GetTableName();
+            string tableName = DbEntity<T>.GetTableName();
             var parameters = filterParams is null ? new DynamicParameters() : new DynamicParameters(filterParams);
             parameters.Add("@Id", entityId);
             parameters.Add("@PropVariable", propValue);
             var sql = @$"UPDATE {tableName} 
                      SET {columnAttribute.Name} = @PropVariable {jsonb}
-                     WHERE {GetKeyColumnName()} = @Id {criteria} ;";
+                     WHERE {DbEntity<T>.GetKeyColumnName()} = @Id {criteria} ;";
             _logger.LogTrace($"Before Execute Query :: {sql}");
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);

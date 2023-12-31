@@ -1,11 +1,123 @@
 
+using static Dapper.SqlMapper;
+
 namespace Qydha.Infrastructure.Repositories;
 
 public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : GenericRepository<User>(dbConnection, logger), IUserRepo
 {
+
+    #region  add User
+    public override async Task<Result<User>> AddAsync<IdT>(User entity, bool excludeKey = true)
+    {
+
+        var insertUserParameters = new DynamicParameters();
+        var insertSettingsParameters = new DynamicParameters();
+        var userTableTuple = User.GetInsertQueryData(entity, excludeKey: true);
+        var generalTableTuple = UserGeneralSettings.GetInsertQueryData(new UserGeneralSettings(), excludeKey: true);
+        var handTableTuple = UserHandSettings.GetInsertQueryData(new UserHandSettings(), excludeKey: true);
+        var balootTableTuple = UserBalootSettings.GetInsertQueryData(new UserBalootSettings(), excludeKey: true);
+
+        insertUserParameters.AddDynamicParams(userTableTuple.Item3);
+        insertSettingsParameters.AddDynamicParams(generalTableTuple.Item3);
+        insertSettingsParameters.AddDynamicParams(handTableTuple.Item3);
+        insertSettingsParameters.AddDynamicParams(balootTableTuple.Item3);
+
+        string insertUserQuery = @$"
+            INSERT INTO {User.GetTableName()}  ({userTableTuple.Item1}) 
+            VALUES ({userTableTuple.Item2}) 
+            RETURNING {User.GetKeyColumnName()};
+            ";
+        string insertSettingsQuery = @$"
+                INSERT INTO {UserGeneralSettings.GetTableName()} 
+                ( {UserGeneralSettings.GetKeyColumnName()} , {generalTableTuple.Item1})
+                VALUES ( @new_user_id, {generalTableTuple.Item2} );
+
+                INSERT INTO {UserHandSettings.GetTableName()} 
+                ( {UserHandSettings.GetKeyColumnName()} ,{handTableTuple.Item1})
+                VALUES  (@new_user_id , {handTableTuple.Item2}) ;
+
+                INSERT INTO {UserBalootSettings.GetTableName()} 
+                ( {UserBalootSettings.GetKeyColumnName()}  , {balootTableTuple.Item1})
+                VALUES  (@new_user_id , {balootTableTuple.Item2}) ;
+            ";
+        using var transaction = dbConnection.BeginTransaction();
+
+        try
+        {
+
+            Guid entityId = await _dbConnection.QuerySingleAsync<Guid>(insertUserQuery, insertUserParameters, transaction);
+            entity.Id = entityId;
+            insertSettingsParameters.Add("@new_user_id", entityId);
+            await _dbConnection.ExecuteAsync(insertSettingsQuery, insertSettingsParameters, transaction);
+            transaction.Commit();
+            return Result.Ok(entity);
+        }
+        catch (Exception exp)
+        {
+            transaction.Rollback();
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
+            return Result.Fail<User>(new()
+            {
+                Code = ErrorType.ServerErrorOnDB,
+                Message = exp.Message
+            });
+        }
+
+    }
+    #endregion
+
     #region getUser
+    public async Task<Result<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>> GetUserWithSettingsByIdAsync(Guid userId)
+    {
+        try
+        {
+            string sql = @$"
+            SELECT {User.GetColumnsAndPropsForGet(excludeKey: false)}
+            from {User.GetTableName()}
+            where {User.GetKeyColumnName()} = @userId;
+
+            SELECT {UserGeneralSettings.GetColumnsAndPropsForGet(excludeKey: false)}
+            from {UserGeneralSettings.GetTableName()}
+            where {UserGeneralSettings.GetKeyColumnName()} = @userId;
+
+            SELECT {UserHandSettings.GetColumnsAndPropsForGet(excludeKey: false)}
+            from {UserHandSettings.GetTableName()}
+            where {UserHandSettings.GetKeyColumnName()} = @userId;
+
+            SELECT {UserBalootSettings.GetColumnsAndPropsForGet(excludeKey: false)}
+            from {UserBalootSettings.GetTableName()}
+            where {UserBalootSettings.GetKeyColumnName()} = @userId;
+            ";
+            using GridReader multi = await _dbConnection.QueryMultipleAsync(sql, new { userId });
+            User? user = await multi.ReadSingleOrDefaultAsync<User>();
+            UserGeneralSettings? userGeneralSettings = await multi.ReadSingleOrDefaultAsync<UserGeneralSettings>();
+            UserHandSettings? userHandSettings = await multi.ReadSingleOrDefaultAsync<UserHandSettings>();
+            UserBalootSettings? userBalootSettings = await multi.ReadSingleOrDefaultAsync<UserBalootSettings>();
+            if (user is null)
+                return Result.Fail<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>(new()
+                {
+                    Code = _notFoundError,
+                    Message = $"{_notFoundError} :: Entity not found"
+                });
+            if (userGeneralSettings is null || userHandSettings is null || userBalootSettings is null)
+            {
+                _logger.LogError("user with #id do not have one of this settings => general settings : #hasGS , hand settings : #hasHS , baloot settings : #hasBS", [user.Id, userGeneralSettings is null, userHandSettings is null, userBalootSettings is null]);
+            }
+            return Result.Ok(new Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>(user, userGeneralSettings, userHandSettings, userBalootSettings));
+        }
+        catch (Exception exp)
+        {
+            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
+            return Result.Fail<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>(new()
+            {
+                Code = ErrorType.ServerErrorOnDB,
+                Message = exp.Message
+            });
+        }
+    }
+
     public async Task<Result<IEnumerable<User>>> GetAllRegularUsers() =>
-         await GetAllAsync(filterCriteria: $"{GetColumnName(nameof(User.IsAnonymous))} = false",
+         await GetAllAsync(filterCriteria: $"{User.GetColumnName(nameof(User.IsAnonymous))} = false",
                                 parameters: new { },
                                 orderCriteria: "");
 

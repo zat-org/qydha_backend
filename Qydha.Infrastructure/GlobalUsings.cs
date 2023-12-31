@@ -13,10 +13,8 @@ global using Qydha.Domain.Common;
 global using Qydha.Domain.Attributes;
 global using Qydha.Domain.Enums;
 
-global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Reflection;
 global using Microsoft.Extensions.Logging;
-
 
 global using Newtonsoft.Json;

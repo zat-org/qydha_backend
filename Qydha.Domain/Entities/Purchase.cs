@@ -3,7 +3,7 @@
 [Table("purchases")]
 [NotFoundError(ErrorType.PurchaseNotFound)]
 
-public class Purchase
+public class Purchase : DbEntity<Purchase>
 {
     [Key]
     [Column("id")]

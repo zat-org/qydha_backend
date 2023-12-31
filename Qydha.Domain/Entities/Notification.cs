@@ -2,7 +2,7 @@
 [Table("notification")]
 [NotFoundError(ErrorType.NotificationNotFound)]
 
-public class Notification
+public class Notification : DbEntity<Notification>
 {
     [Key]
     [Column("notification_id")]

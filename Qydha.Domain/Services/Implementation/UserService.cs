@@ -1,6 +1,6 @@
 ﻿namespace Qydha.Domain.Services.Implementation;
 
-public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, IUserGeneralSettingsRepo userGeneralSettingsRepo) : IUserService
+public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, IUserGeneralSettingsRepo userGeneralSettingsRepo, IUserHandSettingsRepo handSettingsRepo, IUserBalootSettingsRepo balootSettingsRepo) : IUserService
 {
     #region  injections
     private readonly OtpManager _otpManager = otpManager;
@@ -12,12 +12,18 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     private readonly IUpdatePhoneOTPRequestRepo _updatePhoneOTPRequestRepo = updatePhoneOTPRequestRepo;
     private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
     private readonly IUserGeneralSettingsRepo _userGeneralSettingsRepo = userGeneralSettingsRepo;
+    private readonly IUserHandSettingsRepo _userHandSettingsRepo = handSettingsRepo;
+    private readonly IUserBalootSettingsRepo _userBalootSettingsRepo = balootSettingsRepo;
+
     private readonly AvatarSettings _avatarSettings = avatarOptions.Value;
     private readonly ILogger<UserService> _logger = logger;
     #endregion
 
     #region Get User 
     public async Task<Result<User>> GetUserById(Guid userId) => await _userRepo.GetByIdAsync(userId);
+    public async Task<Result<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>> GetUserWithSettingsByIdAsync(Guid userId) =>
+        await _userRepo.GetUserWithSettingsByIdAsync(userId);
+
     public async Task<Result> IsUserNameAvailable(string username) => await _userRepo.IsUsernameAvailable(username);
 
     public async Task<Result<IEnumerable<User>>> GetAllRegularUsers() =>
@@ -263,13 +269,21 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     }
     #endregion
 
-    #region user general settings
+    #region user  settings
     public async Task<Result<UserGeneralSettings>> GetUserGeneralSettings(Guid userId) =>
         await _userGeneralSettingsRepo.GetByUniquePropAsync(nameof(UserGeneralSettings.UserId), userId);
+
+    public async Task<Result<UserHandSettings>> GetUserHandSettings(Guid userId) =>
+        await _userHandSettingsRepo.GetByUniquePropAsync(nameof(UserHandSettings.UserId), userId);
+
+    public async Task<Result<UserBalootSettings>> GetUserBalootSettings(Guid userId) =>
+        await _userBalootSettingsRepo.GetByUniquePropAsync(nameof(UserBalootSettings.UserId), userId);
+
     public async Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(UserGeneralSettings settings) =>
            await _userGeneralSettingsRepo.PutByIdAsync(settings);
-
-
-
+    public async Task<Result<UserHandSettings>> UpdateUserHandSettings(UserHandSettings settings) =>
+            await _userHandSettingsRepo.PutByIdAsync(settings);
+    public async Task<Result<UserBalootSettings>> UpdateUserBalootSettings(UserBalootSettings settings) =>
+            await _userBalootSettingsRepo.PutByIdAsync(settings);
     #endregion
 }

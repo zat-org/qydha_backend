@@ -142,8 +142,12 @@ builder.Services.AddAuthentication("Bearer")
 
 // db connection
 builder.Services.AddScoped<IDbConnection, NpgsqlConnection>(
-    sp => new NpgsqlConnection(connectionString));
-
+    sp =>
+    {
+        var connection = new NpgsqlConnection(connectionString);
+        connection.Open(); // Open the connection when it's created
+        return connection;
+    });
 #endregion
 
 #region DI Repos
@@ -161,6 +165,9 @@ builder.Services.AddScoped<IUserPromoCodesRepo, UserPromoCodesRepo>();
 builder.Services.AddScoped<IAdminUserRepo, AdminUserRepo>();
 builder.Services.AddScoped<IInfluencerCodesRepo, InfluencerCodesRepo>();
 builder.Services.AddScoped<IUserGeneralSettingsRepo, UserGeneralSettingsRepo>();
+builder.Services.AddScoped<IUserHandSettingsRepo, UserHandSettingsRepo>();
+builder.Services.AddScoped<IUserBalootSettingsRepo, UserBalootSettingsRepo>();
+
 
 #endregion
 

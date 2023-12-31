@@ -7,6 +7,9 @@ public partial class UserMapper
     public partial GetUserDto UserToUserDto(User user);
 
     public partial UserGeneralSettingsDto UserGeneralSettingsToDto(UserGeneralSettings userSettings);
+    public partial UserHandSettingsDto UserHandSettingsToDto(UserHandSettings userHandSettings);
+    public partial UserBalootSettingsDto UserBalootSettingsToDto(UserBalootSettings userBalootSettings);
+
     public partial UserGeneralSettings DtoToUserGeneralSettings(UserGeneralSettingsDto dto);
 
     private IEnumerable<string> JsonToStringArray(Json<IEnumerable<string>> jsonStringArr)

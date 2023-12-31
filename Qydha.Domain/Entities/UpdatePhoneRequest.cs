@@ -3,7 +3,7 @@
 [Table("update_phone_requests")]
 [NotFoundError(ErrorType.UpdatePhoneRequestNotFound)]
 
-public class UpdatePhoneRequest
+public class UpdatePhoneRequest : DbEntity<UpdatePhoneRequest>
 {
     [Key]
     [Column("id")]

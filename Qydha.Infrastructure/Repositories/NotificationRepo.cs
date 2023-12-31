@@ -3,7 +3,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
 {
     public async Task<Result> DeleteByIdAndUserIdAsync(Guid userId, int notificationId)
     {
-        string colName = GetColumnName(nameof(Notification.UserId));
+        string colName = Notification.GetColumnName(nameof(Notification.UserId));
         string criteria = $"{colName} = @userId";
         return await DeleteByIdAsync(notificationId, criteria, new { userId });
     }
@@ -12,7 +12,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
     {
         try
         {
-            var sql = @$"DELETE FROM {GetTableName()} WHERE user_id = @UserId;";
+            var sql = @$"DELETE FROM {Notification.GetTableName()} WHERE user_id = @UserId;";
             var effectedRows = await _dbConnection.ExecuteAsync(sql, new { UserId = userId });
             return Result.Ok(effectedRows);
         }
@@ -31,13 +31,13 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
         string isReadCondition = isRead switch
         {
             null => "",
-            true => $"AND {GetColumnName(nameof(Notification.ReadAt))} is not null",
-            false => $"AND {GetColumnName(nameof(Notification.ReadAt))} is null"
+            true => $"AND {Notification.GetColumnName(nameof(Notification.ReadAt))} is not null",
+            false => $"AND {Notification.GetColumnName(nameof(Notification.ReadAt))} is null"
         };
         return (await GetAllAsync(
-                @$"{GetColumnName(nameof(Notification.UserId))} = @userId 
+                @$"{Notification.GetColumnName(nameof(Notification.UserId))} = @userId 
                     {isReadCondition} ",
-                new { userId }, pageSize, pageNumber, $" {GetColumnName(nameof(Notification.CreatedAt))} Desc "))
+                new { userId }, pageSize, pageNumber, $" {Notification.GetColumnName(nameof(Notification.CreatedAt))} Desc "))
                 .OnSuccess<IEnumerable<Notification>>((notifications) =>
                 {
                     notifications = notifications.OrderByDescending(n => n.CreatedAt);
@@ -47,7 +47,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
 
     public Task<Result> MarkNotificationAsRead(Guid userId, int notificationId)
     {
-        string colName = GetColumnName(nameof(Notification.UserId));
+        string colName = Notification.GetColumnName(nameof(Notification.UserId));
         string criteria = $"{colName} = @userId";
         return PatchById(notificationId, nameof(Notification.ReadAt), DateTime.UtcNow, criteria, new { userId });
     }
@@ -60,7 +60,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
 
         string criteria = string.IsNullOrWhiteSpace(filteringCriteria) ? "" : $" WHERE  {filteringCriteria}";
         var sql = @$"
-        INSERT INTO {GetTableName()} (User_Id, Title, Description,  Created_At, Action_Path, Action_Type)
+        INSERT INTO {Notification.GetTableName()} (User_Id, Title, Description,  Created_At, Action_Path, Action_Type)
             SELECT Users.Id , @Title, @Description, @CreatedAt, @ActionPath, @ActionType
             FROM Users {criteria} ;";
         _logger.LogInformation(sql);
@@ -73,7 +73,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
         var parameters = new DynamicParameters(notification);
         parameters.Add("@Ids", ids);
         var sql = @$"
-        INSERT INTO {GetTableName()} (User_Id, Title, Description, Created_At, Action_Path, Action_Type)
+        INSERT INTO {Notification.GetTableName()} (User_Id, Title, Description, Created_At, Action_Path, Action_Type)
             SELECT Users.Id , @Title, @Description, @CreatedAt, @ActionPath, @ActionType
             FROM Users WHERE users.Id IN ( @Ids );";
         _logger.LogInformation(sql);

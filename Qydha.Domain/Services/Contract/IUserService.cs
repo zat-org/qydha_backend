@@ -3,6 +3,8 @@ public interface IUserService
 {
     Task<Result<IEnumerable<User>>> GetAllRegularUsers();
     Task<Result<User>> GetUserById(Guid userId);
+    Task<Result<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>> GetUserWithSettingsByIdAsync(Guid userId);
+
     Task<Result> IsUserNameAvailable(string username);
 
     Task<Result<User>> UpdateUser(User user);
@@ -22,5 +24,11 @@ public interface IUserService
 
     Task<Result<UserGeneralSettings>> GetUserGeneralSettings(Guid userId);
     Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(UserGeneralSettings settings);
+
+    Task<Result<UserHandSettings>> GetUserHandSettings(Guid userId);
+    Task<Result<UserHandSettings>> UpdateUserHandSettings(UserHandSettings settings);
+
+    Task<Result<UserBalootSettings>> GetUserBalootSettings(Guid userId);
+    Task<Result<UserBalootSettings>> UpdateUserBalootSettings(UserBalootSettings settings);
 
 }

@@ -1,7 +1,7 @@
 ﻿namespace Qydha.Domain.Entities;
 [Table("users")]
 [NotFoundError(ErrorType.UserNotFound)]
-public class User
+public class User : DbEntity<User>
 {
     [Key]
     [Column("id")]

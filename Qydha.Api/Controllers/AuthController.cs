@@ -15,19 +15,17 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> LoginAsAnonymous()
     {
         return (await _authService.LoginAsAnonymousAsync())
-        .Handle<Tuple<User, UserGeneralSettings, string>, IActionResult>(
+        .Handle<Tuple<User, string>, IActionResult>(
             (tuple) =>
             {
                 User user = tuple.Item1;
-                UserGeneralSettings settings = tuple.Item2;
-                string token = tuple.Item3;
+                string token = tuple.Item2;
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
                         user = mapper.UserToUserDto(user),
-                        generalSettings = mapper.UserGeneralSettingsToDto(settings),
                         token
                     },
                     message = "Anonymous account created successfully."
@@ -77,19 +75,17 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
         return (await _authService.Login(dto.Username, dto.Password, dto.FCMToken))
-        .Handle<Tuple<User, UserGeneralSettings, string>, IActionResult>(
+        .Handle<Tuple<User, string>, IActionResult>(
             (tuple) =>
             {
                 User user = tuple.Item1;
-                UserGeneralSettings settings = tuple.Item2;
-                string token = tuple.Item3;
+                string token = tuple.Item2;
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
                         user = mapper.UserToUserDto(user),
-                        generalSettings = mapper.UserGeneralSettingsToDto(settings),
                         token
                     },
                     message = "Logged In successfully."

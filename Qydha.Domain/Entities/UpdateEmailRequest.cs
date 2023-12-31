@@ -2,7 +2,7 @@
 
 [Table("update_email_requests")]
 [NotFoundError(ErrorType.UpdateEmailRequestNotFound)]
-public class UpdateEmailRequest
+public class UpdateEmailRequest : DbEntity<UpdateEmailRequest>
 {
     [Key]
     [Column("id")]

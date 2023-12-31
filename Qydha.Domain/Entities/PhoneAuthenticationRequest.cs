@@ -3,7 +3,7 @@
 [Table("phone_authentication_requests")]
 [NotFoundError(ErrorType.PhoneAuthenticationRequestNotFound)]
 
-public class PhoneAuthenticationRequest
+public class PhoneAuthenticationRequest : DbEntity<PhoneAuthenticationRequest>
 {
     [Key]
     [Column("id")]

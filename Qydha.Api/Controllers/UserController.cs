@@ -34,17 +34,24 @@ public class UserController(IUserService userService, INotificationService notif
     public async Task<IActionResult> GetUser()
     {
         User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.GetUserGeneralSettings(user.Id))
-       .Handle<UserGeneralSettings, IActionResult>(
-           (settings) =>
+        return (await _userService.GetUserWithSettingsByIdAsync(user.Id))
+       .Handle<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>, IActionResult>(
+           (userDataType) =>
            {
+               User user = userDataType.Item1;
+               var generalSettings = userDataType.Item2;
+               var handSettings = userDataType.Item3;
+               var balootSettings = userDataType.Item4;
+
                var mapper = new UserMapper();
                return Ok(new
                {
                    data = new
                    {
                        user = mapper.UserToUserDto(user),
-                       generalSettings = mapper.UserGeneralSettingsToDto(settings)
+                       generalSettings = generalSettings is null ? null : mapper.UserGeneralSettingsToDto(generalSettings),
+                       handSettings = handSettings is null ? null : mapper.UserHandSettingsToDto(handSettings),
+                       balootSettings = balootSettings is null ? null : mapper.UserBalootSettingsToDto(balootSettings)
                    },
                    message = "User fetched successfully."
                });
@@ -375,7 +382,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
     #endregion
 
-    #region General Settings
+    #region user Settings
 
     [HttpPatch("me/general-settings")]
     [Authorization(AuthZUserType.User)]
@@ -393,7 +400,6 @@ public class UserController(IUserService userService, INotificationService notif
                     Code = ErrorType.InvalidBodyInput,
                     Message = ".لا يوجد بيانات لتحديثها"
                 });
-
             var dto = mapper.UserGeneralSettingsToDto(settings);
             try
             {
@@ -424,7 +430,168 @@ public class UserController(IUserService userService, INotificationService notif
         }, BadRequest);
     }
 
+    [HttpPatch("me/hand-settings")]
+    [Authorization(AuthZUserType.User)]
+    public async Task<IActionResult> UpdateUserHandSettings([FromBody] JsonPatchDocument<UserHandSettingsDto> handSettingsDtoPatch)
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        var mapper = new UserMapper();
 
+        return (await _userService.GetUserHandSettings(user.Id))
+        .OnSuccess<UserHandSettings>((settings) =>
+        {
+            if (handSettingsDtoPatch is null)
+                return Result.Fail<UserHandSettings>(new()
+                {
+                    Code = ErrorType.InvalidBodyInput,
+                    Message = ".لا يوجد بيانات لتحديثها"
+                });
+
+            var dto = mapper.UserHandSettingsToDto(settings);
+            try
+            {
+                handSettingsDtoPatch.ApplyTo(dto);
+            }
+            catch (JsonPatchException exp)
+            {
+                return Result.Fail<UserHandSettings>(new()
+                {
+                    Code = ErrorType.InvalidPatchBodyInput,
+                    Message = exp.Message
+                });
+            }
+
+            var handSettingsValidator = new UserHandSettingsDtoValidator();
+            var validationRes = handSettingsValidator.Validate(dto);
+
+            if (!validationRes.IsValid)
+            {
+                return Result.Fail<UserHandSettings>(new Error()
+                {
+                    Code = ErrorType.InvalidBodyInput,
+                    Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
+                });
+            }
+
+            settings.MaxLimit = dto.MaxLimit;
+            settings.RoundsCount = dto.RoundsCount;
+            settings.PlayersCountInTeam = dto.PlayersCountInTeam;
+            settings.TeamsCount = dto.TeamsCount;
+
+            return Result.Ok(settings);
+        })
+        .OnSuccessAsync<UserHandSettings>(_userService.UpdateUserHandSettings)
+        .Handle<UserHandSettings, IActionResult>((settings) =>
+        {
+            return Ok(new
+            {
+                data = new { user = mapper.UserToUserDto(user), handSettings = mapper.UserHandSettingsToDto(settings) },
+                message = "User's Hand settings updated successfully."
+            });
+        }, BadRequest);
+    }
+
+    [HttpPatch("me/baloot-settings")]
+    [Authorization(AuthZUserType.User)]
+    public async Task<IActionResult> UpdateUserBalootSettings([FromBody] JsonPatchDocument<UserBalootSettingsDto> balootSettingsDtoPatch)
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        var mapper = new UserMapper();
+
+        return (await _userService.GetUserBalootSettings(user.Id))
+        .OnSuccess<UserBalootSettings>((settings) =>
+        {
+            if (balootSettingsDtoPatch is null)
+                return Result.Fail<UserBalootSettings>(new()
+                {
+                    Code = ErrorType.InvalidBodyInput,
+                    Message = ".لا يوجد بيانات لتحديثها"
+                });
+
+            var dto = mapper.UserBalootSettingsToDto(settings);
+            try
+            {
+                balootSettingsDtoPatch.ApplyTo(dto);
+            }
+            catch (JsonPatchException exp)
+            {
+                return Result.Fail<UserBalootSettings>(new()
+                {
+                    Code = ErrorType.InvalidPatchBodyInput,
+                    Message = exp.Message
+                });
+            }
+            // validate here
+            settings.IsAdvancedRecording = dto.IsAdvancedRecording;
+            settings.IsFlipped = dto.IsFlipped;
+            return Result.Ok(settings);
+        })
+        .OnSuccessAsync<UserBalootSettings>(_userService.UpdateUserBalootSettings)
+        .Handle<UserBalootSettings, IActionResult>((settings) =>
+        {
+            return Ok(new
+            {
+                data = new { user = mapper.UserToUserDto(user), balootSettings = mapper.UserBalootSettingsToDto(settings) },
+                message = "User's baloot settings updated successfully."
+            });
+        }, BadRequest);
+    }
+
+    [HttpGet("me/general-settings")]
+    [Authorization(AuthZUserType.User)]
+    public async Task<IActionResult> GetUserGeneralSettings()
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        var mapper = new UserMapper();
+        return (await _userService.GetUserGeneralSettings(user.Id))
+        .Handle<UserGeneralSettings, IActionResult>(
+            (settings) =>
+            {
+                return Ok(new
+                {
+                    data = new { generalSettings = mapper.UserGeneralSettingsToDto(settings) },
+                    message = "Settings fetched successfully."
+                });
+            }
+            , BadRequest);
+    }
+    [HttpGet("me/hand-settings")]
+    [Authorization(AuthZUserType.User)]
+    public async Task<IActionResult> GetUserHandSettings()
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        var mapper = new UserMapper();
+        return (await _userService.GetUserHandSettings(user.Id))
+        .Handle<UserHandSettings, IActionResult>(
+            (settings) =>
+            {
+                return Ok(new
+                {
+                    data = new { handSettings = mapper.UserHandSettingsToDto(settings) },
+                    message = "Settings fetched successfully."
+                });
+            }
+            , BadRequest);
+    }
+
+    [HttpGet("me/baloot-settings")]
+    [Authorization(AuthZUserType.User)]
+    public async Task<IActionResult> GetUserBalootSettings()
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        var mapper = new UserMapper();
+        return (await _userService.GetUserBalootSettings(user.Id))
+        .Handle<UserBalootSettings, IActionResult>(
+            (settings) =>
+            {
+                return Ok(new
+                {
+                    data = new { generalSettings = mapper.UserBalootSettingsToDto(settings) },
+                    message = "Settings fetched successfully."
+                });
+            }
+            , BadRequest);
+    }
     #endregion
 
 }

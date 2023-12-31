@@ -3,7 +3,7 @@
 [Table("registration_otp_request")]
 [NotFoundError(ErrorType.RegistrationOTPRequestNotFound)]
 
-public class RegistrationOTPRequest
+public class RegistrationOTPRequest : DbEntity<RegistrationOTPRequest>
 {
     [Key]
     [Column("id")]

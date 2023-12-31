@@ -1,7 +1,8 @@
 ﻿namespace Qydha.Domain.Entities;
 
 [Table("user_general_settings")]
-public class UserGeneralSettings
+public class UserGeneralSettings : DbEntity<UserGeneralSettings>
+
 {
     [Key]
     [Column("user_id")]
