@@ -1,4 +1,5 @@
-﻿namespace Qydha.Infrastructure.Repositories;
+﻿
+namespace Qydha.Infrastructure.Repositories;
 public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRepo> logger) : GenericRepository<Notification>(dbConnection, logger), INotificationRepo
 {
     public async Task<Result> DeleteByIdAndUserIdAsync(Guid userId, int notificationId)
@@ -16,13 +17,10 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
             var effectedRows = await _dbConnection.ExecuteAsync(sql, new { UserId = userId });
             return Result.Ok(effectedRows);
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            return Result.Fail<int>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
 

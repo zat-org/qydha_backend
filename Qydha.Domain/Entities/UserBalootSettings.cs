@@ -13,4 +13,10 @@ public class UserBalootSettings : DbEntity<UserBalootSettings>
     [Column("is_advanced_recording")]
     public bool IsAdvancedRecording { get; set; } = false;
 
+    [Column("is_sakkah_mashdodah_mode")]
+    public bool IsSakkahMashdodahMode { get; set; } = false;
+
+    [Column("show_who_won_dialog_on_draw")]
+    public bool ShowWhoWonDialogOnDraw { get; set; } = false;
+
 }

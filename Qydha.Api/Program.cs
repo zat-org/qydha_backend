@@ -1,8 +1,9 @@
-
+using StackExchange.Profiling;
 using System.Globalization;
 using Dapper;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
+using StackExchange.Profiling.Data;
 
 
 FirebaseApp.Create(new AppOptions()
@@ -11,7 +12,10 @@ FirebaseApp.Create(new AppOptions()
 });
 
 var builder = WebApplication.CreateBuilder(args);
-//  Add services to the container.
+
+builder.Configuration.AddJsonFile("app_keys.json");
+if (builder.Environment.IsDevelopment())
+    builder.Configuration.AddJsonFile("app_keys.Development.json");
 
 var connectionString = builder.Configuration.GetConnectionString("postgres");
 
@@ -79,7 +83,15 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
+builder.Services.AddMiniProfiler(options =>
+      {
+          //   options.RouteBasePath = "/profiler"; // Configure the route path as needed
+          //   options.ResultsAuthorize = _ => true;
+          //   options.ResultsListAuthorize = _ => true;
 
+
+
+      });
 
 #region Serilog
 Log.Logger =
@@ -116,6 +128,9 @@ builder.Services.Configure<SubscriptionSetting>(builder.Configuration.GetSection
 builder.Services.Configure<NotificationsSettings>(builder.Configuration.GetSection("NotificationsSettings"));
 // Notification Image Settings
 builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetSection("NotificationImageSettings"));
+// Book Settings
+builder.Services.Configure<BookSettings>(builder.Configuration.GetSection("BookSettings"));
+
 
 
 // Authentication 
@@ -141,12 +156,13 @@ builder.Services.AddAuthentication("Bearer")
     });
 
 // db connection
-builder.Services.AddScoped<IDbConnection, NpgsqlConnection>(
+builder.Services.AddScoped<IDbConnection, ProfiledDbConnection>(
     sp =>
     {
         var connection = new NpgsqlConnection(connectionString);
-        connection.Open(); // Open the connection when it's created
-        return connection;
+        var profiledConnection = new ProfiledDbConnection(connection, MiniProfiler.Current);
+        profiledConnection.Open(); // Open the connection when it's created
+        return profiledConnection;
     });
 #endregion
 
@@ -167,6 +183,8 @@ builder.Services.AddScoped<IInfluencerCodesRepo, InfluencerCodesRepo>();
 builder.Services.AddScoped<IUserGeneralSettingsRepo, UserGeneralSettingsRepo>();
 builder.Services.AddScoped<IUserHandSettingsRepo, UserHandSettingsRepo>();
 builder.Services.AddScoped<IUserBalootSettingsRepo, UserBalootSettingsRepo>();
+builder.Services.AddScoped<IAppAssetsRepo, AppAssetsRepo>();
+
 
 
 #endregion
@@ -192,6 +210,9 @@ builder.Services.AddScoped<IPurchaseService, PurchaseService>();
 builder.Services.AddScoped<IUserPromoCodesService, UserPromoCodesService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IInfluencerCodesService, InfluencerCodesService>();
+builder.Services.AddScoped<IAppAssetsService, AppAssetsService>();
+builder.Services.AddSingleton(new GoogleStorageService("googleCloud_private_key.json"));
+
 
 
 #endregion
@@ -211,6 +232,17 @@ builder.Services.AddCors(options =>
 });
 #endregion
 
+if (connectionString is not null)
+{
+    var configSec = builder.Configuration.GetSection("AdminCredentials");
+
+    var variables = new Dictionary<string, string>(){
+            {"password",BCrypt.Net.BCrypt.HashPassword(configSec["password"] ?? "admin@123") },
+            {"username",configSec["username"] ?? "admin"},
+            {"capitalUsername" , (configSec["username"] ?? "admin").ToUpper()}
+        };
+    DbMigrator.Migrate(connectionString, variables);
+}
 
 var app = builder.Build();
 
@@ -223,6 +255,7 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
 
 app.UseCors(MyAllowSpecificOrigins);
 
+app.UseMiniProfiler();
 app.UseStaticFiles();
 
 app.UseSerilogRequestLogging();
@@ -232,15 +265,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-var configSec = app.Configuration.GetSection("AdminCredentials");
-
-var variables = new Dictionary<string, string>(){
-    {"password",BCrypt.Net.BCrypt.HashPassword(configSec["password"] ?? "admin@123") },
-    {"username",configSec["username"] ?? "admin"},
-    {"capitalUsername" , (configSec["username"] ?? "admin").ToUpper()}
-};
-
-if (connectionString is not null)
-    DbMigrator.Migrate(connectionString, variables);
-
 app.Run();
+
+
+

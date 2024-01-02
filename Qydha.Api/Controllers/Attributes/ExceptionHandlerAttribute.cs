@@ -1,4 +1,6 @@
-﻿namespace Qydha.API.Controllers.Attributes;
+﻿using System.Data.Common;
+
+namespace Qydha.API.Controllers.Attributes;
 
 public class ExceptionHandlerAttribute : ExceptionFilterAttribute
 {
@@ -10,21 +12,37 @@ public class ExceptionHandlerAttribute : ExceptionFilterAttribute
     public override void OnException(ExceptionContext context)
     {
 
-        var Exception = context.Exception;
-        _logger.LogError(Exception, "Error caught by Exception Filter "); //logger 
-        while (Exception.InnerException != null)
+        var exception = context.Exception;
+        ObjectResult res;
+        if (exception is DbException dbException)
         {
-            Exception = Exception.InnerException;
+            _logger.LogError(dbException, "Error caught by Exception Filter DbException Message :: #msg ", [dbException.Message]); //logger 
+            res = new ObjectResult(new Error()
+            {
+                Message = dbException.Message,
+                Code = ErrorType.ServerErrorOnDB
+            })
+            {
+                StatusCode = 500
+            };
         }
-
-        var res = new ObjectResult(new Error()
+        else
         {
-            Message = Exception.Message,
-            Code = ErrorType.UnknownServerError
-        })
-        {
-            StatusCode = 500
-        };
+            _logger.LogError(exception, "Error caught by Exception Filter Outer exception Message :: #msg ", [exception.Message]); //logger 
+            while (exception.InnerException != null)
+            {
+                exception = exception.InnerException;
+            }
+            _logger.LogError(exception, "Error caught by Exception Filter Inner exception Message :: #msg ", [exception.Message]); //logger 
+            res = new ObjectResult(new Error()
+            {
+                Message = exception.Message,
+                Code = ErrorType.UnknownServerError
+            })
+            {
+                StatusCode = 500
+            };
+        }
         context.Result = res;
     }
 }

@@ -19,4 +19,7 @@ public class UserHandSettings : DbEntity<UserHandSettings>
 
     [Column("players_count_in_team")]
     public int PlayersCountInTeam { get; set; } = 2;
+
+    [Column("win_using_zat")]
+    public bool WinUsingZat { get; set; } = false;
 }

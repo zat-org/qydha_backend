@@ -14,13 +14,6 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Migrations\016_AddUsersGeneralSettingsTable.sql" />
-    <None Remove="Migrations\017_gamesSettingsTables.sql" />
-    <None Remove="Migrations\017_notificationChangesToManytoManyRelation.sql" />
-  </ItemGroup>
-
-  
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.24" />

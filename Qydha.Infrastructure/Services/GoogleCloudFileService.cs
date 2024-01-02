@@ -1,16 +1,14 @@
-﻿using Google.Cloud.Storage.V1;
+﻿using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Storage.V1;
 
 namespace Qydha.Infrastructure.Services;
 
-public class GoogleCloudFileService : IFileService
+public class GoogleCloudFileService(GoogleStorageService googleStorageService) : IFileService
 {
 
-    private readonly StorageClient _client;
+    private readonly StorageClient _client = googleStorageService.GetStorageClient();
     private readonly string bucketName = "qydha_bucket";
-    public GoogleCloudFileService()
-    {
-        _client = StorageClient.Create();
-    }
+
     public async Task<Result> DeleteFile(string path)
     {
         try

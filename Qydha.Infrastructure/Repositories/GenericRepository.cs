@@ -1,4 +1,5 @@
-﻿namespace Qydha.Infrastructure.Repositories;
+﻿
+namespace Qydha.Infrastructure.Repositories;
 
 public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbEntity<T>
 {
@@ -37,14 +38,10 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
             keyProp.SetValue(entity, entityId);
             return Result.Ok(entity);
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<T>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
     public virtual async Task<Result> DeleteByIdAsync<IdT>(IdT entityId, string filterCriteria = "", object? filterParams = null)
@@ -67,14 +64,10 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
                     Message = $"{_notFoundError} :: Entity not found"
                 });
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
 
     }
@@ -85,18 +78,14 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
         try
         {
             var sql = @$"SELECT {DbEntity<T>.GetColumnsAndPropsForGet(excludeKey: false)} FROM {DbEntity<T>.GetTableName()};";
-            _logger.LogTrace($"Before Execute Query :: {sql}");
+            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
             IEnumerable<T> entities = await _dbConnection.QueryAsync<T>(sql);
             return Result.Ok(entities);
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<IEnumerable<T>>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
 
@@ -111,19 +100,15 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
                          FROM {DbEntity<T>.GetTableName()}
                          {criteria}
                          {orderString} ;";
-            _logger.LogTrace($"Before Execute Query :: {sql}");
+            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
 
             IEnumerable<T> entities = await _dbConnection.QueryAsync<T>(sql, parameters);
             return Result.Ok(entities);
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<IEnumerable<T>>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
     public async Task<Result<IEnumerable<T>>> GetAllAsync(string filterCriteria, object parameters, int pageSize = 10, int pageNumber = 1, string orderCriteria = "")
@@ -140,19 +125,15 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
                          {criteria}
                          {orderString}
                          LIMIT @Limit OFFSET @Offset ;";
-            _logger.LogTrace($"Before Execute Query :: {sql}");
+            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
 
             IEnumerable<T> entities = await _dbConnection.QueryAsync<T>(sql, dynamicParameters);
             return Result.Ok(entities);
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<IEnumerable<T>>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
     #endregion
@@ -175,7 +156,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
             string tableName = DbEntity<T>.GetTableName();
             var sql = @$"SELECT {DbEntity<T>.GetColumnsAndPropsForGet(excludeKey: false)} from {tableName}
                          where {columnAttribute.Name} = @PropVariable;";
-            _logger.LogTrace($"Before Execute Query :: {sql}");
+            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
             T? entity = await _dbConnection.QuerySingleOrDefaultAsync<T>(sql, parameters);
             if (entity is null)
                 return Result.Fail<T>(new()
@@ -185,14 +166,10 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
                 });
             return Result.Ok(entity);
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<T>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
 
@@ -203,7 +180,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
             var sql = @$"UPDATE {DbEntity<T>.GetTableName()} 
                     SET {DbEntity<T>.GetColumnsAndPropsForPut(excludeKey: true)}
                     WHERE {DbEntity<T>.GetKeyColumnName()} = @{DbEntity<T>.GetKeyPropertyName()};";
-            _logger.LogTrace($"Before Execute Query :: {sql}");
+            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, entity);
             return effectedRows == 1 ?
@@ -214,14 +191,10 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
                     Message = $"{_notFoundError} :: Entity not found"
                 });
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<T>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
 
@@ -258,7 +231,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
             var sql = @$"UPDATE {DbEntity<T>.GetTableName()} 
                      SET {string.Join(",", propsNamesInQueryList)} 
                      WHERE {DbEntity<T>.GetKeyColumnName()} = @id {criteria} ;";
-            _logger.LogTrace($"Before Execute Query :: {sql}");
+            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
             return effectedRows == 1 ?
@@ -269,14 +242,10 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
                    Message = $"{_notFoundError} :: Entity not found"
                });
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
 
@@ -304,7 +273,7 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
             var sql = @$"UPDATE {tableName} 
                      SET {columnAttribute.Name} = @PropVariable {jsonb}
                      WHERE {DbEntity<T>.GetKeyColumnName()} = @Id {criteria} ;";
-            _logger.LogTrace($"Before Execute Query :: {sql}");
+            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
 
             var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
             return effectedRows == 1 ?
@@ -315,14 +284,10 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
                   Message = $"{_notFoundError} :: Entity not found"
               });
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<T>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
 }

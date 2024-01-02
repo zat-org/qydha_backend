@@ -362,9 +362,10 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-appsettings.json
-appsettings.Development.json
+app_keys.json
+app_keys.Development.json
 firebase_private_key.json
+googleCloud_private_key.json
 
 Qydha.Api/Error_logs/*.json
 Qydha.Api/info_logs/*.json

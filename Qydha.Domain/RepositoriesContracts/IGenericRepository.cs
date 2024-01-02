@@ -1,6 +1,6 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IGenericRepository<T>
+public interface IGenericRepository<T> where T : DbEntity<T>
 {
     Task<Result<T>> AddAsync<IdT>(T entity, bool excludeKey = true);
     Task<Result> DeleteByIdAsync<IdT>(IdT entityId, string filterCriteria = "", object? filterParams = null);

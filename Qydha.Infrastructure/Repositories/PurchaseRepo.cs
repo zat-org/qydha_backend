@@ -1,4 +1,5 @@
-﻿namespace Qydha.Infrastructure.Repositories;
+﻿
+namespace Qydha.Infrastructure.Repositories;
 public class PurchaseRepo(IDbConnection dbConnection, ILogger<PurchaseRepo> logger) : GenericRepository<Purchase>(dbConnection, logger), IPurchaseRepo
 {
     public async Task<Result<IEnumerable<Purchase>>> GetAllByUserIdAsync(Guid userId)
@@ -15,18 +16,14 @@ public class PurchaseRepo(IDbConnection dbConnection, ILogger<PurchaseRepo> logg
                         where {Purchase.GetColumnName(nameof(Purchase.UserId))} = @userId AND
                         {Purchase.GetColumnName(nameof(Purchase.ProductSku))} = @code AND
                         {Purchase.GetColumnName(nameof(Purchase.Type))} = @type ;";
-            _logger.LogTrace($"Before Execute Query :: {sql}");
+            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
             int num = await _dbConnection.ExecuteScalarAsync<int>(sql, new { userId, code, type = "Influencer" });
             return Result.Ok(num);
         }
-        catch (Exception exp)
+        catch (DbException exp)
         {
-            _logger.LogError(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<int>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
+            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            throw;
         }
     }
 }
