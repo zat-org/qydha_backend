@@ -85,12 +85,16 @@ builder.Services.AddSwaggerGen(opt =>
 
 builder.Services.AddMiniProfiler(options =>
       {
-          //   options.RouteBasePath = "/profiler"; // Configure the route path as needed
+          if (builder.Environment.IsDevelopment())
+          {
+              options.RouteBasePath = "/dev/profiler"; // Configure the route path as needed
+          }
+          else
+          {
+              options.RouteBasePath = "/qydha/profiler"; // Configure the route path as needed
+          }
           //   options.ResultsAuthorize = _ => true;
           //   options.ResultsListAuthorize = _ => true;
-
-
-
       });
 
 #region Serilog
