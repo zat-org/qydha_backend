@@ -47,3 +47,4 @@ global using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 global using Qydha.Infrastructure.SqlMappersHandlers;
 
 global using Microsoft.AspNetCore.JsonPatch.Exceptions;
+
