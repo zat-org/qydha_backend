@@ -3,12 +3,13 @@ namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("notifications/")]
+[Auth(SystemUserRoles.Admin)]
+
 public class NotificationController(INotificationService notificationService, IOptions<NotificationImageSettings> optionsOfPhoto) : ControllerBase
 {
     private readonly INotificationService _notificationService = notificationService;
     private readonly IOptions<NotificationImageSettings> _optionsOfPhoto = optionsOfPhoto;
 
-    [Authorization(AuthZUserType.Admin)]
     [HttpPost("send-to-user/")]
     public async Task<IActionResult> SendNotificationToUser([FromBody] NotificationSendToUserDto notification_request)
     {
@@ -28,7 +29,6 @@ public class NotificationController(INotificationService notificationService, IO
     }
 
 
-    [Authorization(AuthZUserType.Admin)]
     [HttpPost("send-to-all-users/")]
     public async Task<IActionResult> SendNotificationToAllUsers([FromBody] NotificationSendDto dto)
     {
@@ -44,7 +44,6 @@ public class NotificationController(INotificationService notificationService, IO
 
     }
 
-    [Authorization(AuthZUserType.Admin)]
     [HttpPost("upload-notification-image/")]
     public async Task<IActionResult> UploadNotificationImage([FromForm] IFormFile file)
     {

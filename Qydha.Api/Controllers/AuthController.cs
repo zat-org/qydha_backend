@@ -2,14 +2,9 @@ namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("/auth")]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }
+    private readonly IAuthService _authService = authService;
 
     [HttpPost("login-anonymous/")]
     public async Task<IActionResult> LoginAsAnonymous()
@@ -53,7 +48,7 @@ public class AuthController : ControllerBase
     }
 
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.AnonymousUser)]
     [HttpPost("register-anonymous/")]
     public async Task<IActionResult> RegisterAnonymous([FromBody] UserRegisterDTO dto)
     {
@@ -181,7 +176,7 @@ public class AuthController : ControllerBase
     }
 
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPost("logout/")]
     public async Task<IActionResult> Logout()
     {
@@ -195,20 +190,20 @@ public class AuthController : ControllerBase
     }
 
 
-    [Authorization(AuthZUserType.User)]
-    [HttpGet("test")]
-    public IActionResult TestDeploy()
-    {
-        return Ok(new { message = "Deployed. ✔️✔️" });
-    }
+    // [Auth]
+    // [HttpGet("test")]
+    // public IActionResult TestDeploy()
+    // {
+    //     return Ok(new { message = "Deployed. ✔️✔️" });
+    // }
 
 
 
-    [HttpGet("throwError")]
-    public IActionResult ThrowError()
-    {
-        throw new InvalidOperationException();
-    }
+    // [HttpGet("throwError")]
+    // public IActionResult ThrowError()
+    // {
+    //     throw new InvalidOperationException();
+    // }
 
 }
 

@@ -79,6 +79,7 @@ public class User : DbEntity<User>
                 new ("username", Username ?? "" ),
                 new ("phone", Phone ?? ""),
                 new ("isAnonymous", IsAnonymous.ToString()),
+                new ("role", !IsAnonymous ? "RegularUser" : "AnonymousUser"),
             };
     }
     public static User CreateUserFromRegisterRequest(RegistrationOTPRequest otpRequest)

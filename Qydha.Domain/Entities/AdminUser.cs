@@ -31,7 +31,7 @@ public class AdminUser : DbEntity<AdminUser>
             new ("sub", Id.ToString()),
             new ("userId", Id.ToString()),
             new ("username", Username ),
-            new ("role", Role.ToString()),
+            new ("role", Role.ToString()),   // SuperAdmin , StaffAdmin
         };
     }
 }

@@ -11,7 +11,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
 
 
     [HttpPost]
-    [Authorization(AuthZUserType.Admin)]
+    [Auth(SystemUserRoles.Admin)]
     public async Task<IActionResult> AddPromo(PromoCodesAddingDto dto)
     {
         return (await _userPromoCodesService.AddPromoCode(dto.UserId, dto.Code, dto.NumberOfDays, dto.ExpireAt))
@@ -28,7 +28,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
     }
 
     [HttpGet]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
 
     public async Task<IActionResult> GetAllUserPromoCodes()
     {
@@ -47,7 +47,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
     }
 
     [HttpPost("use")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
 
     public async Task<IActionResult> UsePromo(PromoCodesUsingDto dto)
     {

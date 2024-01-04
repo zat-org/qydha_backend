@@ -11,7 +11,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
 
 
 
-    [Authorization(AuthZUserType.Admin)]
+    [Auth(SystemUserRoles.Admin)]
     [HttpPatch("baloot-book/")]
     public async Task<IActionResult> UpdateBalootBook([FromForm] IFormFile file)
     {
@@ -38,7 +38,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.Admin | SystemUserRoles.RegularUser)]
     [HttpGet("baloot-book/")]
     public async Task<IActionResult> GetBalootBook()
     {
@@ -54,7 +54,8 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.Admin)]
+    [Auth(SystemUserRoles.Admin)]
+
     [HttpPatch("popup/")]
     public async Task<IActionResult> UpdatePopupData([FromBody] JsonPatchDocument<PopupDto> popupDtoPatch)
     {
@@ -118,7 +119,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.Admin)]
+    [Auth(SystemUserRoles.Admin)]
     [HttpPut("popup/image")]
     public async Task<IActionResult> UpdatePopupImage([FromForm] IFormFile file)
     {
@@ -147,7 +148,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth]
     [HttpGet("popup/")]
     public async Task<IActionResult> GetPopup()
     {

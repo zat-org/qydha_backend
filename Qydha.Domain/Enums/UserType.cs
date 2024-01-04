@@ -1,15 +1,15 @@
 ﻿namespace Qydha.Domain.Enums;
 
-public enum UserType
+[Flags]
+public enum SystemUserRoles
 {
-    Anonymous,
-    Regular
-}
-
-public enum AuthZUserType
-{
-    Admin,
-    User
+    RegularUser = 1,
+    AnonymousUser = 2,
+    User = 3,
+    SuperAdmin = 4,
+    StaffAdmin = 8,
+    Admin = 12,
+    All = 15
 }
 
 public enum AdminType

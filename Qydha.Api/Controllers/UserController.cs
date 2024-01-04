@@ -14,7 +14,7 @@ public class UserController(IUserService userService, INotificationService notif
 
     #region Get user 
     [HttpGet]
-    [Authorization(AuthZUserType.Admin)]
+    [Auth(SystemUserRoles.Admin)]
     public async Task<IActionResult> GetUsers()
     {
         return (await _userService.GetAllRegularUsers())
@@ -30,7 +30,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpGet("me/")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     public async Task<IActionResult> GetUser()
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -60,6 +60,7 @@ public class UserController(IUserService userService, INotificationService notif
        );
     }
 
+    [Auth(SystemUserRoles.All)]
     [HttpGet("is-username-available")]
     public async Task<IActionResult> IsUserNameAvailable([FromBody] string username)
     {
@@ -80,8 +81,8 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
     #region update user
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/update-password/")]
-    [Authorization(AuthZUserType.User)]
     public async Task<IActionResult> UpdateAuthorizedUserPassword([FromBody] ChangePasswordDto changePasswordDto)
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -98,7 +99,7 @@ public class UserController(IUserService userService, INotificationService notif
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/update-password-from-phone-authentication/")]
     public async Task<IActionResult> UpdatePhoneAuthorizedUserPassword([FromBody] UpdatePasswordFromPhoneAuthentication dto)
     {
@@ -116,7 +117,7 @@ public class UserController(IUserService userService, INotificationService notif
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/update-username/")]
     public async Task<IActionResult> UpdateAuthorizedUsername([FromBody] ChangeUsernameDto changeUsernameDto)
     {
@@ -134,7 +135,7 @@ public class UserController(IUserService userService, INotificationService notif
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/update-phone/")]
     public async Task<IActionResult> UpdateAuthorizedPhone([FromBody] ChangePhoneDto changePhoneDto)
     {
@@ -151,7 +152,7 @@ public class UserController(IUserService userService, INotificationService notif
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPost("me/confirm-phone-update/")]
     public async Task<IActionResult> ConfirmPhoneUpdate([FromBody] ConfirmPhoneDto confirmPhoneDto)
     {
@@ -170,7 +171,7 @@ public class UserController(IUserService userService, INotificationService notif
             BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/update-email")]
     public async Task<IActionResult> UpdateAuthorizedEmail([FromBody] ChangeEmailDto changeEmailDto)
     {
@@ -188,7 +189,7 @@ public class UserController(IUserService userService, INotificationService notif
             },
             BadRequest);
     }
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPost("me/confirm-email-update/")]
     public async Task<IActionResult> ConfirmEmailUpdate([FromBody] ConfirmEmailDto confirmEmailDto)
     {
@@ -206,7 +207,7 @@ public class UserController(IUserService userService, INotificationService notif
         },
         BadRequest);
     }
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
 
     [HttpPatch("me/update-avatar")]
     public async Task<IActionResult> UpdateUserAvatar([FromForm] IFormFile file)
@@ -237,8 +238,7 @@ public class UserController(IUserService userService, INotificationService notif
             }, BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
-
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/update-fcm-token")]
     public async Task<IActionResult> UpdateUsersFCMToken([FromBody] ChangeUserFCMTokenDto changeUserFCMTokenDto)
     {
@@ -248,7 +248,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/")]
     public async Task<IActionResult> UpdateUserData([FromBody] JsonPatchDocument<UpdateUserDto> updateUserDtoPatch)
     {
@@ -309,7 +309,7 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
     #region Delete user
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpDelete("me/")]
     public async Task<IActionResult> DeleteUser(DeleteUserDto deleteUserDto)
     {
@@ -321,7 +321,7 @@ public class UserController(IUserService userService, INotificationService notif
             , BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.AnonymousUser)]
     [HttpDelete("me/delete-anonymous")]
     public async Task<IActionResult> DeleteAnonymousUser()
     {
@@ -335,7 +335,7 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
     #region users notifications
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     [HttpGet("me/notifications")]
     public async Task<IActionResult> GetUserNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1, [FromQuery] bool? isRead = null)
     {
@@ -356,7 +356,7 @@ public class UserController(IUserService userService, INotificationService notif
          , BadRequest);
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     [HttpPatch("me/notifications/{notificationId}/mark-as-read/")]
     public async Task<IActionResult> MarkNotificationAsRead([FromRoute] int notificationId)
     {
@@ -364,7 +364,7 @@ public class UserController(IUserService userService, INotificationService notif
         return (await _notificationService.MarkNotificationAsRead(user.Id, notificationId))
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
     }
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     [HttpDelete("me/notifications/{notificationId}")]
     public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
     {
@@ -372,7 +372,7 @@ public class UserController(IUserService userService, INotificationService notif
         return (await _notificationService.DeleteNotification(user.Id, notificationId))
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification Deleted." }), BadRequest);
     }
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     [HttpDelete("me/notifications/")]
     public async Task<IActionResult> DeleteAllNotifications()
     {
@@ -385,7 +385,7 @@ public class UserController(IUserService userService, INotificationService notif
     #region user Settings
 
     [HttpPatch("me/general-settings")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     public async Task<IActionResult> UpdateUserGeneralSettings([FromBody] JsonPatchDocument<UserGeneralSettingsDto> generalSettingsDtoPatch)
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -431,7 +431,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpPatch("me/hand-settings")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     public async Task<IActionResult> UpdateUserHandSettings([FromBody] JsonPatchDocument<UserHandSettingsDto> handSettingsDtoPatch)
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -477,6 +477,7 @@ public class UserController(IUserService userService, INotificationService notif
             settings.RoundsCount = dto.RoundsCount;
             settings.PlayersCountInTeam = dto.PlayersCountInTeam;
             settings.TeamsCount = dto.TeamsCount;
+            settings.WinUsingZat = dto.WinUsingZat;
 
             return Result.Ok(settings);
         })
@@ -492,7 +493,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpPatch("me/baloot-settings")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     public async Task<IActionResult> UpdateUserBalootSettings([FromBody] JsonPatchDocument<UserBalootSettingsDto> balootSettingsDtoPatch)
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -524,6 +525,9 @@ public class UserController(IUserService userService, INotificationService notif
             // validate here
             settings.IsAdvancedRecording = dto.IsAdvancedRecording;
             settings.IsFlipped = dto.IsFlipped;
+            settings.ShowWhoWonDialogOnDraw = dto.ShowWhoWonDialogOnDraw;
+            settings.IsSakkahMashdodahMode = dto.IsSakkahMashdodahMode;
+
             return Result.Ok(settings);
         })
         .OnSuccessAsync<UserBalootSettings>(_userService.UpdateUserBalootSettings)
@@ -538,7 +542,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpGet("me/general-settings")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     public async Task<IActionResult> GetUserGeneralSettings()
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -556,7 +560,7 @@ public class UserController(IUserService userService, INotificationService notif
             , BadRequest);
     }
     [HttpGet("me/hand-settings")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     public async Task<IActionResult> GetUserHandSettings()
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -575,7 +579,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpGet("me/baloot-settings")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.User)]
     public async Task<IActionResult> GetUserBalootSettings()
     {
         User user = (User)HttpContext.Items["User"]!;

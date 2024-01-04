@@ -7,7 +7,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
     private readonly IInfluencerCodesService _influencerCodesService = influencerCodesService;
 
     [HttpPost]
-    [Authorization(AuthZUserType.Admin)]
+    [Auth(SystemUserRoles.Admin)]
     public async Task<IActionResult> AddInfluencerCode(AddInfluencerCodeDto dto)
     {
         return (await _influencerCodesService.AddInfluencerCode(dto.Code, dto.NumberOfDays, dto.ExpireAt))
@@ -24,7 +24,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
     }
 
     [HttpPost("use")]
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
 
     public async Task<IActionResult> UseInfluencerCode(UseInfluencerCodeDto dto)
     {

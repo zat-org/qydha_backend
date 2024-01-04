@@ -2,18 +2,12 @@
 
 [ApiController]
 [Route("iaphub/")]
-public class IAPHubController : ControllerBase
+public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubController> logger, IOptions<IAPHubSettings> iaphubSettings) : ControllerBase
 {
-    private readonly IPurchaseService _purchaseService;
-    private readonly IAPHubSettings _iAPHubSettings;
-    private readonly ILogger<IAPHubController> _logger;
+    private readonly IPurchaseService _purchaseService = purchaseService;
+    private readonly IAPHubSettings _iAPHubSettings = iaphubSettings.Value;
+    private readonly ILogger<IAPHubController> _logger = logger;
 
-    public IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubController> logger, IOptions<IAPHubSettings> iaphubSettings)
-    {
-        _iAPHubSettings = iaphubSettings.Value;
-        _purchaseService = purchaseService;
-        _logger = logger;
-    }
     [HttpPost]
     public async Task<IActionResult> IApHubWebHook([FromBody] WebHookDto webHookDto)
     {
@@ -43,7 +37,7 @@ public class IAPHubController : ControllerBase
         }
     }
 
-    [Authorization(AuthZUserType.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPost("free_30/")]
     public async Task<IActionResult> SubscribeInFree()
     {

@@ -29,7 +29,7 @@ public class AdminController(IAdminUserService adminUserService) : ControllerBas
     }
 
 
-    [Authorization(AuthZUserType.Admin)]
+    [Auth(SystemUserRoles.Admin)]
     [HttpPatch("change-password/")]
     public async Task<IActionResult> ChangePassword([FromBody] AdminUserChangePasswordDto dto)
     {
