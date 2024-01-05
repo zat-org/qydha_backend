@@ -12,7 +12,7 @@ public enum ErrorType
     InvalidCredentials = 4011, // 400
     InvalidActionByAnonymousUser = 4012, // 400
     InvalidActionByRegularUser = 4013, // 400
-    InvalidActionOrForbidden = 4030,
+    InvalidActionOrForbidden = 4030, //403
     #endregion
 
     #region influencer codes errors

@@ -48,12 +48,12 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
 
-    [Auth(SystemUserRoles.AnonymousUser)]
+    // [Auth(SystemUserRoles.AnonymousUser)]
     [HttpPost("register-anonymous/")]
     public async Task<IActionResult> RegisterAnonymous([FromBody] UserRegisterDTO dto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, user.Id))
+        // User user = (User)HttpContext.Items["User"]!;
+        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken , null))
         .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
             new
             {

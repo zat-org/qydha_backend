@@ -321,15 +321,16 @@ public class UserController(IUserService userService, INotificationService notif
             , BadRequest);
     }
 
-    [Auth(SystemUserRoles.AnonymousUser)]
+    // [Auth(SystemUserRoles.AnonymousUser)]
     [HttpDelete("me/delete-anonymous")]
-    public async Task<IActionResult> DeleteAnonymousUser()
+    public IActionResult DeleteAnonymousUser()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.DeleteAnonymousUser(user.Id))
-        .Handle<User, IActionResult>(
-            (user) => Ok(new { data = new { }, message = $"Anonymous user deleted successfully." })
-            , BadRequest);
+        // User user = (User)HttpContext.Items["User"]!;
+        // return (await _userService.DeleteAnonymousUser(user.Id))
+        // .Handle<User, IActionResult>(
+        //     (user) => Ok(new { data = new { }, message = $"Anonymous user deleted successfully." })
+        //     , BadRequest);
+        return Ok();
     }
 
     #endregion
