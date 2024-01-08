@@ -132,27 +132,6 @@ builder.Services.Configure<UltraMsgSettings>(builder.Configuration.GetSection("U
 builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetSection("NotificationImageSettings"));
 
 
-// Authentication 
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer(options =>
-    {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = false;
-        options.TokenValidationParameters = new()
-        {
-            // TODO ::  Validate Life time when have refresh token mechanism
-            // ValidateLifetime = true,
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Authentication:Issuer"],
-            ValidAudience = builder.Configuration["Authentication:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.ASCII.GetBytes(builder.Configuration["Authentication:SecretForKey"] ?? "MustProvideSecretKeyIn__CONFIGURATION__")
-            )
-        };
-
-    });
 
 // db connection
 builder.Services.AddScoped<IDbConnection, ProfiledDbConnection>(
@@ -258,9 +237,6 @@ app.UseMiniProfiler();
 app.UseStaticFiles();
 
 app.UseSerilogRequestLogging();
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.MapControllers();
 

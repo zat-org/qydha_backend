@@ -132,6 +132,19 @@ public static class ResultExtensions
         }
     }
 
+    public static void Handle<InT>(this Result<InT> result, Action<InT> OnSuccessFunc, Action<Error> OnFailureFunc)
+    {
+        if (result.IsSuccess)
+        {
+            OnSuccessFunc(result.Value);
+        }
+        else
+        {
+            OnFailureFunc(result.Error);
+        }
+    }
+
+
     public static OutT Handle<InT, OutT>(this Result<InT> result, Func<InT, OutT> OnSuccessFunc, Func<Error, OutT> OnFailureFunc)
     {
         if (result.IsSuccess)

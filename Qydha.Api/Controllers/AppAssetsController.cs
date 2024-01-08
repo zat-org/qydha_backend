@@ -148,7 +148,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
             BadRequest);
     }
 
-    [Auth]
+    
     [HttpGet("popup/")]
     public async Task<IActionResult> GetPopup()
     {

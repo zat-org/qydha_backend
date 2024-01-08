@@ -190,12 +190,12 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
 
-    // [Auth]
-    // [HttpGet("test")]
-    // public IActionResult TestDeploy()
-    // {
-    //     return Ok(new { message = "Deployed. ✔️✔️" });
-    // }
+    [Auth(SystemUserRoles.All)]
+    [HttpGet("test")]
+    public IActionResult TestDeploy()
+    {
+        return Ok(new { message = "Deployed. ✔️✔️" });
+    }
 
 
 
