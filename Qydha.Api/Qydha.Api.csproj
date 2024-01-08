@@ -22,24 +22,6 @@
 	<ItemGroup>
       <Content Include="Templates\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
-<!-- 
-	<ItemGroup>
-      <Content Include="app_keys.json" CopyToPublishDirectory="PreserveNewest"/>
-  </ItemGroup>
-
-	<ItemGroup>
-      <Content Include="app_keys.Development.json" CopyToPublishDirectory="PreserveNewest"/>
-  </ItemGroup>
-
-	<ItemGroup>
-      <Content Include="firebase_private_key.json" CopyToPublishDirectory="PreserveNewest"/>
-  </ItemGroup>
-
-	<ItemGroup>
-      <Content Include="googleCloud_private_key.json" CopyToPublishDirectory="PreserveNewest"/>
-  </ItemGroup> -->
-
-
 
   <ItemGroup>
     <Folder Include="Error_logs\" />
