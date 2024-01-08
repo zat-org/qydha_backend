@@ -86,7 +86,7 @@ builder.Services.AddSwaggerGen(opt =>
 builder.Services.AddMiniProfiler(options =>
       {
           options.RouteBasePath = "/profiler"; // Configure the route path as needed
-     
+
           //   options.ResultsAuthorize = _ => true;
           //   options.ResultsListAuthorize = _ => true;
       });
@@ -127,8 +127,9 @@ builder.Services.Configure<NotificationsSettings>(builder.Configuration.GetSecti
 // Notification Image Settings
 builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetSection("NotificationImageSettings"));
 // Book Settings
-builder.Services.Configure<BookSettings>(builder.Configuration.GetSection("BookSettings"));
-
+builder.Services.Configure<UltraMsgSettings>(builder.Configuration.GetSection("UltraMsgSettings"));
+//
+builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetSection("NotificationImageSettings"));
 
 
 // Authentication 
@@ -196,7 +197,7 @@ SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
 builder.Services.AddSingleton<TokenManager>();
 builder.Services.AddSingleton<OtpManager>();
 
-builder.Services.AddScoped<IMessageService, WhatsAppService>();
+builder.Services.AddScoped<IMessageService, UltraMsgService>();
 builder.Services.AddScoped<IMailingService, MailingService>();
 builder.Services.AddScoped<IFileService, GoogleCloudFileService>();
 builder.Services.AddScoped<IPushNotificationService, FCMService>();

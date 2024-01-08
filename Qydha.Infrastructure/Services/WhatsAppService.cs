@@ -1,14 +1,10 @@
 ﻿using System.Net.Http.Json;
 namespace Qydha.Infrastructure.Services;
 
-public class WhatsAppService : IMessageService
+public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings) : IMessageService
 {
-    private readonly WhatsAppSettings _whatsSettings;
+    private readonly WhatsAppSettings _whatsSettings = whatsSettings.Value;
 
-    public WhatsAppService(IOptions<WhatsAppSettings> whatsSettings)
-    {
-        _whatsSettings = whatsSettings.Value;
-    }
     public async Task<Result> SendAsync(string phoneNum, string otp)
     {
         using HttpClient httpClient = new();
