@@ -20,7 +20,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
         return getCodeRes
         .OnSuccess<InfluencerCode>((influencerCode) =>
         {
-            if (influencerCode.ExpireAt > DateTime.UtcNow)
+            if (influencerCode.ExpireAt < DateTime.UtcNow)
                 return Result.Fail<InfluencerCode>(new()
                 {
                     Code = ErrorType.InfluencerCodeExpired,

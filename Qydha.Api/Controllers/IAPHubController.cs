@@ -32,7 +32,7 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
                     }
                 );
             default:
-                _logger.LogWarning($"Unhandled IAPHUB Action Type : {webHookDto.Type} , Data => {webHookDto}");
+                _logger.LogWarning("Unhandled IAPHUB Action Type : {type} , Data => {data}", webHookDto.Type, webHookDto.ToString());
                 return Ok();
         }
     }

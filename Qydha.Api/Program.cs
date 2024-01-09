@@ -127,9 +127,9 @@ builder.Services.Configure<NotificationsSettings>(builder.Configuration.GetSecti
 // Notification Image Settings
 builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetSection("NotificationImageSettings"));
 // Book Settings
+builder.Services.Configure<BookSettings>(builder.Configuration.GetSection("BookSettings"));
+// UltraMsg Settings
 builder.Services.Configure<UltraMsgSettings>(builder.Configuration.GetSection("UltraMsgSettings"));
-//
-builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetSection("NotificationImageSettings"));
 
 
 

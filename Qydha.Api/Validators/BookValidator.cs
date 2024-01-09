@@ -14,7 +14,7 @@ public class BookValidator : AbstractValidator<IFormFile>
                    .Must(file => file.Length <= _settings.MaxBytes)
                    .WithMessage("الكتاب لا يمكن ان تتعدى الـ  MB 30 بالحجم")
                    .Must(file => IsValidMIME(Path.GetExtension(file.FileName)))
-                   .WithMessage("يرجي ارفاق صورة.");
+                   .WithMessage("يرجي ارفاق الكتاب.");
     }
 
 
