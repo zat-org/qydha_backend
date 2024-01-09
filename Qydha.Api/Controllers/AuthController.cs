@@ -176,18 +176,17 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
 
-    // [Auth(SystemUserRoles.RegularUser)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPost("logout/")]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
-        // User user = (User)HttpContext.Items["User"]!;
+        User user = (User)HttpContext.Items["User"]!;
 
-        // return (await _authService.Logout(user.Id))
-        // .Handle<IActionResult>(
-        //     () => Ok(new { data = new { }, message = "User logged out successfully." }),
-        //     BadRequest
-        // );
-        return Ok();
+        return (await _authService.Logout(user.Id))
+        .Handle<IActionResult>(
+            () => Ok(new { data = new { }, message = "User logged out successfully." }),
+            BadRequest
+        );
     }
 
 

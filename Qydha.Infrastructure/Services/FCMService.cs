@@ -18,7 +18,19 @@ public class FCMService : IPushNotificationService
             Notification = new()
             {
                 Title = title,
-                Body = body
+                Body = body,
+            },
+            Apns = new ApnsConfig()
+            {
+                Aps = new Aps()
+                {
+                    CriticalSound = new CriticalSound()
+                    {
+                        Critical = true,
+                        Name = "notification_alert.wav",
+                        Volume = 7
+                    }
+                }
             }
         };
         try
@@ -62,6 +74,7 @@ public class FCMService : IPushNotificationService
             Topic = topicName,
             Notification = new()
             {
+
                 Title = title,
                 Body = body
             }

@@ -78,4 +78,34 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
         var effectedRows = await _dbConnection.ExecuteAsync(sql, parameters);
         return Result.Ok(effectedRows);
     }
+
+    public async Task<Result> AssignNotificationToUser(Guid userId, int notificationId)
+    {
+        string sql = @$"INSERT INTO Notifications_Users_Link 
+                            (Notification_Id ,User_Id ,Read_At ,Sent_At)
+                        VALUES 
+                            (@notificationId ,@userId ,NULL , NOW())";
+        try
+        {
+            int effectedRows = await _dbConnection.ExecuteAsync(sql, new { userId, notificationId });
+            return Result.Ok(effectedRows);
+        }
+        catch (DbException exp)
+        {
+            if (IsForeignKeyConstraintViolation(exp))
+            {
+                _logger.LogWarning("Foreign Key Constrain Violation in {sql} at userId = {userId} , notificationId = {notificationId}", sql, userId, notificationId);
+                return Result.Fail<int>(new Error()
+                {
+                    Code = ErrorType.DbForeignKeyViolation,
+                    Message = $"Foreign Key Constrain Violation : {exp.Message} "
+                });
+            }
+            else
+            {
+                _logger.LogCritical("Db Error at {sql} with error message : {msg} ", sql, exp.Message);
+                throw;
+            }
+        }
+    }
 }

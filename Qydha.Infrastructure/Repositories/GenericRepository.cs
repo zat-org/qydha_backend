@@ -290,4 +290,9 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
             throw;
         }
     }
+    protected static bool IsForeignKeyConstraintViolation(DbException ex)
+    {
+        // PostgreSQL error code for foreign key violation is 23503
+        return ex.SqlState == "23503";
+    }
 }

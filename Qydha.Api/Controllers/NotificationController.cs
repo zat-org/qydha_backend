@@ -10,6 +10,12 @@ public class NotificationController(INotificationService notificationService, IO
     private readonly INotificationService _notificationService = notificationService;
     private readonly IOptions<NotificationImageSettings> _optionsOfPhoto = optionsOfPhoto;
 
+    [HttpGet("public/")]
+    public IActionResult GetPublicNotifications()
+    {
+        return Ok();
+    }
+
     [HttpPost("send-to-user/")]
     public async Task<IActionResult> SendNotificationToUser([FromBody] NotificationSendToUserDto notification_request)
     {

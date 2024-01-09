@@ -27,6 +27,7 @@ public enum ErrorType
     #endregion
 
     #region db errors
+    DbForeignKeyViolation = 4038,
     DbUniqueViolation = 4039,
     EntityNotFound = 4040,
     UserNotFound = 4041,
