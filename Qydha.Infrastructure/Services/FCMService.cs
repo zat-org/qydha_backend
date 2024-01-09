@@ -24,7 +24,10 @@ public class FCMService : IPushNotificationService
             {
                 Notification = new AndroidNotification()
                 {
-                    Sound = "notification_alert"
+                    Sound = "notification_alert",
+                    ChannelId = "qydha",
+                    DefaultSound = false,
+                    Priority = NotificationPriority.MAX
                 }
 
             },
