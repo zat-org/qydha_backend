@@ -176,7 +176,11 @@ SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
 builder.Services.AddSingleton<TokenManager>();
 builder.Services.AddSingleton<OtpManager>();
 
-builder.Services.AddScoped<IMessageService, WhatsAppService>();
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IMessageService, UltraMsgService>();
+else
+    builder.Services.AddScoped<IMessageService, WhatsAppService>();
+
 builder.Services.AddScoped<IMailingService, MailingService>();
 builder.Services.AddScoped<IFileService, GoogleCloudFileService>();
 builder.Services.AddScoped<IPushNotificationService, FCMService>();
