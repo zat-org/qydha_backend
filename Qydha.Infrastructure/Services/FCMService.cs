@@ -20,6 +20,14 @@ public class FCMService : IPushNotificationService
                 Title = title,
                 Body = body,
             },
+            Android = new AndroidConfig()
+            {
+                Notification = new AndroidNotification()
+                {
+                    Sound = "notification_alert"
+                }
+
+            },
             Apns = new ApnsConfig()
             {
                 Aps = new Aps()
@@ -27,7 +35,7 @@ public class FCMService : IPushNotificationService
                     CriticalSound = new CriticalSound()
                     {
                         Critical = true,
-                        Name = "notification_alert",
+                        Name = "notification_alert.wav",
                         Volume = 1
                     }
                 }
