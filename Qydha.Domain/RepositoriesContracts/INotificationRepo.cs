@@ -12,4 +12,5 @@ public interface INotificationRepo : IGenericRepository<NotificationData>
     Task<Result<int>> DeleteNotificationByUserIdAsync(Guid userId, int notificationId);
     Task<Result<int>> MarkAllAsReadByUserIdAsync(Guid userId);
     Task<Result<int>> MarkNotificationAsReadByUserIdAsync(Guid userId, int notificationId);
+    Task<Result> ApplyAnonymousClickOnNotification(int notificationId);
 }

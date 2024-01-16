@@ -112,4 +112,7 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
                         };
                     });
     }
+
+    public async Task<Result> ApplyAnonymousClickOnNotification(int notificationId) =>
+            await _notificationRepo.ApplyAnonymousClickOnNotification(notificationId);
 }

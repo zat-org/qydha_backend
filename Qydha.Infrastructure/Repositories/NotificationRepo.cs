@@ -233,4 +233,31 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
 
     }
 
+    public async Task<Result> ApplyAnonymousClickOnNotification(int notificationId)
+    {
+        var anonymousClicksColumnName = NotificationData.GetColumnName(nameof(NotificationData.AnonymousClicks));
+        NotificationVisibility[] visibilities = [NotificationVisibility.Public, NotificationVisibility.Anonymous];
+        string query = @$"
+            UPDATE {NotificationData.GetTableName()} 
+            SET {anonymousClicksColumnName} = {anonymousClicksColumnName} + 1 
+            WHERE {NotificationData.GetKeyColumnName()} = @Id AND 
+                {NotificationData.GetColumnName(nameof(NotificationData.Visibility))} IN  @Visibilities ;";
+        try
+        {
+            int effectedRows = await _dbConnection.ExecuteAsync(query, new { Id = notificationId, Visibilities = visibilities });
+            if (effectedRows == 1)
+                return Result.Ok(effectedRows);
+            else
+                return Result.Fail(new()
+                {
+                    Code = ErrorType.NotificationNotFound,
+                    Message = "Notification Not Found"
+                });
+        }
+        catch (DbException exp)
+        {
+            _logger.LogCritical("Db Error at {sql} with error message : {msg} ", query, exp.Message);
+            throw;
+        }
+    }
 }

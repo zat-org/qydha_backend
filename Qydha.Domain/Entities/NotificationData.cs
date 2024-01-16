@@ -35,6 +35,11 @@ public class NotificationData : DbEntity<NotificationData>
         set => PayloadStr = JsonConvert.SerializeObject(value);
     }
 
-    [Column("Visibility")]
+    [Column("visibility")]
     public NotificationVisibility Visibility { get; set; } = NotificationVisibility.Private;
+
+    [Column("anonymous_clicks")]
+    public int AnonymousClicks { get; set; }
+
+
 }

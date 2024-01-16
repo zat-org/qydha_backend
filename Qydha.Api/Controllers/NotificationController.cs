@@ -30,6 +30,22 @@ public class NotificationController(INotificationService notificationService) : 
         );
     }
 
+    [HttpPatch("click/{notificationId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ApplyAnonymousClickOnNotification([FromRoute] int notificationId)
+    {
+        return (await _notificationService.ApplyAnonymousClickOnNotification(notificationId))
+        .Handle<IActionResult>(
+            () => Ok(
+                    new
+                    {
+                        data = new { },
+                        message = "Notification Clicked successfully."
+                    })
+            , BadRequest
+        );
+    }
+
     [HttpPost("send-to-user/")]
     public IActionResult SendNotificationToUser([FromForm] NotificationSendToUserDto dto)
     {
