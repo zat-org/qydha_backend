@@ -536,7 +536,8 @@ public class UserController(IUserService userService, INotificationService notif
             settings.IsFlipped = dto.IsFlipped;
             settings.ShowWhoWonDialogOnDraw = dto.ShowWhoWonDialogOnDraw;
             settings.IsSakkahMashdodahMode = dto.IsSakkahMashdodahMode;
-
+            settings.IsNumbersSoundEnabled = dto.IsNumbersSoundEnabled;
+            settings.IsCommentsSoundEnabled = dto.IsCommentsSoundEnabled;
             return Result.Ok(settings);
         })
         .OnSuccessAsync<UserBalootSettings>(_userService.UpdateUserBalootSettings)
@@ -599,7 +600,7 @@ public class UserController(IUserService userService, INotificationService notif
             {
                 return Ok(new
                 {
-                    data = new { generalSettings = mapper.UserBalootSettingsToDto(settings) },
+                    data = new { balootSettings = mapper.UserBalootSettingsToDto(settings) },
                     message = "Settings fetched successfully."
                 });
             }
