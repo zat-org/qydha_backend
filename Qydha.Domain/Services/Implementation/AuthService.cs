@@ -1,14 +1,16 @@
 ﻿namespace Qydha.Domain.Services.Implementation;
 
-public class AuthService(TokenManager tokenManager, INotificationService notificationService, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, IUserGeneralSettingsRepo userGeneralSettingsRepo) : IAuthService
+public class AuthService(TokenManager tokenManager, INotificationService notificationService, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, IUserPromoCodesRepo userPromoCodesRepo, IOptions<RegisterGiftSetting> newUserGiftOptions) : IAuthService
 {
     #region  injections
     private readonly IUserRepo _userRepo = userRepo;
     private readonly IRegistrationOTPRequestRepo _registrationOTPRequestRepo = registrationOTPRequestRepo;
     private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
-    private readonly IUserGeneralSettingsRepo _userGeneralSettingsRepo = userGeneralSettingsRepo;
     private readonly INotificationService _notificationService = notificationService;
     private readonly IMessageService _messageService = messageService;
+    private readonly IUserPromoCodesRepo _userPromoCodesRepo = userPromoCodesRepo;
+    private readonly RegisterGiftSetting _newUserGiftSettings = newUserGiftOptions.Value;
+
     private readonly OtpManager _otpManager = otpManager;
     private readonly TokenManager _tokenManager = tokenManager;
     #endregion
@@ -112,7 +114,10 @@ public class AuthService(TokenManager tokenManager, INotificationService notific
         else
             saveUserRes = await _userRepo.AddAsync<Guid>(User.CreateUserFromRegisterRequest(otpRequest));
 
-        return saveUserRes.OnSuccessAsync<User>(async (user) =>
+        return saveUserRes
+        .OnSuccessAsync<User>(async (user) =>
+            (await _userPromoCodesRepo.AddAsync<Guid>(new UserPromoCode(user.Id, _newUserGiftSettings.CodeName, _newUserGiftSettings.NumberOfGiftedDays, DateTime.UtcNow.AddDays(_newUserGiftSettings.ExpireAfterInDays)))).MapTo(user))
+        .OnSuccessAsync<User>(async (user) =>
             {
                 await _notificationService.SendToUserPreDefinedNotification(user, SystemDefaultNotifications.Register);
                 return Result.Ok(user);
