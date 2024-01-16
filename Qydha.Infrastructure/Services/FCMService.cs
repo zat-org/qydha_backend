@@ -31,7 +31,7 @@ public class FCMService : IPushNotificationService
                     CriticalSound = new CriticalSound()
                     {
                         Critical = true,
-                        Name = "notification_alert",
+                        Name = "notification_alert.wav",
                         Volume = 1
                     }
                 }
