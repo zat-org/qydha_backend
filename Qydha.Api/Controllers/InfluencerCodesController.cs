@@ -10,7 +10,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
     [Auth(SystemUserRoles.Admin)]
     public async Task<IActionResult> AddInfluencerCode(AddInfluencerCodeDto dto)
     {
-        return (await _influencerCodesService.AddInfluencerCode(dto.Code, dto.NumberOfDays, dto.ExpireAt))
+        return (await _influencerCodesService.AddInfluencerCode(dto.Code, dto.NumberOfDays, dto.ExpireAt, dto.MaxInfluencedUsersCount))
         .Handle<InfluencerCode, IActionResult>((InfCode) => Ok(new
         {
             Data = new

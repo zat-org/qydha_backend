@@ -23,17 +23,21 @@ public class InfluencerCode : DbEntity<InfluencerCode>
     [Column("number_of_days")]
     public int NumberOfDays { get; set; }
 
+    [Column("max_influenced_users_count")]
+    public int MaxInfluencedUsersCount { get; set; }
+
 
     public InfluencerCode()
     {
 
     }
-    public InfluencerCode(string code, int numOfDays, DateTime? expireDate)
+    public InfluencerCode(string code, int numOfDays, DateTime? expireDate, int maxInfluencedUsers)
     {
         Code = code;
         NormalizedCode = code.ToUpper();
         CreatedAt = DateTime.UtcNow;
         ExpireAt = expireDate;
         NumberOfDays = numOfDays;
+        MaxInfluencedUsersCount = maxInfluencedUsers;
     }
 }

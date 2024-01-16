@@ -7,11 +7,11 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
     private readonly INotificationService _notificationService = notificationService;
     private readonly IPurchaseRepo _purchaseRepo = purchaseRepo;
 
-    public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTime? expireDate)
+    public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTime? expireDate, int MaxInfluencedUsersCount)
     {
         var getCodeRes = await _influencerCodesRepo.IsCodeAvailable(code);
         return getCodeRes
-        .OnSuccessAsync(async () => await _influencerCodesRepo.AddAsync<Guid>(new InfluencerCode(code, numOfDays, expireDate)));
+        .OnSuccessAsync(async () => await _influencerCodesRepo.AddAsync<Guid>(new InfluencerCode(code, numOfDays, expireDate, MaxInfluencedUsersCount)));
     }
 
     public async Task<Result<User>> UseInfluencerCode(Guid userId, string code)
@@ -38,6 +38,21 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
                     {
                         Code = ErrorType.InfluencerCodeAlreadyUsed,
                         Message = "Influencer Code Used Before"
+                    });
+                return Result.Ok(influencerCode);
+            });
+        })
+        .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
+        {
+            if (influencerCode.MaxInfluencedUsersCount == 0) return Result.Ok(influencerCode);
+            Result<int> getUsageNumRes = await _purchaseRepo.GetInfluencerCodeUsageByAllUsersCountAsync(influencerCode.Code);
+            return getUsageNumRes.OnSuccess(num =>
+            {
+                if (num >= influencerCode.MaxInfluencedUsersCount)
+                    return Result.Fail<InfluencerCode>(new()
+                    {
+                        Code = ErrorType.InfluencerCodeExceedMaxUsageCount,
+                        Message = "InfluencerCode Exceed Max Usage Count"
                     });
                 return Result.Ok(influencerCode);
             });

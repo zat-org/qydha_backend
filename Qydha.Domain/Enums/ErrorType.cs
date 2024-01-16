@@ -18,6 +18,8 @@ public enum ErrorType
     #region influencer codes errors
     InfluencerCodeExpired = 4020,
     InfluencerCodeAlreadyUsed = 4021,
+    InfluencerCodeExceedMaxUsageCount = 4022,
+
     #endregion
 
     #region Promo Codes errors

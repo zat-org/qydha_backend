@@ -6,6 +6,8 @@ public class AddInfluencerCodeDto
     public string Code { get; set; } = null!;
     public int NumberOfDays { get; set; }
     public DateTime? ExpireAt { get; set; }
+    public int MaxInfluencedUsersCount { get; set; }
+
 
 }
 public class AddInfluencerCodeDtoValidator : AbstractValidator<AddInfluencerCodeDto>
@@ -27,6 +29,8 @@ public class AddInfluencerCodeDtoValidator : AbstractValidator<AddInfluencerCode
                    .Must(val => val > DateTime.UtcNow);
         });
 
-
+        RuleFor(dto => dto.MaxInfluencedUsersCount)
+        .NotEmpty()
+        .GreaterThanOrEqualTo(0);
     }
 }
