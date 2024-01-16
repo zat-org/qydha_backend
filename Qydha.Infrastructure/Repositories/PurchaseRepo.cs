@@ -16,13 +16,13 @@ public class PurchaseRepo(IDbConnection dbConnection, ILogger<PurchaseRepo> logg
                         where {Purchase.GetColumnName(nameof(Purchase.UserId))} = @userId AND
                         {Purchase.GetColumnName(nameof(Purchase.ProductSku))} = @code AND
                         {Purchase.GetColumnName(nameof(Purchase.Type))} = @type ;";
-            _logger.LogTrace("Before Execute Query :: #sql", [sql]);
+            _logger.LogTrace("Before Execute Query :: {sql}", sql);
             int num = await _dbConnection.ExecuteScalarAsync<int>(sql, new { userId, code, type = "Influencer" });
             return Result.Ok(num);
         }
         catch (DbException exp)
         {
-            _logger.LogCritical(exp, "Error from db : #msg ", [exp.Message]);
+            _logger.LogCritical(exp, "Error from db : {msg} ", exp.Message);
             throw;
         }
     }

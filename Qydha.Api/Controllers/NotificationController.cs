@@ -5,76 +5,91 @@ namespace Qydha.API.Controllers;
 [Route("notifications/")]
 [Auth(SystemUserRoles.Admin)]
 
-public class NotificationController(INotificationService notificationService, IOptions<NotificationImageSettings> optionsOfPhoto) : ControllerBase
+public class NotificationController(INotificationService notificationService) : ControllerBase
 {
     private readonly INotificationService _notificationService = notificationService;
-    private readonly IOptions<NotificationImageSettings> _optionsOfPhoto = optionsOfPhoto;
 
     [HttpGet("public/")]
-    public IActionResult GetPublicNotifications()
+    [AllowAnonymous]
+    public async Task<IActionResult> GetPublicNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
     {
-        return Ok();
+        return (await _notificationService.GetAllAnonymousUserNotification(pageSize, pageNumber))
+        .Handle<IEnumerable<NotificationData>, IActionResult>(
+            (notificationsData) =>
+            {
+                var mapper = new NotificationMapper();
+
+                return Ok(
+                    new
+                    {
+                        data = new { notifications = notificationsData.Select(n => mapper.NotificationDataToGetNotificationDto(n)) },
+                        message = "Notifications Fetched successfully."
+                    });
+            }
+            , BadRequest
+        );
     }
 
     [HttpPost("send-to-user/")]
-    public async Task<IActionResult> SendNotificationToUser([FromBody] NotificationSendToUserDto notification_request)
+    public IActionResult SendNotificationToUser([FromForm] NotificationSendToUserDto dto)
     {
-        return (await _notificationService.SendToUser(new Notification()
+        Dictionary<string, object> payload = [];
+        return Result.Ok()
+        .OnSuccessAsync(async () =>
         {
-            Title = notification_request.Title!,
-            Description = notification_request.Description!,
-            ActionPath = notification_request.Action_Path!,
-            ActionType = notification_request.Action_Type,
-            CreatedAt = DateTime.UtcNow,
-            UserId = notification_request.UserId
-        }))
+            if (dto.PopUpImage is not null)
+                return await _notificationService.UploadNotificationImage(dto.PopUpImage);
+            else
+                return Result.Ok(new FileData());
+        })
+        .OnSuccessAsync(async (fileData) =>
+        {
+            if (dto.PopUpImage is not null)
+                payload.Add("image", fileData);
+            return await _notificationService.SendToUser(dto.UserId, new NotificationData()
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                ActionPath = dto.ActionPath,
+                ActionType = dto.ActionType,
+                CreatedAt = DateTime.UtcNow,
+                Payload = payload
+            });
+        })
         .Handle<User, IActionResult>((user) =>
             Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" })
         , BadRequest);
-
     }
 
 
     [HttpPost("send-to-all-users/")]
-    public async Task<IActionResult> SendNotificationToAllUsers([FromBody] NotificationSendDto dto)
+    public IActionResult SendNotificationToAllUsers([FromForm] NotificationSendDto dto)
     {
-        return (await _notificationService.SendToAllUsers(new Notification()
+        Dictionary<string, object> payload = [];
+        return Result.Ok()
+        .OnSuccessAsync(async () =>
         {
-            Title = dto.Title!,
-            Description = dto.Description!,
-            ActionPath = dto.Action_Path!,
-            ActionType = dto.Action_Type,
-            CreatedAt = DateTime.UtcNow,
-        }))
-        .Handle<int, IActionResult>((effected) => Ok(new { Message = $"notification sent to : {effected} users " }), BadRequest);
-
-    }
-
-    [HttpPost("upload-notification-image/")]
-    public async Task<IActionResult> UploadNotificationImage([FromForm] IFormFile file)
-    {
-
-        var avatarValidator = new NotificationImageValidator(_optionsOfPhoto);
-        var validationRes = avatarValidator.Validate(file);
-
-        if (!validationRes.IsValid)
+            if (dto.PopUpImage is not null)
+                return await _notificationService.UploadNotificationImage(dto.PopUpImage);
+            else
+                return Result.Ok(new FileData());
+        })
+        .OnSuccessAsync(async (fileData) =>
         {
-            return BadRequest(new Error()
+            if (dto.PopUpImage is not null)
+                payload.Add("image", fileData);
+            return await _notificationService.SendToAllUsers(new NotificationData()
             {
-                Code = ErrorType.InvalidBodyInput,
-                Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
+                Title = dto.Title,
+                Description = dto.Description,
+                ActionPath = dto.ActionPath,
+                ActionType = dto.ActionType,
+                CreatedAt = DateTime.UtcNow,
+                Payload = payload
             });
-        }
-
-        return (await _notificationService.UploadNotificationImage(file))
-        .Handle<FileData, IActionResult>((imageUrl) =>
-            {
-                return Ok(new
-                {
-                    data = imageUrl,
-                    message = "Image updated successfully."
-                });
-            }, BadRequest);
+        })
+        .Handle<int, IActionResult>((usersCount) =>
+            Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" })
+        , BadRequest);
     }
-
 }

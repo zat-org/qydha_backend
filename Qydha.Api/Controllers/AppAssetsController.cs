@@ -11,7 +11,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
 
 
 
-    [Auth(SystemUserRoles.Admin)]
+    [Auth(SystemUserRoles.All )]
     [HttpPatch("baloot-book/")]
     public async Task<IActionResult> UpdateBalootBook([FromForm] IFormFile file)
     {
@@ -55,7 +55,6 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
     }
 
     [Auth(SystemUserRoles.Admin)]
-
     [HttpPatch("popup/")]
     public async Task<IActionResult> UpdatePopupData([FromBody] JsonPatchDocument<PopupDto> popupDtoPatch)
     {

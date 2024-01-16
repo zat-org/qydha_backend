@@ -21,7 +21,7 @@ public class AppAssetsService(IAppAssetsRepo appAssetsRepo, IFileService fileSer
                 (await _fileService.DeleteFile(tuple.Item1.Path)).OnFailure(() =>
                 {
                     //! Handle Error On Delete File 
-                    _logger.LogError("Can't delete the old book with the path : #path", [tuple.Item1.Path]);
+                    _logger.LogError("Can't delete the old book with the path : {path}",tuple.Item1.Path);
                 });
             return Result.Ok(tuple.Item2);
         })
@@ -52,7 +52,7 @@ public class AppAssetsService(IAppAssetsRepo appAssetsRepo, IFileService fileSer
                     .OnFailure(() =>
                     {
                         //! Handle Error On Delete File 
-                        _logger.LogError("Can't delete the old Popup image with the path : #path", [tuple.Item1.Image.Path]);
+                        _logger.LogError("Can't delete the old Popup image with the path : {path}", tuple.Item1.Image.Path);
                     });
             return Result.Ok(tuple);
         })

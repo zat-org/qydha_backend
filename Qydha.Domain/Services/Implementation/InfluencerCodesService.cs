@@ -46,7 +46,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
         {
             return (await _purchaseRepo.AddAsync<Guid>(new(influencerCode, userId)))
                     .OnSuccessAsync(async (purchase) =>
-                        await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)));
+                         await _notificationService.SendToUserPreDefinedNotification(purchase.UserId, SystemDefaultNotifications.UseInfluencerCode));
         });
     }
 }

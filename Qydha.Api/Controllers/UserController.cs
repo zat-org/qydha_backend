@@ -366,6 +366,14 @@ public class UserController(IUserService userService, INotificationService notif
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
     }
     [Auth(SystemUserRoles.User)]
+    [HttpPatch("me/notifications/mark-all-as-read/")]
+    public async Task<IActionResult> MarkAllNotificationAsRead([FromRoute] int notificationId)
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _notificationService.MarkAllNotificationsOfUserAsRead(user.Id))
+        .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
+    }
+    [Auth(SystemUserRoles.User)]
     [HttpDelete("me/notifications/{notificationId}")]
     public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
     {

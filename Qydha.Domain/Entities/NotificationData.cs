@@ -1,6 +1,8 @@
-﻿namespace Qydha.Domain.Entities;
+﻿using Newtonsoft.Json;
 
-[Table("notification")]
+namespace Qydha.Domain.Entities;
+
+[Table("notifications_data")]
 [NotFoundError(ErrorType.NotificationNotFound)]
 public class NotificationData : DbEntity<NotificationData>
 {
@@ -23,9 +25,15 @@ public class NotificationData : DbEntity<NotificationData>
     [Column("action_type")]
     public NotificationActionType ActionType { get; set; } = NotificationActionType.NoAction;
 
-    [Column("Payload")]
+
+    [Column("payload")]
     [JsonField]
-    public Dictionary<string, object> Payload { get; set; } = [];
+    public string PayloadStr { get; set; } = null!;
+    public Dictionary<string, object> Payload
+    {
+        get => JsonConvert.DeserializeObject<Dictionary<string, object>>(PayloadStr) ?? [];
+        set => PayloadStr = JsonConvert.SerializeObject(value);
+    }
 
     [Column("Visibility")]
     public NotificationVisibility Visibility { get; set; } = NotificationVisibility.Private;

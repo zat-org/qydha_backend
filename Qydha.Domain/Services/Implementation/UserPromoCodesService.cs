@@ -14,7 +14,7 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INoti
         return getUserRes
         .OnSuccessAsync(async (user) => await _userPromoCodesRepo.AddAsync<Guid>(new UserPromoCode(userId, code, numberOfDays, expireAt)))
         .OnSuccessAsync<UserPromoCode>(async (promo) =>
-            (await _notificationService.SendToUser(Notification.CreatePromoCodeNotification(promo))).MapTo(promo)
+            (await _notificationService.SendToUserPreDefinedNotification(userId, SystemDefaultNotifications.GetTicket)).MapTo(promo)
         );
     }
 

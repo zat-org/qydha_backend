@@ -101,13 +101,13 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
                 });
             if (userGeneralSettings is null || userHandSettings is null || userBalootSettings is null)
             {
-                _logger.LogError("user with #id do not have one of this settings => general settings : #hasGS , hand settings : #hasHS , baloot settings : #hasBS", [user.Id, userGeneralSettings is null, userHandSettings is null, userBalootSettings is null]);
+                _logger.LogError("user with {id} do not have one of this settings => general settings : {hasGS} , hand settings : {hasHS} , baloot settings : {hasBS}", user.Id, userGeneralSettings is null, userHandSettings is null, userBalootSettings is null);
             }
             return Result.Ok(new Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>(user, userGeneralSettings, userHandSettings, userBalootSettings));
         }
         catch (Exception exp)
         {
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
+            _logger.LogCritical(exp, "error from db : {msg} ", exp.Message);
             return Result.Fail<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>(new()
             {
                 Code = ErrorType.ServerErrorOnDB,

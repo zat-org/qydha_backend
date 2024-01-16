@@ -16,7 +16,7 @@ public class ExceptionHandlerAttribute : ExceptionFilterAttribute
         ObjectResult res;
         if (exception is DbException dbException)
         {
-            _logger.LogError(dbException, "Error caught by Exception Filter DbException Message :: #msg ", [dbException.Message]); //logger 
+            _logger.LogError(dbException, "Error caught by Exception Filter DbException Message :: {msg} ", dbException.Message); //logger 
             res = new ObjectResult(new Error()
             {
                 Message = dbException.Message,
@@ -28,12 +28,12 @@ public class ExceptionHandlerAttribute : ExceptionFilterAttribute
         }
         else
         {
-            _logger.LogError(exception, "Error caught by Exception Filter Outer exception Message :: #msg ", [exception.Message]); //logger 
+            _logger.LogError(exception, "Error caught by Exception Filter Outer exception Message :: {msg} ", exception.Message); //logger 
             while (exception.InnerException != null)
             {
                 exception = exception.InnerException;
             }
-            _logger.LogError(exception, "Error caught by Exception Filter Inner exception Message :: #msg ", [exception.Message]); //logger 
+            _logger.LogError(exception, "Error caught by Exception Filter Inner exception Message :: {msg} ", exception.Message); //logger 
             res = new ObjectResult(new Error()
             {
                 Message = exception.Message,

@@ -4,21 +4,25 @@ namespace Qydha.Infrastructure.Services;
 
 public class FCMService : IPushNotificationService
 {
-    public async Task<Result> SendToToken(string userToken, string title, string body)
+    private static Message CreateSingleTokenNotificationMessage(string userToken, string title, string body)
     {
-        if (string.IsNullOrEmpty(userToken))
-            return Result.Fail(new()
-            {
-                Code = ErrorType.InvalidFCMToken,
-                Message = $" Invalid FCM Token Value : '{userToken}' "
-            });
-        var msg = new Message()
+        return new Message()
         {
             Token = userToken,
             Notification = new()
             {
                 Title = title,
                 Body = body,
+            },
+            Android = new AndroidConfig()
+            {
+                Notification = new AndroidNotification()
+                {
+                    Sound = "notification_alert",
+                    ChannelId = "qydha",
+                    DefaultSound = false,
+                    Priority = NotificationPriority.MAX
+                }
             },
             Apns = new ApnsConfig()
             {
@@ -28,11 +32,90 @@ public class FCMService : IPushNotificationService
                     {
                         Critical = true,
                         Name = "notification_alert.wav",
-                        Volume = 7
+                        Volume = 1
                     }
                 }
             }
         };
+    }
+    private static Message CreateTopicNotificationMessage(string topicName, string title, string body)
+    {
+        return new Message()
+        {
+            Topic = topicName,
+            Notification = new()
+            {
+                Title = title,
+                Body = body,
+            },
+            Android = new AndroidConfig()
+            {
+                Notification = new AndroidNotification()
+                {
+                    Sound = "notification_alert",
+                    ChannelId = "qydha",
+                    DefaultSound = false,
+                    Priority = NotificationPriority.MAX
+                }
+            },
+            Apns = new ApnsConfig()
+            {
+                Aps = new Aps()
+                {
+                    CriticalSound = new CriticalSound()
+                    {
+                        Critical = true,
+                        Name = "notification_alert.wav",
+                        Volume = 1
+                    }
+                }
+            }
+        };
+    }
+    private static MulticastMessage CreateNotificationMulticastMessage(IEnumerable<string> tokens, string title, string body)
+    {
+        return new MulticastMessage()
+        {
+            Tokens = tokens.ToList(),
+            Notification = new()
+            {
+                Title = title,
+                Body = body,
+            },
+            Android = new AndroidConfig()
+            {
+                Notification = new AndroidNotification()
+                {
+                    Sound = "notification_alert",
+                    ChannelId = "qydha",
+                    DefaultSound = false,
+                    Priority = NotificationPriority.MAX
+                }
+            },
+            Apns = new ApnsConfig()
+            {
+                Aps = new Aps()
+                {
+                    CriticalSound = new CriticalSound()
+                    {
+                        Critical = true,
+                        Name = "notification_alert.wav",
+                        Volume = 1
+                    }
+                }
+            }
+        };
+    }
+
+    public async Task<Result> SendToToken(string userToken, string title, string body)
+    {
+        if (string.IsNullOrEmpty(userToken))
+            return Result.Fail(new()
+            {
+                Code = ErrorType.InvalidFCMToken,
+                Message = $" Invalid FCM Token Value : '{userToken}' "
+            });
+        var msg = CreateSingleTokenNotificationMessage(userToken, title, body);
         try
         {
             var res = await FirebaseMessaging.DefaultInstance.SendAsync(msg);
@@ -69,16 +152,7 @@ public class FCMService : IPushNotificationService
                 Code = ErrorType.InvalidTopicName,
                 Message = $" Invalid Topic Name Value : '{topicName}' "
             });
-        var msg = new Message()
-        {
-            Topic = topicName,
-            Notification = new()
-            {
-
-                Title = title,
-                Body = body
-            }
-        };
+        var msg = CreateTopicNotificationMessage(topicName, title, body);
         try
         {
             var res = await FirebaseMessaging.DefaultInstance.SendAsync(msg);
@@ -110,22 +184,14 @@ public class FCMService : IPushNotificationService
 
     public async Task<Result> SendToTokens(IEnumerable<string> tokens, string title, string body)
     {
-        if (tokens.Count() > 0)
-            return Result.Fail(new()
-            {
-                Code = ErrorType.InvalidFCMTokensArray,
-                Message = $" Invalid Tokens Array  : '{tokens}' "
-            });
+        // if (tokens.Count() > 0)
+        //     return Result.Fail(new()
+        //     {
+        //         Code = ErrorType.InvalidFCMTokensArray,
+        //         Message = $" Invalid Tokens Array  : '{tokens}' "
+        //     });
 
-        var msg = new MulticastMessage()
-        {
-            Tokens = tokens.ToList(),
-            Notification = new()
-            {
-                Title = title,
-                Body = body
-            }
-        };
+        var msg = CreateNotificationMulticastMessage(tokens, title, body);
         try
         {
             var res = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(msg);

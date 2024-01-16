@@ -114,7 +114,7 @@ public class AuthService(TokenManager tokenManager, INotificationService notific
 
         return saveUserRes.OnSuccessAsync<User>(async (user) =>
             {
-                await _notificationService.SendToUser(user, Notification.CreateRegisterNotification(user));
+                await _notificationService.SendToUserPreDefinedNotification(user, SystemDefaultNotifications.Register);
                 return Result.Ok(user);
             });
     }

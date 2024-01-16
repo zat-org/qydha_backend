@@ -1,11 +1,15 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface INotificationRepo : IGenericRepository<Notification>
+public interface INotificationRepo : IGenericRepository<NotificationData>
 {
-    Task<Result> DeleteByIdAndUserIdAsync(Guid userId, int id);
-    Task<Result<int>> DeleteAllByUserIdAsync(Guid userId);
+    Task<Result<int>> AssignNotificationToUser(Guid userId, int notificationId);
+    Task<Result<int>> AssignNotificationToUser(Guid userId, NotificationData notification);
+    Task<Result<int>> AssignNotificationToAllUsers(NotificationData notification);
+    Task<Result<NotificationData>> AssignNotificationToAllAnonymousUsers(NotificationData notification);
     Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null);
-    Task<Result> MarkNotificationAsRead(Guid userId, int id);
-    Task<Result<int>> AddToUsersWithCriteria(Notification notification, string filteringCriteria = "", object? filterParams = null);
-    Task<Result<int>> AddToUsersWithByIds(Notification notification, IEnumerable<Guid> ids);
+    Task<Result<IEnumerable<NotificationData>>> GetAllAnonymousUserNotification(int pageSize = 10, int pageNumber = 1);
+    Task<Result<int>> DeleteAllByUserIdAsync(Guid userId);
+    Task<Result<int>> DeleteNotificationByUserIdAsync(Guid userId, int notificationId);
+    Task<Result<int>> MarkAllAsReadByUserIdAsync(Guid userId);
+    Task<Result<int>> MarkNotificationAsReadByUserIdAsync(Guid userId, int notificationId);
 }

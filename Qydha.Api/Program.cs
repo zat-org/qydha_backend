@@ -34,6 +34,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<NotificationSendDtoValidato
 builder.Services.AddFluentValidationAutoValidation(configuration =>
 {
     configuration.OverrideDefaultResultFactoryWith<ValidatorResultFactory>();
+    configuration.EnableFormBindingSourceAutomaticValidation = true;
+    configuration.EnableBodyBindingSourceAutomaticValidation = true;
+    configuration.EnablePathBindingSourceAutomaticValidation = true;
+    configuration.EnablePathBindingSourceAutomaticValidation = true;
+    configuration.EnableQueryBindingSourceAutomaticValidation = true;
 });
 
 ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("ar");
@@ -169,6 +174,7 @@ builder.Services.AddScoped<IAppAssetsRepo, AppAssetsRepo>();
 
 #region SQL Mappers for json
 SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
+
 
 #endregion
 

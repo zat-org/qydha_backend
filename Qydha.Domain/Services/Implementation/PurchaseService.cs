@@ -51,7 +51,7 @@ public class PurchaseService : IPurchaseService
             return await _purchaseRepo.AddAsync<Guid>(purchase);
         })
         .OnSuccessAsync(async (purchase) =>
-            await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)));
+            await _notificationService.SendToUserPreDefinedNotification(purchase.UserId, SystemDefaultNotifications.MakePurchase));
     }
 
     public async Task<Result<User>> SubscribeInFree(Guid userId)
@@ -77,13 +77,13 @@ public class PurchaseService : IPurchaseService
             return await _purchaseRepo.AddAsync<Guid>(purchase);
         })
         .OnSuccessAsync(async (purchase) =>
-            await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)));
+            await _notificationService.SendToUserPreDefinedNotification(purchase.UserId, SystemDefaultNotifications.UseInfluencerCode));
     }
 
     public async Task<Result<UserPromoCode>> AddPromoCodePurchase(UserPromoCode promoCode)
     {
         return (await _purchaseRepo.AddAsync<Guid>(new(promoCode)))
-                .OnSuccessAsync(async (purchase) => await _notificationService.SendToUser(Notification.CreatePurchaseNotification(purchase)))
+                .OnSuccessAsync(async (purchase) => await _notificationService.SendToUserPreDefinedNotification(purchase.UserId, SystemDefaultNotifications.UseTicket))
                 .MapTo(promoCode);
     }
 
