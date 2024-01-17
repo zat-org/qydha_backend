@@ -188,22 +188,5 @@ public class AuthController(IAuthService authService) : ControllerBase
             BadRequest
         );
     }
-
-
-    [Auth(SystemUserRoles.All)]
-    [HttpGet("test")]
-    public IActionResult TestDeploy()
-    {
-        return Ok(new { message = "Deployed. ✔️✔️" });
-    }
-
-
-
-    // [HttpGet("throwError")]
-    // public IActionResult ThrowError()
-    // {
-    //     throw new InvalidOperationException();
-    // }
-
 }
 

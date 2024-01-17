@@ -68,6 +68,22 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         });
     }
 
+
+    public async Task<Result<NotificationData>> SendToAnonymousUsers(NotificationData notification)
+    {
+        return (await _notificationRepo.AssignNotificationToAllAnonymousUsers(notification))
+        .OnSuccessAsync<NotificationData>(async (notificationData) =>
+        {
+            (await _pushNotificationService.SendToTopic(_notificationsSettings.ToAnonymousTopicName, notification.Title, notification.Description))
+            .OnFailure((result) =>
+            {
+                //! Handle Error in send push notification to User with fcm; 
+                _logger.LogError(result.Error.ToString());
+            });
+            return Result.Ok(notificationData);
+        });
+    }
+
     // public async Task<Result<int>> SendToGroupOfUsers(Notification notification, Func<User, bool> criteriaFunc)
     // {
     //     return (await _userRepo.GetAllAsync())

@@ -30,7 +30,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpGet("me/")]
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> GetUser()
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -60,7 +60,6 @@ public class UserController(IUserService userService, INotificationService notif
        );
     }
 
-    [Auth(SystemUserRoles.All)]
     [HttpGet("is-username-available")]
     public async Task<IActionResult> IsUserNameAvailable([FromBody] string username)
     {
@@ -336,7 +335,7 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
     #region users notifications
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpGet("me/notifications")]
     public async Task<IActionResult> GetUserNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1, [FromQuery] bool? isRead = null)
     {
@@ -357,7 +356,7 @@ public class UserController(IUserService userService, INotificationService notif
          , BadRequest);
     }
 
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/notifications/{notificationId}/mark-as-read/")]
     public async Task<IActionResult> MarkNotificationAsRead([FromRoute] int notificationId)
     {
@@ -365,7 +364,7 @@ public class UserController(IUserService userService, INotificationService notif
         return (await _notificationService.MarkNotificationAsRead(user.Id, notificationId))
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
     }
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/notifications/mark-all-as-read/")]
     public async Task<IActionResult> MarkAllNotificationAsRead([FromRoute] int notificationId)
     {
@@ -373,7 +372,7 @@ public class UserController(IUserService userService, INotificationService notif
         return (await _notificationService.MarkAllNotificationsOfUserAsRead(user.Id))
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
     }
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpDelete("me/notifications/{notificationId}")]
     public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
     {
@@ -381,7 +380,7 @@ public class UserController(IUserService userService, INotificationService notif
         return (await _notificationService.DeleteNotification(user.Id, notificationId))
         .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification Deleted." }), BadRequest);
     }
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpDelete("me/notifications/")]
     public async Task<IActionResult> DeleteAllNotifications()
     {
@@ -394,7 +393,7 @@ public class UserController(IUserService userService, INotificationService notif
     #region user Settings
 
     [HttpPatch("me/general-settings")]
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> UpdateUserGeneralSettings([FromBody] JsonPatchDocument<UserGeneralSettingsDto> generalSettingsDtoPatch)
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -440,7 +439,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpPatch("me/hand-settings")]
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> UpdateUserHandSettings([FromBody] JsonPatchDocument<UserHandSettingsDto> handSettingsDtoPatch)
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -502,7 +501,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpPatch("me/baloot-settings")]
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> UpdateUserBalootSettings([FromBody] JsonPatchDocument<UserBalootSettingsDto> balootSettingsDtoPatch)
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -552,7 +551,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpGet("me/general-settings")]
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> GetUserGeneralSettings()
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -570,7 +569,7 @@ public class UserController(IUserService userService, INotificationService notif
             , BadRequest);
     }
     [HttpGet("me/hand-settings")]
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> GetUserHandSettings()
     {
         User user = (User)HttpContext.Items["User"]!;
@@ -589,7 +588,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpGet("me/baloot-settings")]
-    [Auth(SystemUserRoles.User)]
+    [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> GetUserBalootSettings()
     {
         User user = (User)HttpContext.Items["User"]!;

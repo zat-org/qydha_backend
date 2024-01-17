@@ -108,4 +108,35 @@ public class NotificationController(INotificationService notificationService) : 
             Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" })
         , BadRequest);
     }
+
+    [HttpPost("send-to-anonymous-users/")]
+    public IActionResult SendNotificationToAnonymousUsers([FromForm] NotificationSendDto dto)
+    {
+        Dictionary<string, object> payload = [];
+        return Result.Ok()
+        .OnSuccessAsync(async () =>
+        {
+            if (dto.PopUpImage is not null)
+                return await _notificationService.UploadNotificationImage(dto.PopUpImage);
+            else
+                return Result.Ok(new FileData());
+        })
+        .OnSuccessAsync(async (fileData) =>
+        {
+            if (dto.PopUpImage is not null)
+                payload.Add("image", fileData);
+            return await _notificationService.SendToAnonymousUsers(new NotificationData()
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                ActionPath = dto.ActionPath,
+                ActionType = dto.ActionType,
+                CreatedAt = DateTime.UtcNow,
+                Payload = payload
+            });
+        })
+        .Handle<NotificationData, IActionResult>((notification) =>
+            Ok(new { message = $"Notification sent to the Anonymous users" })
+        , BadRequest);
+    }
 }

@@ -7,7 +7,8 @@ public interface INotificationService
     Task<Result<User>> SendToUserPreDefinedNotification(Guid userId, int notificationId);
     Task<Result<User>> SendToUserPreDefinedNotification(User user, int notificationId);
     Task<Result<int>> SendToAllUsers(NotificationData notification);
-    
+    Task<Result<NotificationData>> SendToAnonymousUsers(NotificationData notification);
+
     // Task<Result<int>> SendToGroupOfUsers(Notification notification, Func<User, bool> criteriaFunc);
     Task<Result> MarkAllNotificationsOfUserAsRead(Guid userId);
     Task<Result> MarkNotificationAsRead(Guid userId, int notificationId);
