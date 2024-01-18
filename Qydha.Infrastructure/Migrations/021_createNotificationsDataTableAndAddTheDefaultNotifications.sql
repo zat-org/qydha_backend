@@ -29,7 +29,7 @@ INSERT INTO Notifications_Data (
 VALUES (
         'مرحباً بك في قيدها ♥',
         'نتمنى لك تجربة جميلة، ارسلنا لك هدية بقسم المتجر😉',
-        NOW() AT time zone 'utc' AS utc,
+        NOW() ,
         '_',
         1,
         '{}'::jsonb,
@@ -47,7 +47,7 @@ INSERT INTO Notifications_Data (
 VALUES (
         'شكرا لثقتك بقيدها..',
         'نتمنى لك تجربة جميلة، لا تنسى قيدها ليس مجرد حاسبة',
-        NOW() AT time zone 'utc' AS utc,
+        NOW() ,
         '_',
         1,
         '{}'::jsonb,
@@ -65,7 +65,7 @@ INSERT INTO Notifications_Data (
 VALUES (
         'وصلتك هدية..🎁 ',
         'شيك على المتجر .. تتهنى♥',
-        NOW() AT time zone 'utc' AS utc,
+        NOW() ,
         '_',
         1,
         '{}'::jsonb,
@@ -83,7 +83,7 @@ INSERT INTO Notifications_Data (
 VALUES (
         'تستاهل ما جاك',
         'نتمنى لك تجربة ممتعة♥',
-        NOW() AT time zone 'utc' AS utc,
+        NOW() ,
         '_',
         1,
         '{}'::jsonb,
@@ -101,7 +101,7 @@ INSERT INTO Notifications_Data (
 VALUES (
         'تم تفعيل الكود',
         'إذا عجبك التطبيق لا تنسى تنشره بين أخوياك',
-        NOW() AT time zone 'utc' AS utc,
+        NOW() ,
         '_',
         1,
         '{}'::jsonb,

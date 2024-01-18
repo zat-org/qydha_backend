@@ -7,7 +7,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
         string sql = @$"INSERT INTO Notifications_Users_Link 
                             (Notification_Id ,User_Id ,Read_At ,Sent_At)
                         VALUES 
-                            (@notificationId ,@userId ,NULL , NOW() AT time zone 'utc' AS utc)";
+                            (@notificationId ,@userId ,NULL , NOW() )";
         try
         {
             int effectedRows = await _dbConnection.ExecuteAsync(sql, new { userId, notificationId });
@@ -46,7 +46,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
             INSERT INTO Notifications_Users_Link
                 (Notification_Id, User_Id, Read_At, Sent_At)
             SELECT
-                inserted_notification.id, @userId, NULL, NOW() AT time zone 'utc' AS utc FROM inserted_notification;";
+                inserted_notification.id, @userId, NULL, NOW()  FROM inserted_notification;";
         try
         {
             int effectedRows = await _dbConnection.ExecuteAsync(query, parameters);
@@ -86,7 +86,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
             INSERT INTO Notifications_Users_Link
                 (Notification_Id, User_Id, Read_At, Sent_At)    
             SELECT
-                inserted_notification.id, users.id , NULL, NOW() AT time zone 'utc' AS utc FROM inserted_notification join users on users.is_Anonymous = false;";
+                inserted_notification.id, users.id , NULL, NOW()  FROM inserted_notification join users on users.is_Anonymous = false;";
 
         try
         {
@@ -198,7 +198,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
     {
         try
         {
-            string query = $"UPDATE notifications_users_link SET read_at = NOW() AT time zone 'utc' AS utc WHERE user_id = @Id ;";
+            string query = $"UPDATE notifications_users_link SET read_at = NOW()  WHERE user_id = @Id ;";
             _logger.LogTrace("Before Execute Query :: {query}", query);
             int effectedRows = await _dbConnection.ExecuteAsync(query, new { Id = userId });
             return Result.Ok(effectedRows);
@@ -214,7 +214,7 @@ public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRe
     {
         try
         {
-            string query = $"UPDATE notifications_users_link SET read_at = NOW() AT time zone 'utc' AS utc WHERE user_id = @userId AND id = @notificationId ;";
+            string query = $"UPDATE notifications_users_link SET read_at = NOW()  WHERE user_id = @userId AND id = @notificationId ;";
             _logger.LogTrace("Before Execute Query :: {query}", query);
             int effectedRows = await _dbConnection.ExecuteAsync(query, new { userId, notificationId });
             return effectedRows == 1 ?
