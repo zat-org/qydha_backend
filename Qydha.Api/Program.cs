@@ -4,6 +4,8 @@ using Dapper;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using StackExchange.Profiling.Data;
+using Serilog.Sinks.GoogleCloudLogging;
+using Serilog.Exceptions;
 
 
 FirebaseApp.Create(new AppOptions()
@@ -97,14 +99,32 @@ builder.Services.AddMiniProfiler(options =>
       });
 
 #region Serilog
-Log.Logger =
-    new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration)
+var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration)
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
     .WriteTo.Console()
-    .WriteTo.File(new JsonFormatter(), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning)
-    .WriteTo.File(new JsonFormatter(), "./info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information)
-    .CreateLogger();
+
+    .Enrich.WithExceptionDetails()
+
+    .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning);
+
+if (builder.Environment.IsDevelopment())
+{
+    loggerConfig.WriteTo.File(new JsonFormatter(renderMessage: true), "./info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information);
+}
+else
+{
+    string serviceAccountCredential = File.ReadAllText("googleCloud_private_key.json");
+    var googleCloudConfig = new GoogleCloudLoggingSinkOptions
+    {
+        ProjectId = "qydha-98740",
+        GoogleCredentialJson = serviceAccountCredential,
+        ServiceName = "Qydha Production"
+    };
+    loggerConfig.WriteTo.GoogleCloudLogging(googleCloudConfig);
+}
+
+Log.Logger = loggerConfig.CreateLogger();
 builder.Host.UseSerilog();
 #endregion
 
@@ -248,7 +268,16 @@ app.UseCors(MyAllowSpecificOrigins);
 app.UseMiniProfiler();
 app.UseStaticFiles();
 
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(op =>
+{
+    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms UserId : {UserId} User-Agent : {UserAgent} , Client IP : {ClientIp} ";
+    op.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("ClientIp", httpContext.Connection.RemoteIpAddress?.ToString());
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+        diagnosticContext.Set("UserId", httpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
+    };
+});
 
 app.MapControllers();
 

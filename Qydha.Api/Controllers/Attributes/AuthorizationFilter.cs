@@ -149,7 +149,7 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
             if (!string.IsNullOrEmpty(bearerToken))
             {
                 token = bearerToken.Substring("Bearer ".Length);
-                _logger.LogInformation("Enter AuthFilter with token = {token}", token);
+                // _logger.LogInformation("Enter AuthFilter with token = {token}", token);
                 return Result.Ok(token);
             }
         }
