@@ -270,13 +270,11 @@ app.UseStaticFiles();
 
 app.UseSerilogRequestLogging(op =>
 {
-    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms UserId : {UserId} , User-Agent : {UserAgent} , Client IP : {ClientIp} , X-Real-IP : {XRealIP} , X-Forwarded-For : {XForwardedFor} ";
+    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine}UserId : {UserId} {NewLine}Client IP : {ClientIp} {NewLine}User-Agent : {UserAgent} ";
     op.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
-        diagnosticContext.Set("ClientIp", httpContext.Connection.RemoteIpAddress?.ToString());
         diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
-        diagnosticContext.Set("XRealIP", httpContext.Request.Headers["X-Real-IP"].ToString());
-        diagnosticContext.Set("XForwardedFor", httpContext.Request.Headers["X-Forwarded-For"].ToString());
+        diagnosticContext.Set("ClientIp", httpContext.Request.Headers["X-Real-IP"].ToString());
         diagnosticContext.Set("UserId", httpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
     };
 });
