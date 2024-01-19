@@ -106,13 +106,10 @@ var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Conf
 
     .Enrich.WithExceptionDetails()
 
-    .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning);
+    .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning)
+    .WriteTo.File(new JsonFormatter(renderMessage: true), "./info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information);
 
-if (builder.Environment.IsDevelopment())
-{
-    loggerConfig.WriteTo.File(new JsonFormatter(renderMessage: true), "./info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information);
-}
-else
+if (builder.Environment.IsProduction())
 {
     string serviceAccountCredential = File.ReadAllText("googleCloud_private_key.json");
     var googleCloudConfig = new GoogleCloudLoggingSinkOptions
@@ -204,10 +201,13 @@ SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
 builder.Services.AddSingleton<TokenManager>();
 builder.Services.AddSingleton<OtpManager>();
 
-if (builder.Environment.IsDevelopment())
-    builder.Services.AddScoped<IMessageService, UltraMsgService>();
-else
-    builder.Services.AddScoped<IMessageService, WhatsAppService>();
+// if (builder.Environment.IsDevelopment())
+//     builder.Services.AddScoped<IMessageService, UltraMsgService>();
+// else
+//     builder.Services.AddScoped<IMessageService, WhatsAppService>();
+
+builder.Services.AddScoped<IMessageService, UltraMsgService>();
+
 
 builder.Services.AddScoped<IMailingService, MailingService>();
 builder.Services.AddScoped<IFileService, GoogleCloudFileService>();
@@ -262,10 +262,14 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+if (app.Configuration.GetValue<bool>("UseMiniProfiler"))
+{
+    app.UseMiniProfiler();
+}
+
 
 app.UseCors(MyAllowSpecificOrigins);
 
-app.UseMiniProfiler();
 app.UseStaticFiles();
 
 app.UseSerilogRequestLogging(op =>
