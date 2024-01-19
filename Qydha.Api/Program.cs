@@ -274,10 +274,10 @@ app.UseStaticFiles();
 
 app.UseSerilogRequestLogging(op =>
 {
-    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Client IP : {ClientIp} {NewLine} => User-Agent : {UserAgent} ";
+    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Client IP : {ClientIp} {NewLine} => X-INFO : {xINFO} ";
     op.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
-        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+        diagnosticContext.Set("xINFO", httpContext.Request.Headers["x-info"].ToString());
         diagnosticContext.Set("ClientIp", httpContext.Request.Headers["X-Real-IP"].ToString());
         diagnosticContext.Set("UserId", httpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
         diagnosticContext.Set("NewLine", "\n");
