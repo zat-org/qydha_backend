@@ -1,5 +1,4 @@
-﻿
-namespace Qydha.API.Models;
+﻿namespace Qydha.API.Models;
 
 public class AddInfluencerCodeDto
 {
@@ -30,7 +29,6 @@ public class AddInfluencerCodeDtoValidator : AbstractValidator<AddInfluencerCode
         });
 
         RuleFor(dto => dto.MaxInfluencedUsersCount)
-        .NotEmpty()
         .GreaterThanOrEqualTo(0);
     }
 }
