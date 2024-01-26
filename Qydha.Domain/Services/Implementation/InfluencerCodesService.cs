@@ -77,12 +77,12 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
             {
                 int usageNum = tuple.Item1;
                 int MaxUsageNum = tuple.Item2.MaxCodesPerUserInGroup;
-
+                // TODO Send this Error Code ErrorType.InfluencerCodeCategoryAlreadyUsed
                 if (usageNum >= MaxUsageNum)
                     return Result.Fail<InfluencerCode>(new()
                     {
-                        Code = ErrorType.InfluencerCodeCategoryAlreadyUsed,
-                        Message = "User Exceed the max usage count of this influencer Code category"
+                        Code = ErrorType.InvalidBodyInput,
+                        Message = "عذرا لقد استخدمت كود آخر مشابه"
                     });
                 return Result.Ok(influencerCode);
             });
