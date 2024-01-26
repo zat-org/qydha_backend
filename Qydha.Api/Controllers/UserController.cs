@@ -329,7 +329,11 @@ public class UserController(IUserService userService, INotificationService notif
         // .Handle<User, IActionResult>(
         //     (user) => Ok(new { data = new { }, message = $"Anonymous user deleted successfully." })
         //     , BadRequest);
-        return Ok();
+        return BadRequest(new Error()
+        {
+            Code = ErrorType.InvalidBodyInput,
+            Message = "برجاء تحديث التطبيق"
+        });
     }
 
     #endregion
@@ -486,6 +490,7 @@ public class UserController(IUserService userService, INotificationService notif
             settings.PlayersCountInTeam = dto.PlayersCountInTeam;
             settings.TeamsCount = dto.TeamsCount;
             settings.WinUsingZat = dto.WinUsingZat;
+            settings.TakweeshPoints = dto.TakweeshPoints;
 
             return Result.Ok(settings);
         })

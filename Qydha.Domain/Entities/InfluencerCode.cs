@@ -26,12 +26,15 @@ public class InfluencerCode : DbEntity<InfluencerCode>
     [Column("max_influenced_users_count")]
     public int MaxInfluencedUsersCount { get; set; }
 
+    [Column("category_id")]
+    public int? CategoryId { get; set; }
+
 
     public InfluencerCode()
     {
 
     }
-    public InfluencerCode(string code, int numOfDays, DateTime? expireDate, int maxInfluencedUsers)
+    public InfluencerCode(string code, int numOfDays, DateTime? expireDate, int maxInfluencedUsers, int? categoryId)
     {
         Code = code;
         NormalizedCode = code.ToUpper();
@@ -39,5 +42,6 @@ public class InfluencerCode : DbEntity<InfluencerCode>
         ExpireAt = expireDate;
         NumberOfDays = numOfDays;
         MaxInfluencedUsersCount = maxInfluencedUsers;
+        CategoryId = categoryId;
     }
 }

@@ -1,21 +1,13 @@
 ﻿namespace Qydha.Domain.Services.Implementation;
 
-public class PurchaseService : IPurchaseService
+public class PurchaseService(IPurchaseRepo purchaseRepo, IUserRepo userRepo, INotificationService notificationService, IOptions<SubscriptionSetting> subscriptionOptions, IOptions<ProductsSettings> productSettings) : IPurchaseService
 {
-    private readonly IPurchaseRepo _purchaseRepo;
-    private readonly IUserRepo _userRepo;
-    private readonly INotificationService _notificationService;
-    private readonly SubscriptionSetting _subscriptionSetting;
-    private readonly ProductsSettings _productsSettings;
+    private readonly IPurchaseRepo _purchaseRepo = purchaseRepo;
+    private readonly IUserRepo _userRepo = userRepo;
+    private readonly INotificationService _notificationService = notificationService;
+    private readonly SubscriptionSetting _subscriptionSetting = subscriptionOptions.Value;
+    private readonly ProductsSettings _productsSettings = productSettings.Value;
 
-    public PurchaseService(IPurchaseRepo purchaseRepo, IUserRepo userRepo, INotificationService notificationService, IOptions<SubscriptionSetting> subscriptionOptions, IOptions<ProductsSettings> productSettings)
-    {
-        _purchaseRepo = purchaseRepo;
-        _subscriptionSetting = subscriptionOptions.Value;
-        _userRepo = userRepo;
-        _notificationService = notificationService;
-        _productsSettings = productSettings.Value;
-    }
     public async Task<Result<User>> AddPurchase(string purchaseId, Guid userId, string productSku, DateTime created_at)
     {
         Result<User> getUserRes = (await _userRepo.GetByIdAsync(userId))

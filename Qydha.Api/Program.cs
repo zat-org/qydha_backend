@@ -152,7 +152,10 @@ builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetS
 builder.Services.Configure<BookSettings>(builder.Configuration.GetSection("BookSettings"));
 // UltraMsg Settings
 builder.Services.Configure<UltraMsgSettings>(builder.Configuration.GetSection("UltraMsgSettings"));
+
 builder.Services.Configure<RegisterGiftSetting>(builder.Configuration.GetSection("RegisterGiftSetting"));
+
+
 
 
 
@@ -186,6 +189,8 @@ builder.Services.AddScoped<IUserGeneralSettingsRepo, UserGeneralSettingsRepo>();
 builder.Services.AddScoped<IUserHandSettingsRepo, UserHandSettingsRepo>();
 builder.Services.AddScoped<IUserBalootSettingsRepo, UserBalootSettingsRepo>();
 builder.Services.AddScoped<IAppAssetsRepo, AppAssetsRepo>();
+builder.Services.AddScoped<IInfluencerCodesCategoriesRepo, InfluencerCodesCategoriesRepo>();
+
 
 
 
@@ -221,9 +226,9 @@ builder.Services.AddScoped<IUserPromoCodesService, UserPromoCodesService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IInfluencerCodesService, InfluencerCodesService>();
 builder.Services.AddScoped<IAppAssetsService, AppAssetsService>();
+builder.Services.AddScoped<IInfluencerCodeCategoryService, InfluencerCodeCategoryService>();
+
 builder.Services.AddSingleton(new GoogleStorageService("googleCloud_private_key.json"));
-
-
 
 #endregion
 
@@ -281,7 +286,6 @@ app.UseSerilogRequestLogging(op =>
         diagnosticContext.Set("ClientIp", httpContext.Request.Headers["X-Real-IP"].ToString());
         diagnosticContext.Set("UserId", httpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
         diagnosticContext.Set("NewLine", "\n");
-
     };
 });
 

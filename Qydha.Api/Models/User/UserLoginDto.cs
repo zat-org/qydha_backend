@@ -16,10 +16,6 @@ public class UserLoginDtoValidator : AbstractValidator<UserLoginDto>
         RuleFor(r => r.Username)
         .Configure(config => config.CascadeMode = CascadeMode.Stop)
         .NotEmpty()
-        .WithMessage(msg)
-        .Length(2, 25)
-        .WithMessage(msg)
-        .Matches("^[a-zA-Z][a-zA-Z0-9_.-]*$")
         .WithMessage(msg);
 
         RuleFor(r => r.Password)

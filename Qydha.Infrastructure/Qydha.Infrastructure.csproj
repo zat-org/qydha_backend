@@ -17,6 +17,8 @@
     <None Remove="Migrations\022_addBalootSoundsSettings.sql" />
     <None Remove="Migrations\023_addMaxInfluencedUsersToInfluencersCodestable.sql" />
     <None Remove="Migrations\024_addAnonymous_clicksToNotificatoinDataTable.sql" />
+    <None Remove="Migrations\025_AddTakweeshPointstoHandSettings.sql" />
+    <None Remove="Migrations\026_AddInfluencerCodeCategories.sql" />
   </ItemGroup>
 
 

@@ -10,14 +10,15 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
     [Auth(SystemUserRoles.Admin)]
     public async Task<IActionResult> AddInfluencerCode(AddInfluencerCodeDto dto)
     {
-        return (await _influencerCodesService.AddInfluencerCode(dto.Code, dto.NumberOfDays, dto.ExpireAt, dto.MaxInfluencedUsersCount))
-        .Handle<InfluencerCode, IActionResult>((InfCode) => Ok(new
+        return (await _influencerCodesService.AddInfluencerCode(dto.Code, dto.NumberOfDays, dto.ExpireAt, dto.MaxInfluencedUsersCount, dto.CategoryId))
+        .Handle<InfluencerCode, IActionResult>((infCode) => Ok(new
         {
             Data = new
             {
-                code = InfCode.Code,
-                expireAt = InfCode.ExpireAt,
-                numberOfDays = InfCode.NumberOfDays
+                code = infCode.Code,
+                expireAt = infCode.ExpireAt,
+                numberOfDays = infCode.NumberOfDays,
+                categoryId = infCode.CategoryId
             },
             message = "Influencer Code Added Successfully."
         }), BadRequest);

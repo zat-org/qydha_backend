@@ -22,4 +22,7 @@ public class UserHandSettings : DbEntity<UserHandSettings>
 
     [Column("win_using_zat")]
     public bool WinUsingZat { get; set; } = false;
+
+    [Column("takweesh_points")]
+    public int TakweeshPoints { get; set; } = 100;
 }

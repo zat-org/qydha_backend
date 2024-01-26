@@ -3,6 +3,7 @@
 public class AddInfluencerCodeDto
 {
     public string Code { get; set; } = null!;
+    public int? CategoryId { get; set; }
     public int NumberOfDays { get; set; }
     public DateTime? ExpireAt { get; set; }
     public int MaxInfluencedUsersCount { get; set; }
@@ -16,6 +17,11 @@ public class AddInfluencerCodeDtoValidator : AbstractValidator<AddInfluencerCode
         RuleFor(dto => dto.Code)
         .NotEmpty()
         .Length(2, 15);
+
+        When(dto => dto.CategoryId is not null, () =>
+        {
+            RuleFor(dto => dto.CategoryId).GreaterThan(0);
+        });
 
         RuleFor(dto => dto.NumberOfDays)
         .NotEmpty()

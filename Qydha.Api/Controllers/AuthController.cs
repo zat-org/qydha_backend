@@ -7,26 +7,31 @@ public class AuthController(IAuthService authService) : ControllerBase
     private readonly IAuthService _authService = authService;
 
     [HttpPost("login-anonymous/")]
-    public async Task<IActionResult> LoginAsAnonymous()
+    public IActionResult LoginAsAnonymous()
     {
-        return (await _authService.LoginAsAnonymousAsync())
-        .Handle<Tuple<User, string>, IActionResult>(
-            (tuple) =>
-            {
-                User user = tuple.Item1;
-                string token = tuple.Item2;
-                var mapper = new UserMapper();
-                return Ok(new
-                {
-                    data = new
-                    {
-                        user = mapper.UserToUserDto(user),
-                        token
-                    },
-                    message = "Anonymous account created successfully."
-                });
-            }
-            , BadRequest);
+        return BadRequest(new Error()
+        {
+            Code = ErrorType.InvalidBodyInput,
+            Message = "برجاء تحديث التطبيق"
+        });
+        // (await _authService.LoginAsAnonymousAsync())
+        // .Handle<Tuple<User, string>, IActionResult>(
+        //     (tuple) =>
+        //     {
+        //         User user = tuple.Item1;
+        //         string token = tuple.Item2;
+        //         var mapper = new UserMapper();
+        //         return Ok(new
+        //         {
+        //             data = new
+        //             {
+        //                 user = mapper.UserToUserDto(user),
+        //                 token
+        //             },
+        //             message = "Anonymous account created successfully."
+        //         });
+        //     }
+        //     , BadRequest);
     }
 
     [HttpPost("register/")]
@@ -47,23 +52,26 @@ public class AuthController(IAuthService authService) : ControllerBase
         );
     }
 
-
-    // [Auth(SystemUserRoles.AnonymousUser)]
     [HttpPost("register-anonymous/")]
-    public async Task<IActionResult> RegisterAnonymous([FromBody] UserRegisterDTO dto)
+    public IActionResult RegisterAnonymous([FromBody] UserRegisterDTO dto)
     {
+        return BadRequest(new Error()
+        {
+            Code = ErrorType.InvalidBodyInput,
+            Message = "برجاء تحديث التطبيق"
+        });
         // User user = (User)HttpContext.Items["User"]!;
-        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, null))
-        .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
-            new
-            {
-                data = new
-                {
-                    RequestId = req.Id,
-                },
-                Message = "otp sent successfully."
-            }),
-        BadRequest);
+        // return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, null))
+        // .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
+        //     new
+        //     {
+        //         data = new
+        //         {
+        //             RequestId = req.Id,
+        //         },
+        //         Message = "otp sent successfully."
+        //     }),
+        // BadRequest);
     }
 
     [HttpPost("login/")]

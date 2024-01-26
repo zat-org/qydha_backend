@@ -12,13 +12,14 @@ public enum ErrorType
     InvalidCredentials = 4011, // 400
     InvalidActionByAnonymousUser = 4012, // 400
     InvalidActionByRegularUser = 4013, // 400
-    InvalidActionOrForbidden = 4030, //403
+    InvalidActionOrForbidden = 4014, //403
     #endregion
 
     #region influencer codes errors
     InfluencerCodeExpired = 4020,
     InfluencerCodeAlreadyUsed = 4021,
     InfluencerCodeExceedMaxUsageCount = 4022,
+    InfluencerCodeCategoryAlreadyUsed = 4023,
 
     #endregion
 
@@ -42,6 +43,8 @@ public enum ErrorType
     UpdateEmailRequestNotFound = 4048,
     UpdatePhoneRequestNotFound = 4049,
     UserPromoCodeNotFound = 4050,
+    InfluencerCodeCategoryNotFound = 4051,
+
     #endregion
 
     #region forget password errors

@@ -1,17 +1,24 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IPurchaseRepo purchaseRepo, INotificationService notificationService) : IInfluencerCodesService
+public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IPurchaseRepo purchaseRepo, INotificationService notificationService, IInfluencerCodesCategoriesRepo influencerCodesCategoriesRepo) : IInfluencerCodesService
 {
     private readonly IInfluencerCodesRepo _influencerCodesRepo = influencerCodesRepo;
+    private readonly IInfluencerCodesCategoriesRepo _influencerCodesCategoriesRepo = influencerCodesCategoriesRepo;
     private readonly INotificationService _notificationService = notificationService;
     private readonly IPurchaseRepo _purchaseRepo = purchaseRepo;
 
-    public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTime? expireDate, int MaxInfluencedUsersCount)
+    public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTime? expireDate, int MaxInfluencedUsersCount, int? categoryId)
     {
         var getCodeRes = await _influencerCodesRepo.IsCodeAvailable(code);
         return getCodeRes
-        .OnSuccessAsync(async () => await _influencerCodesRepo.AddAsync<Guid>(new InfluencerCode(code, numOfDays, expireDate, MaxInfluencedUsersCount)));
+        .OnSuccessAsync(async () =>
+        {
+            if (categoryId is not null)
+                return await _influencerCodesCategoriesRepo.GetByIdAsync(categoryId.Value);
+            return Result.Ok();
+        })
+        .OnSuccessAsync(async () => await _influencerCodesRepo.AddAsync<Guid>(new InfluencerCode(code, numOfDays, expireDate, MaxInfluencedUsersCount, categoryId)));
     }
 
     public async Task<Result<User>> UseInfluencerCode(Guid userId, string code)
@@ -53,6 +60,29 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
                     {
                         Code = ErrorType.InfluencerCodeExceedMaxUsageCount,
                         Message = "InfluencerCode Exceed Max Usage Count"
+                    });
+                return Result.Ok(influencerCode);
+            });
+        })
+        .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
+        {
+            if (influencerCode.CategoryId is null) return Result.Ok(influencerCode);
+            return (await _purchaseRepo.GetInfluencerCodeUsageCountByCategoryForUserAsync(userId, influencerCode.CategoryId.Value))
+            .OnSuccessAsync(async (UsageNum) =>
+            {
+                return (await _influencerCodesCategoriesRepo.GetByIdAsync(influencerCode.CategoryId.Value))
+                .MapTo((category) => new Tuple<int, InfluencerCodeCategory>(UsageNum, category));
+            })
+            .OnSuccess(tuple =>
+            {
+                int usageNum = tuple.Item1;
+                int MaxUsageNum = tuple.Item2.MaxCodesPerUserInGroup;
+
+                if (usageNum >= MaxUsageNum)
+                    return Result.Fail<InfluencerCode>(new()
+                    {
+                        Code = ErrorType.InfluencerCodeCategoryAlreadyUsed,
+                        Message = "User Exceed the max usage count of this influencer Code category"
                     });
                 return Result.Ok(influencerCode);
             });
