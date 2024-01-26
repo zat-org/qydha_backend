@@ -21,7 +21,7 @@ public static class InputValidators
         .WithName(propName)
         .Length(6, 6)
         .Matches(@"^\d{6}$")
-        .WithMessage("{PropertyName} غير صالح.");
+        .WithMessage("{PropertyName} غير صالح");
     }
 
 
@@ -31,7 +31,7 @@ public static class InputValidators
         .NotEmpty()
         .WithName(propName)
         .Matches(@"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-        .WithMessage("{PropertyName} غير صالح.");
+        .WithMessage("{PropertyName} غير صالح");
     }
     public static IRuleBuilderOptions<T, Guid> GuidId<T>(this IRuleBuilder<T, Guid> ruleBuilder, string propName)
     {
@@ -63,7 +63,7 @@ public static class InputValidators
         .WithName(propName)
         .MinimumLength(6)
         .Matches(@"^(?=.*[a-zA-Z])(?=.*\d).{6,}$")
-        .WithMessage("يجب ان تحتوي {PropertyName} علي حروف و ارقام.");
+        .WithMessage("يجب ان تحتوي {PropertyName} علي حروف و ارقام");
     }
     public static IRuleBuilderOptions<T, string?> FCM_Token<T>(this IRuleBuilder<T, string?> ruleBuilder, string propName)
     {
@@ -81,9 +81,9 @@ public static class InputValidators
         .NotEmpty()
         .WithName(propName)
         .LessThanOrEqualTo(DateTime.UtcNow.AddYears(-7))
-        .WithMessage("برجاء ادخال {PropertyName} صحيح.")
+        .WithMessage("برجاء ادخال {PropertyName} صحيح")
         .GreaterThanOrEqualTo(DateTime.UtcNow.AddYears(-150))
-        .WithMessage("برجاء ادخال {PropertyName} صحيح.");
+        .WithMessage("برجاء ادخال {PropertyName} صحيح");
     }
     public static IRuleBuilderOptions<T, string?> Phone<T>(this IRuleBuilder<T, string?> ruleBuilder, string propName)
     {
@@ -105,7 +105,7 @@ public static class InputValidators
             .Configure(config => config.CascadeMode = CascadeMode.Stop)
             .WithName(propName)
             .Must(number => number is not null && PhonePatterns.Any(pattern => new Regex(pattern).IsMatch(number)))
-            .WithMessage("يجب ادخال {PropertyName} صحيح ويستخدم الواتس اب.");
+            .WithMessage("يجب ادخال {PropertyName} صحيح ويستخدم الواتس اب");
     }
 
 }

@@ -10,11 +10,11 @@ public class SMSService : IMessageService
     {
         _twilio = twilio.Value;
     }
-    public async Task<Result> SendAsync(string phoneNum, string otp)
+    public async Task<Result> SendOtpAsync(string phoneNum, string username, string otp)
     {
         TwilioClient.Init(_twilio.AccountSID, _twilio.AuthToken);
         var result = await MessageResource.CreateAsync(
-            body: $" رمز التحقق لتطبيق قيدها : {otp}",
+            body: @$"مرحبا _*{username}*_ كود التحقق هو *{otp}*",
             from: new Twilio.Types.PhoneNumber(_twilio.TwilioPhoneNumber),
             to: phoneNum
         );

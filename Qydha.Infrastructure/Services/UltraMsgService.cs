@@ -5,19 +5,14 @@ public class UltraMsgService(IOptions<UltraMsgSettings> settings) : IMessageServ
 {
     private readonly UltraMsgSettings _ultraMsgSettings = settings.Value;
 
-    public async Task<Result> SendAsync(string phoneNum, string otp)
+    public async Task<Result> SendOtpAsync(string phoneNum, string username, string otp)
     {
         using HttpClient httpClient = new();
-
         var data = new[]
         {
             new KeyValuePair<string, string>("token", _ultraMsgSettings.Token),
             new KeyValuePair<string, string>("to", phoneNum),
-            new KeyValuePair<string, string>("body", @$"
-             *{otp}* هو كود التحقق الخاص بك. للحفاظ على امانك، لا تشارك هذا الكود مع أي شخص.
-
-                _تنتهى صلاحية هذا الكود خلال 6 دقائق_
-            "),
+            new KeyValuePair<string, string>("body", @$"مرحبا بك *{username}*\nرمز التحقق *{otp}*"),
         };
 
         HttpResponseMessage response = await httpClient.PostAsync(

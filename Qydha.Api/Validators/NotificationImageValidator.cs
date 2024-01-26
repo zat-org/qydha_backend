@@ -8,13 +8,13 @@ public class NotificationImageValidator : AbstractValidator<IFormFile>
         _settings = settings.Value;
         RuleFor(file => file)
             .NotEmpty()
-            .WithMessage("صورة الاشعار حقل مطلوب.")
+            .WithMessage("صورة الاشعار حقل مطلوب")
             .Must(file => file.Length > 0)
             .WithMessage("صورة الاشعار لا يمكن ان تكون فارغة")
             .Must(file => file.Length <= _settings.MaxBytes)
             .WithMessage("صورة الاشعار لا يمكن ان تتعدى الـ  MB 30 بالحجم")
             .Must(file => IsValidMIME(Path.GetExtension(file.FileName)))
-            .WithMessage("يرجي ارفاق صورة الاشعار.");
+            .WithMessage("يرجي ارفاق صورة الاشعار");
     }
 
 

@@ -99,14 +99,12 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     }
     public async Task<Result<UpdatePhoneRequest>> UpdateUserPhone(Guid userId, string password, string newPhone)
     {
-
-        Result checkingRes = await _userRepo.CheckUserCredentials(userId, password);
-        return checkingRes
-            .OnSuccessAsync(async () => await _userRepo.IsPhoneAvailable(newPhone))
-            .OnSuccessAsync(async () =>
+        return (await _userRepo.CheckUserCredentials(userId, password))
+            .OnSuccessAsync<User>(async (user) => (await _userRepo.IsPhoneAvailable(newPhone)).MapTo(user))
+            .OnSuccessAsync(async (user) =>
             {
                 var otp = _otpManager.GenerateOTP();
-                return (await _messageService.SendAsync(newPhone, otp)).MapTo(otp);
+                return (await _messageService.SendOtpAsync(newPhone, user.Username!, otp)).MapTo(otp);
             })
             .OnSuccessAsync(async (otp) => await _updatePhoneOTPRequestRepo.AddAsync<Guid>(new(newPhone, otp, userId)));
     }

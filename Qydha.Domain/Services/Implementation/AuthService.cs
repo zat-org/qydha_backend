@@ -90,7 +90,7 @@ public class AuthService(TokenManager tokenManager, INotificationService notific
         .OnSuccessAsync(async () =>
         {
             var otp = _otpManager.GenerateOTP();
-            return (await _messageService.SendAsync(phone, otp)).MapTo(otp);
+            return (await _messageService.SendOtpAsync(phone, username, otp)).MapTo(otp);
         })
         .OnSuccessAsync(async (otp) =>
         {
@@ -130,7 +130,7 @@ public class AuthService(TokenManager tokenManager, INotificationService notific
        .OnSuccessAsync(async (user) =>
        {
            string otp = _otpManager.GenerateOTP();
-           return (await _messageService.SendAsync(user.Phone!, otp)).MapTo(new Tuple<User, string>(user, otp));
+           return (await _messageService.SendOtpAsync(user.Phone!, user.Username!, otp)).MapTo(new Tuple<User, string>(user, otp));
        })
        .OnSuccessAsync(async (tuple) =>
            await _phoneAuthenticationRequestRepo.AddAsync<Guid>(new PhoneAuthenticationRequest(tuple.Item1.Phone!, tuple.Item2))

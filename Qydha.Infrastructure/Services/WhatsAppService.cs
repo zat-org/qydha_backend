@@ -5,7 +5,7 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings) : IMessag
 {
     private readonly WhatsAppSettings _whatsSettings = whatsSettings.Value;
 
-    public async Task<Result> SendAsync(string phoneNum, string otp)
+    public async Task<Result> SendOtpAsync(string phoneNum, string username, string otp)
     {
         using HttpClient httpClient = new();
         httpClient.DefaultRequestHeaders.Authorization =

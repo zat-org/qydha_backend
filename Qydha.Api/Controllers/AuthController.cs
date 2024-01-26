@@ -14,24 +14,6 @@ public class AuthController(IAuthService authService) : ControllerBase
             Code = ErrorType.InvalidBodyInput,
             Message = "برجاء تحديث التطبيق"
         });
-        // (await _authService.LoginAsAnonymousAsync())
-        // .Handle<Tuple<User, string>, IActionResult>(
-        //     (tuple) =>
-        //     {
-        //         User user = tuple.Item1;
-        //         string token = tuple.Item2;
-        //         var mapper = new UserMapper();
-        //         return Ok(new
-        //         {
-        //             data = new
-        //             {
-        //                 user = mapper.UserToUserDto(user),
-        //                 token
-        //             },
-        //             message = "Anonymous account created successfully."
-        //         });
-        //     }
-        //     , BadRequest);
     }
 
     [HttpPost("register/")]
@@ -60,18 +42,6 @@ public class AuthController(IAuthService authService) : ControllerBase
             Code = ErrorType.InvalidBodyInput,
             Message = "برجاء تحديث التطبيق"
         });
-        // User user = (User)HttpContext.Items["User"]!;
-        // return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, null))
-        // .Handle<RegistrationOTPRequest, IActionResult>((req) => Ok(
-        //     new
-        //     {
-        //         data = new
-        //         {
-        //             RequestId = req.Id,
-        //         },
-        //         Message = "otp sent successfully."
-        //     }),
-        // BadRequest);
     }
 
     [HttpPost("login/")]
@@ -189,7 +159,6 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Logout()
     {
         User user = (User)HttpContext.Items["User"]!;
-
         return (await _authService.Logout(user.Id))
         .Handle<IActionResult>(
             () => Ok(new { data = new { }, message = "User logged out successfully." }),

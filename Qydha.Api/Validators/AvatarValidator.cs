@@ -8,13 +8,13 @@ public class AvatarValidator : AbstractValidator<IFormFile>
         _avatarSettings = avatarOptions.Value;
         RuleFor(file => file)
                    .NotEmpty()
-                   .WithMessage("صورة المستخدم حقل مطلوب.")
+                   .WithMessage("صورة المستخدم حقل مطلوب")
                    .Must(file => file.Length > 0)
                    .WithMessage("صورة المستخدم لا يمكن ان تكون فارغة")
                    .Must(file => file.Length <= _avatarSettings.MaxBytes)
                    .WithMessage("صورة المستخدم لا يمكن ان تتعدى الـ  MB 30 بالحجم")
                    .Must(file => IsValidMIME(Path.GetExtension(file.FileName)))
-                   .WithMessage("يرجي ارفاق صورة.");
+                   .WithMessage("يرجي ارفاق صورة");
     }
 
 

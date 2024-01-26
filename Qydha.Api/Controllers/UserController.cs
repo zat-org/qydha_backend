@@ -259,7 +259,7 @@ public class UserController(IUserService userService, INotificationService notif
                 return Result.Fail<User>(new()
                 {
                     Code = ErrorType.InvalidBodyInput,
-                    Message = ".لا يوجد بيانات لتحديثها"
+                    Message = "لا يوجد بيانات لتحديثها"
                 });
             var dto = new UpdateUserDto()
             {
@@ -320,15 +320,9 @@ public class UserController(IUserService userService, INotificationService notif
             , BadRequest);
     }
 
-    // [Auth(SystemUserRoles.AnonymousUser)]
     [HttpDelete("me/delete-anonymous")]
     public IActionResult DeleteAnonymousUser()
     {
-        // User user = (User)HttpContext.Items["User"]!;
-        // return (await _userService.DeleteAnonymousUser(user.Id))
-        // .Handle<User, IActionResult>(
-        //     (user) => Ok(new { data = new { }, message = $"Anonymous user deleted successfully." })
-        //     , BadRequest);
         return BadRequest(new Error()
         {
             Code = ErrorType.InvalidBodyInput,
@@ -410,7 +404,7 @@ public class UserController(IUserService userService, INotificationService notif
                 return Result.Fail<UserGeneralSettings>(new()
                 {
                     Code = ErrorType.InvalidBodyInput,
-                    Message = ".لا يوجد بيانات لتحديثها"
+                    Message = "لا يوجد بيانات لتحديثها"
                 });
             var dto = mapper.UserGeneralSettingsToDto(settings);
             try
@@ -456,7 +450,7 @@ public class UserController(IUserService userService, INotificationService notif
                 return Result.Fail<UserHandSettings>(new()
                 {
                     Code = ErrorType.InvalidBodyInput,
-                    Message = ".لا يوجد بيانات لتحديثها"
+                    Message = "لا يوجد بيانات لتحديثها"
                 });
 
             var dto = mapper.UserHandSettingsToDto(settings);

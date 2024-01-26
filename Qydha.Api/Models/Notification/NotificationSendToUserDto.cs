@@ -29,7 +29,7 @@ public class NotificationSendToUserDtoValidator : AbstractValidator<Notification
             RuleFor(r => r.PopUpImage)
             .Cascade(CascadeMode.Stop)
             .NotNull()
-            .WithMessage("صورة الاشعار حقل مطلوب.")
+            .WithMessage("صورة الاشعار حقل مطلوب")
             .Must(file => file is not null && file.Length > 0)
             .WithMessage("صورة الاشعار لا يمكن ان تكون فارغة")
             .Must(file => file is not null && file.Length <= _settings.MaxBytes)

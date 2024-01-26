@@ -68,7 +68,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
                 return Result.Fail<PopUpAsset>(new()
                 {
                     Code = ErrorType.InvalidBodyInput,
-                    Message = ".لا يوجد بيانات لتحديثها"
+                    Message = "لا يوجد بيانات لتحديثها"
                 });
             var dto = mapper.PopUpAssetToPopupDto(popupAsset);
             try
@@ -97,7 +97,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
                 return Result.Fail<PopUpAsset>(new Error()
                 {
                     Code = ErrorType.InvalidBodyInput,
-                    Message = "لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة."
+                    Message = "لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة"
                 });
 
             popupAsset.Show = dto.Show;
