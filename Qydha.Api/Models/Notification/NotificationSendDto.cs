@@ -29,16 +29,9 @@ public class NotificationSendDtoValidator : AbstractValidator<NotificationSendDt
             RuleFor(r => r.ActionType).Must(val => val != NotificationActionType.PopUp)
             .WithMessage("Invalid Action Type"); ;
 
-            RuleFor(r => r.PopUpImage)
+            RuleFor(r => r.PopUpImage!)
             .Cascade(CascadeMode.Stop)
-            .NotNull()
-            .WithMessage("صورة الاشعار حقل مطلوب")
-            .Must(file => file is not null && file.Length > 0)
-            .WithMessage("صورة الاشعار لا يمكن ان تكون فارغة")
-            .Must(file => file is not null && file.Length <= _settings.MaxBytes)
-            .WithMessage("صورة الاشعار لا يمكن ان تتعدى الـ  MB 30 بالحجم")
-            .Must(file => file is not null && IsValidMIME(Path.GetExtension(file.FileName)))
-            .WithMessage("يرجي ارفاق صورة الاشعار بامتداد مناسب");
+            .File("صورة الاشعار", _settings);
         })
         .Otherwise(() =>
         {

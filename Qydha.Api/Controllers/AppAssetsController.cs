@@ -3,30 +3,17 @@
 [ApiController]
 [Route("/assets")]
 
-public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<BookSettings> bookOptions, IOptions<NotificationImageSettings> notificationImageOptions) : ControllerBase
+public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<NotificationImageSettings> notificationImageOptions) : ControllerBase
 {
     private readonly IAppAssetsService _appAssetsService = appAssetsService;
-    private readonly IOptions<BookSettings> _bookOptions = bookOptions;
     private readonly IOptions<NotificationImageSettings> _notificationImageOptions = notificationImageOptions;
-
 
 
     [Auth(SystemUserRoles.Admin)]
     [HttpPatch("baloot-book/")]
-    public async Task<IActionResult> UpdateBalootBook([FromForm] IFormFile file)
+    public async Task<IActionResult> UpdateBalootBook([FromForm] UpdateBalootBookDto dto)
     {
-        var bookValidator = new BookValidator(_bookOptions);
-        var validationRes = bookValidator.Validate(file);
-
-        if (!validationRes.IsValid)
-        {
-            return BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidBodyInput,
-                Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
-            });
-        }
-        return (await _appAssetsService.UpdateBalootBookData(file))
+        return (await _appAssetsService.UpdateBalootBookData(dto.File))
         .Handle<BookAsset, IActionResult>((bookAsset) =>
             {
                 return Ok(new
@@ -120,20 +107,9 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<Bo
 
     [Auth(SystemUserRoles.Admin)]
     [HttpPut("popup/image")]
-    public async Task<IActionResult> UpdatePopupImage([FromForm] IFormFile file)
+    public async Task<IActionResult> UpdatePopupImage([FromForm] UpdatePopupImageDto dto)
     {
-        var imageValidator = new NotificationImageValidator(_notificationImageOptions);
-        var validationRes = imageValidator.Validate(file);
-
-        if (!validationRes.IsValid)
-        {
-            return BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidBodyInput,
-                Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
-            });
-        }
-        return (await _appAssetsService.UpdatePopupImage(file))
+        return (await _appAssetsService.UpdatePopupImage(dto.File))
         .Handle<PopUpAsset, IActionResult>((popupAsset) =>
             {
                 var mapper = new AssetsMapper();

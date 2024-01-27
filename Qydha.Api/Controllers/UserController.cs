@@ -3,12 +3,11 @@ namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("users/")]
-public class UserController(IUserService userService, INotificationService notificationService, IOptions<AvatarSettings> optionsOfPhoto) : ControllerBase
+public class UserController(IUserService userService, INotificationService notificationService) : ControllerBase
 {
     #region injections and ctor
     private readonly IUserService _userService = userService;
     private readonly INotificationService _notificationService = notificationService;
-    private readonly IOptions<AvatarSettings> _optionsOfPhoto = optionsOfPhoto;
 
     #endregion
 
@@ -209,23 +208,10 @@ public class UserController(IUserService userService, INotificationService notif
     [Auth(SystemUserRoles.RegularUser)]
 
     [HttpPatch("me/update-avatar")]
-    public async Task<IActionResult> UpdateUserAvatar([FromForm] IFormFile file)
+    public async Task<IActionResult> UpdateUserAvatar([FromForm] UpdateUserAvatarDto dto)
     {
         User user = (User)HttpContext.Items["User"]!;
-
-        var avatarValidator = new AvatarValidator(_optionsOfPhoto);
-        var validationRes = avatarValidator.Validate(file);
-
-        if (!validationRes.IsValid)
-        {
-            return BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidBodyInput,
-                Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
-            });
-        }
-
-        return (await _userService.UploadUserPhoto(user.Id, file))
+        return (await _userService.UploadUserPhoto(user.Id, dto.File))
         .Handle<User, IActionResult>((user) =>
             {
                 var mapper = new UserMapper();
