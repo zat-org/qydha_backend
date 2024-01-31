@@ -36,7 +36,7 @@ public static class InputValidators
         .NotEmpty()
         .Configure(config => config.CascadeMode = CascadeMode.Stop)
         .WithName(propName)
-        .Length(2, 25)
+        .Length(3, 25)
         .Matches("^[a-zA-Z][a-zA-Z0-9_.-]*$")
         .WithMessage("يجب ان يتكون {PropertyName} من حروف انجليزية او ارقام او _ . -");
 
