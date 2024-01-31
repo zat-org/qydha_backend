@@ -17,7 +17,7 @@ global using Qydha.API.Settings;
 global using Qydha.API.Mappers;
 global using Qydha.API.Validators;
 global using Qydha.API.Controllers.Attributes;
-
+global using Qydha.API.Extensions;
 
 
 global using Microsoft.AspNetCore.Mvc;

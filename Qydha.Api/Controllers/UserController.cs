@@ -235,54 +235,37 @@ public class UserController(IUserService userService, INotificationService notif
 
     [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/")]
-    public async Task<IActionResult> UpdateUserData([FromBody] JsonPatchDocument<UpdateUserDto> updateUserDtoPatch)
+    public IActionResult UpdateUserData([FromBody] JsonPatchDocument<UpdateUserDto> updateUserDtoPatch)
     {
+        if (updateUserDtoPatch is null)
+            return BadRequest(new Error()
+            {
+                Code = ErrorType.InvalidBodyInput,
+                Message = "لا يوجد بيانات لتحديثها"
+            });
+
         User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.GetUserById(user.Id))
+        var mapper = new UserMapper();
+
+        return Result.Ok(user)
         .OnSuccess<User>((user) =>
         {
-            if (updateUserDtoPatch is null)
-                return Result.Fail<User>(new()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = "لا يوجد بيانات لتحديثها"
-                });
-            var dto = new UpdateUserDto()
+            var dto = mapper.UserToUpdateUserDto(user);
+            return updateUserDtoPatch.ApplyToAsResult(dto)
+            .OnSuccess<UpdateUserDto>((dtoWithChanges) =>
             {
-                Name = user.Name ?? string.Empty,
-                BirthDate = user.BirthDate ?? null
-            };
-            try
+                var validator = new UpdateUserDtoValidator();
+                return validator.ValidateAsResult(dtoWithChanges);
+            })
+            .OnSuccess((dtoWithChanges) =>
             {
-                updateUserDtoPatch.ApplyTo(dto);
-            }
-            catch (JsonPatchException exp)
-            {
-                return Result.Fail<User>(new()
-                {
-                    Code = ErrorType.InvalidPatchBodyInput,
-                    Message = exp.Message
-                });
-            }
-            var validator = new UpdateUserDtoValidator();
-            var validationRes = validator.Validate(dto);
-            if (!validationRes.IsValid)
-            {
-                return Result.Fail<User>(new()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
-                });
-            }
-
-            user.Name = dto.Name;
-            user.BirthDate = dto.BirthDate;
-            return Result.Ok(user);
+                mapper.ApplyUpdateUserDtoToUser(dtoWithChanges, user);
+                return Result.Ok(user);
+            });
         })
         .OnSuccessAsync<User>(_userService.UpdateUser)
         .Handle<User, IActionResult>((user) =>
         {
-            var mapper = new UserMapper();
             return Ok(new
             {
                 data = new { user = mapper.UserToUserDto(user) },
@@ -380,43 +363,38 @@ public class UserController(IUserService userService, INotificationService notif
     [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> UpdateUserGeneralSettings([FromBody] JsonPatchDocument<UserGeneralSettingsDto> generalSettingsDtoPatch)
     {
+        if (generalSettingsDtoPatch is null)
+            return BadRequest(new Error()
+            {
+                Code = ErrorType.InvalidBodyInput,
+                Message = "لا يوجد بيانات لتحديثها"
+            });
+
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
         return (await _userService.GetUserGeneralSettings(user.Id))
         .OnSuccess<UserGeneralSettings>((settings) =>
         {
-            if (generalSettingsDtoPatch is null)
-                return Result.Fail<UserGeneralSettings>(new()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = "لا يوجد بيانات لتحديثها"
-                });
             var dto = mapper.UserGeneralSettingsToDto(settings);
-            try
+            return generalSettingsDtoPatch.ApplyToAsResult(dto)
+            .OnSuccess((dtoWithChanges) =>
             {
-                generalSettingsDtoPatch.ApplyTo(dto);
-            }
-            catch (JsonPatchException exp)
-            {
-                return Result.Fail<UserGeneralSettings>(new()
-                {
-                    Code = ErrorType.InvalidPatchBodyInput,
-                    Message = exp.Message
-                });
-            }
-            // validate here
-            settings.PlayersNames = new Json<IEnumerable<string>>(dto.PlayersNames);
-            settings.TeamsNames = new Json<IEnumerable<string>>(dto.TeamsNames);
-            settings.EnableVibration = dto.EnableVibration;
-            return Result.Ok(settings);
+                mapper.DtoToUserGeneralSettings(dtoWithChanges, settings);
+                return Result.Ok(settings);
+            });
+
         })
         .OnSuccessAsync<UserGeneralSettings>(_userService.UpdateUserGeneralSettings)
         .Handle<UserGeneralSettings, IActionResult>((settings) =>
         {
             return Ok(new
             {
-                data = new { user = mapper.UserToUserDto(user), generalSettings = mapper.UserGeneralSettingsToDto(settings) },
+                data = new
+                {
+                    user = mapper.UserToUserDto(user),
+                    generalSettings = mapper.UserGeneralSettingsToDto(settings)
+                },
                 message = "User's General settings updated successfully."
             });
         }, BadRequest);
@@ -426,53 +404,31 @@ public class UserController(IUserService userService, INotificationService notif
     [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> UpdateUserHandSettings([FromBody] JsonPatchDocument<UserHandSettingsDto> handSettingsDtoPatch)
     {
+        if (handSettingsDtoPatch is null)
+            return BadRequest(new Error()
+            {
+                Code = ErrorType.InvalidBodyInput,
+                Message = "لا يوجد بيانات لتحديثها"
+            });
+
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
         return (await _userService.GetUserHandSettings(user.Id))
         .OnSuccess<UserHandSettings>((settings) =>
         {
-            if (handSettingsDtoPatch is null)
-                return Result.Fail<UserHandSettings>(new()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = "لا يوجد بيانات لتحديثها"
-                });
-
             var dto = mapper.UserHandSettingsToDto(settings);
-            try
+            return handSettingsDtoPatch.ApplyToAsResult(dto)
+            .OnSuccess<UserHandSettingsDto>((dtoWithChanges) =>
             {
-                handSettingsDtoPatch.ApplyTo(dto);
-            }
-            catch (JsonPatchException exp)
+                var handSettingsValidator = new UserHandSettingsDtoValidator();
+                return handSettingsValidator.ValidateAsResult(dtoWithChanges);
+            })
+            .OnSuccess((dtoWithChanges) =>
             {
-                return Result.Fail<UserHandSettings>(new()
-                {
-                    Code = ErrorType.InvalidPatchBodyInput,
-                    Message = exp.Message
-                });
-            }
-
-            var handSettingsValidator = new UserHandSettingsDtoValidator();
-            var validationRes = handSettingsValidator.Validate(dto);
-
-            if (!validationRes.IsValid)
-            {
-                return Result.Fail<UserHandSettings>(new Error()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
-                });
-            }
-
-            settings.MaxLimit = dto.MaxLimit;
-            settings.RoundsCount = dto.RoundsCount;
-            settings.PlayersCountInTeam = dto.PlayersCountInTeam;
-            settings.TeamsCount = dto.TeamsCount;
-            settings.WinUsingZat = dto.WinUsingZat;
-            settings.TakweeshPoints = dto.TakweeshPoints;
-
-            return Result.Ok(settings);
+                mapper.DtoToUserHandSettings(dtoWithChanges, settings);
+                return Result.Ok(settings);
+            });
         })
         .OnSuccessAsync<UserHandSettings>(_userService.UpdateUserHandSettings)
         .Handle<UserHandSettings, IActionResult>((settings) =>
@@ -489,40 +445,26 @@ public class UserController(IUserService userService, INotificationService notif
     [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> UpdateUserBalootSettings([FromBody] JsonPatchDocument<UserBalootSettingsDto> balootSettingsDtoPatch)
     {
+        if (balootSettingsDtoPatch is null)
+            return BadRequest(new Error()
+            {
+                Code = ErrorType.InvalidBodyInput,
+                Message = ".لا يوجد بيانات لتحديثها"
+            });
+
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
         return (await _userService.GetUserBalootSettings(user.Id))
         .OnSuccess<UserBalootSettings>((settings) =>
         {
-            if (balootSettingsDtoPatch is null)
-                return Result.Fail<UserBalootSettings>(new()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = ".لا يوجد بيانات لتحديثها"
-                });
-
             var dto = mapper.UserBalootSettingsToDto(settings);
-            try
-            {
-                balootSettingsDtoPatch.ApplyTo(dto);
-            }
-            catch (JsonPatchException exp)
-            {
-                return Result.Fail<UserBalootSettings>(new()
-                {
-                    Code = ErrorType.InvalidPatchBodyInput,
-                    Message = exp.Message
-                });
-            }
-            // validate here
-            settings.IsAdvancedRecording = dto.IsAdvancedRecording;
-            settings.IsFlipped = dto.IsFlipped;
-            settings.ShowWhoWonDialogOnDraw = dto.ShowWhoWonDialogOnDraw;
-            settings.IsSakkahMashdodahMode = dto.IsSakkahMashdodahMode;
-            settings.IsNumbersSoundEnabled = dto.IsNumbersSoundEnabled;
-            settings.IsCommentsSoundEnabled = dto.IsCommentsSoundEnabled;
-            return Result.Ok(settings);
+            return balootSettingsDtoPatch.ApplyToAsResult(dto)
+             .OnSuccess((dtoWithChanges) =>
+             {
+                 mapper.DtoToUserBalootSettings(dtoWithChanges, settings);
+                 return Result.Ok(settings);
+             });
         })
         .OnSuccessAsync<UserBalootSettings>(_userService.UpdateUserBalootSettings)
         .Handle<UserBalootSettings, IActionResult>((settings) =>

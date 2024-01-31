@@ -18,6 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("app_keys.json");
 if (builder.Environment.IsDevelopment())
     builder.Configuration.AddJsonFile("app_keys.Development.json");
+else if (builder.Environment.IsStaging())
+    builder.Configuration.AddJsonFile("app_keys.Staging.json");
+
 
 var connectionString = builder.Configuration.GetConnectionString("postgres");
 
@@ -102,24 +105,21 @@ builder.Services.AddMiniProfiler(options =>
 var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration)
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-    .WriteTo.Console()
-
     .Enrich.WithExceptionDetails()
+    .WriteTo.Console()
+    .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning);
+// .WriteTo.File(new JsonFormatter(renderMessage: true), "./info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information);
 
-    .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning)
-    .WriteTo.File(new JsonFormatter(renderMessage: true), "./info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information);
+string serviceAccountCredential = File.ReadAllText("googleCloud_private_key.json");
+var googleLoggerConfig = builder.Configuration.GetSection("GoogleLogger");
 
-if (builder.Environment.IsProduction())
+var googleCloudConfig = new GoogleCloudLoggingSinkOptions
 {
-    string serviceAccountCredential = File.ReadAllText("googleCloud_private_key.json");
-    var googleCloudConfig = new GoogleCloudLoggingSinkOptions
-    {
-        ProjectId = "qydha-98740",
-        GoogleCredentialJson = serviceAccountCredential,
-        ServiceName = "Qydha Production"
-    };
-    loggerConfig.WriteTo.GoogleCloudLogging(googleCloudConfig);
-}
+    ProjectId = googleLoggerConfig["ProjectId"],
+    GoogleCredentialJson = serviceAccountCredential,
+    ServiceName = googleLoggerConfig["ServiceName"]
+};
+loggerConfig.WriteTo.GoogleCloudLogging(googleCloudConfig);
 
 Log.Logger = loggerConfig.CreateLogger();
 builder.Host.UseSerilog();

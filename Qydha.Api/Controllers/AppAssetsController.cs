@@ -3,10 +3,9 @@
 [ApiController]
 [Route("/assets")]
 
-public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<NotificationImageSettings> notificationImageOptions) : ControllerBase
+public class AppAssetsController(IAppAssetsService appAssetsService) : ControllerBase
 {
     private readonly IAppAssetsService _appAssetsService = appAssetsService;
-    private readonly IOptions<NotificationImageSettings> _notificationImageOptions = notificationImageOptions;
 
 
     [Auth(SystemUserRoles.Admin)]
@@ -45,53 +44,42 @@ public class AppAssetsController(IAppAssetsService appAssetsService, IOptions<No
     [HttpPatch("popup/")]
     public async Task<IActionResult> UpdatePopupData([FromBody] JsonPatchDocument<PopupDto> popupDtoPatch)
     {
+        if (popupDtoPatch is null)
+            return BadRequest(new Error()
+            {
+                Code = ErrorType.InvalidBodyInput,
+                Message = "لا يوجد بيانات لتحديثها"
+            });
 
         var mapper = new AssetsMapper();
 
         return (await _appAssetsService.GetPopupAssetData())
         .OnSuccess<PopUpAsset>((popupAsset) =>
         {
-            if (popupDtoPatch is null)
-                return Result.Fail<PopUpAsset>(new()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = "لا يوجد بيانات لتحديثها"
-                });
             var dto = mapper.PopUpAssetToPopupDto(popupAsset);
-            try
+            return popupDtoPatch.ApplyToAsResult(dto)
+            .OnSuccess<PopupDto>((dtoWithChanges) =>
             {
-                popupDtoPatch.ApplyTo(dto);
-            }
-            catch (JsonPatchException exp)
+                var validator = new PopupDtoValidator();
+                return validator.ValidateAsResult(dtoWithChanges);
+            })
+            .OnSuccess<PopupDto>((dtoWithChanges) =>
             {
-                return Result.Fail<PopUpAsset>(new()
-                {
-                    Code = ErrorType.InvalidPatchBodyInput,
-                    Message = exp.Message
-                });
-            }
-            var validator = new PopupDtoValidator();
-            var validationRes = validator.Validate(dto);
+                if (dtoWithChanges.Show && popupAsset.Image is null)
+                    return Result.Fail<PopupDto>(new Error()
+                    {
+                        Code = ErrorType.InvalidBodyInput,
+                        Message = "لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة"
+                    });
+                else
+                    return Result.Ok(dtoWithChanges);
+            })
+            .OnSuccess((dtoWithChanges) =>
+            {
+                mapper.PopupDtoToPopUpAsset(dto, popupAsset);
+                return Result.Ok(popupAsset);
+            });
 
-            if (!validationRes.IsValid)
-                return Result.Fail<PopUpAsset>(new Error()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
-                });
-
-            if (dto.Show && popupAsset.Image is null)
-                return Result.Fail<PopUpAsset>(new Error()
-                {
-                    Code = ErrorType.InvalidBodyInput,
-                    Message = "لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة"
-                });
-
-            popupAsset.Show = dto.Show;
-            popupAsset.ActionPath = dto.ActionPath;
-            popupAsset.ActionType = dto.ActionType;
-
-            return Result.Ok(popupAsset);
         })
         .OnSuccessAsync<PopUpAsset>(async (popupAsset) => (await _appAssetsService.UpdatePopupData(popupAsset)).MapTo(popupAsset))
         .Handle<PopUpAsset, IActionResult>((popupAsset) =>

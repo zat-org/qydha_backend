@@ -2,8 +2,8 @@
 
 public class UpdateUserDto
 {
-    public string Name { get; set; } = null!;
-    public DateTime? BirthDate { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public DateTime? BirthDate { get; set; } = null;
 }
 public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
 {
