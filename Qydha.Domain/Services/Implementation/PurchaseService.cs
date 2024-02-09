@@ -1,10 +1,10 @@
 ﻿namespace Qydha.Domain.Services.Implementation;
 
-public class PurchaseService(IPurchaseRepo purchaseRepo, IUserRepo userRepo, INotificationService notificationService, IOptions<SubscriptionSetting> subscriptionOptions, IOptions<ProductsSettings> productSettings) : IPurchaseService
+public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUserRepo userRepo, IOptions<SubscriptionSetting> subscriptionOptions, IOptions<ProductsSettings> productSettings) : IPurchaseService
 {
     private readonly IPurchaseRepo _purchaseRepo = purchaseRepo;
     private readonly IUserRepo _userRepo = userRepo;
-    private readonly INotificationService _notificationService = notificationService;
+    private readonly IMediator _mediator = mediator;
     private readonly SubscriptionSetting _subscriptionSetting = subscriptionOptions.Value;
     private readonly ProductsSettings _productsSettings = productSettings.Value;
 
@@ -40,19 +40,22 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IUserRepo userRepo, INo
                 ProductSku = productSku,
                 NumberOfDays = tuple.Item2
             };
-            return await _purchaseRepo.AddAsync<Guid>(purchase);
+            return (await _purchaseRepo.AddAsync<Guid>(purchase)).MapTo(tuple.Item1);
         })
-        .OnSuccessAsync(async (purchase) =>
-            await _notificationService.SendToUserPreDefinedNotification(purchase.UserId, SystemDefaultNotifications.MakePurchase));
+        .OnSuccessAsync<User>(async (user) =>
+        {
+            await _mediator.Publish(new AddPurchaseNotification(user.Id, SystemDefaultNotifications.MakePurchase));
+            return Result.Ok(user);
+        });
     }
 
     public async Task<Result<User>> SubscribeInFree(Guid userId)
     {
         return (await _userRepo.GetByIdAsync(userId))
-        .OnSuccessAsync(async (user) =>
+        .OnSuccessAsync<User>(async (user) =>
         {
             if (user.FreeSubscriptionUsed >= _subscriptionSetting.FreeSubscriptionsAllowed)
-                return Result.Fail<Purchase>(new()
+                return Result.Fail<User>(new()
                 {
                     Code = ErrorType.FreeSubscriptionExceededTheLimit,
                     Message = "Free Subscription Used by user Exceeded The Allowed Number"
@@ -66,17 +69,41 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IUserRepo userRepo, INo
                 ProductSku = "free_30",
                 NumberOfDays = _subscriptionSetting.NumberOfDaysInOneSubscription
             };
-            return await _purchaseRepo.AddAsync<Guid>(purchase);
+            return (await _purchaseRepo.AddAsync<Guid>(purchase)).MapTo(user);
         })
-        .OnSuccessAsync(async (purchase) =>
-            await _notificationService.SendToUserPreDefinedNotification(purchase.UserId, SystemDefaultNotifications.UseInfluencerCode));
+        .OnSuccessAsync<User>(async (user) =>
+        {
+            await _mediator.Publish(new AddPurchaseNotification(user.Id, SystemDefaultNotifications.UseInfluencerCode));
+            return Result.Ok(user);
+        });
     }
 
-    public async Task<Result<UserPromoCode>> AddPromoCodePurchase(UserPromoCode promoCode)
+    public async Task<Result<User>> AddPromoCodePurchase(UserPromoCode promoCode)
     {
         return (await _purchaseRepo.AddAsync<Guid>(new(promoCode)))
-                .OnSuccessAsync(async (purchase) => await _notificationService.SendToUserPreDefinedNotification(purchase.UserId, SystemDefaultNotifications.UseTicket))
-                .MapTo(promoCode);
+        .OnSuccessAsync(async (purchase) =>
+        {
+            await _mediator.Publish(new AddPurchaseNotification(purchase.UserId, SystemDefaultNotifications.UseTicket));
+            return await _userRepo.GetByIdAsync(purchase.UserId);
+        });
+    }
+    public async Task<Result<User>> AddInfluencerCodePurchase(InfluencerCode code, Guid userId)
+    {
+        return (await _purchaseRepo.AddAsync<Guid>(new(code, userId)))
+       .OnSuccessAsync(async (purchase) =>
+       {
+           await _mediator.Publish(new AddPurchaseNotification(purchase.UserId, SystemDefaultNotifications.UseInfluencerCode));
+           return await _userRepo.GetByIdAsync(purchase.UserId);
+       });
+
     }
 
+    public async Task<Result<int>> GetInfluencerCodeUsageByAllUsersCountAsync(string code) =>
+        await _purchaseRepo.GetInfluencerCodeUsageByAllUsersCountAsync(code);
+
+    public async Task<Result<int>> GetInfluencerCodeUsageCountByCategoryForUserAsync(Guid userId, int categoryId) =>
+        await _purchaseRepo.GetInfluencerCodeUsageCountByCategoryForUserAsync(userId, categoryId);
+
+    public async Task<Result<int>> GetInfluencerCodeUsageByUserIdCountAsync(Guid userId, string code) =>
+            await _purchaseRepo.GetInfluencerCodeUsageByUserIdCountAsync(userId, code);
 }

@@ -1,12 +1,11 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IPurchaseRepo purchaseRepo, INotificationService notificationService, IInfluencerCodesCategoriesRepo influencerCodesCategoriesRepo) : IInfluencerCodesService
+public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IPurchaseService purchaseService, IInfluencerCodesCategoriesRepo influencerCodesCategoriesRepo) : IInfluencerCodesService
 {
     private readonly IInfluencerCodesRepo _influencerCodesRepo = influencerCodesRepo;
     private readonly IInfluencerCodesCategoriesRepo _influencerCodesCategoriesRepo = influencerCodesCategoriesRepo;
-    private readonly INotificationService _notificationService = notificationService;
-    private readonly IPurchaseRepo _purchaseRepo = purchaseRepo;
+    private readonly IPurchaseService _purchaseService = purchaseService;
 
     public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTime? expireDate, int MaxInfluencedUsersCount, int? categoryId)
     {
@@ -37,7 +36,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
         })
         .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
         {
-            Result<int> getUsageNumRes = await _purchaseRepo.GetInfluencerCodeUsageByUserIdCountAsync(userId, influencerCode.Code);
+            Result<int> getUsageNumRes = await _purchaseService.GetInfluencerCodeUsageByUserIdCountAsync(userId, influencerCode.Code);
             return getUsageNumRes.OnSuccess(num =>
             {
                 if (num > 0)
@@ -52,7 +51,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
         .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
         {
             if (influencerCode.MaxInfluencedUsersCount == 0) return Result.Ok(influencerCode);
-            Result<int> getUsageNumRes = await _purchaseRepo.GetInfluencerCodeUsageByAllUsersCountAsync(influencerCode.Code);
+            Result<int> getUsageNumRes = await _purchaseService.GetInfluencerCodeUsageByAllUsersCountAsync(influencerCode.Code);
             return getUsageNumRes.OnSuccess(num =>
             {
                 if (num >= influencerCode.MaxInfluencedUsersCount)
@@ -67,7 +66,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
         .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
         {
             if (influencerCode.CategoryId is null) return Result.Ok(influencerCode);
-            return (await _purchaseRepo.GetInfluencerCodeUsageCountByCategoryForUserAsync(userId, influencerCode.CategoryId.Value))
+            return (await _purchaseService.GetInfluencerCodeUsageCountByCategoryForUserAsync(userId, influencerCode.CategoryId.Value))
             .OnSuccessAsync(async (UsageNum) =>
             {
                 return (await _influencerCodesCategoriesRepo.GetByIdAsync(influencerCode.CategoryId.Value))
@@ -87,11 +86,6 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
                 return Result.Ok(influencerCode);
             });
         })
-        .OnSuccessAsync(async (influencerCode) =>
-        {
-            return (await _purchaseRepo.AddAsync<Guid>(new(influencerCode, userId)))
-                    .OnSuccessAsync(async (purchase) =>
-                         await _notificationService.SendToUserPreDefinedNotification(purchase.UserId, SystemDefaultNotifications.UseInfluencerCode));
-        });
+        .OnSuccessAsync(async (influencerCode) => await _purchaseService.AddInfluencerCodePurchase(influencerCode, userId));
     }
 }

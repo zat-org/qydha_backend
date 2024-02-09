@@ -2,7 +2,6 @@
 
 public interface IAuthService
 {
-    Task<Result<Tuple<User, string>>> LoginAsAnonymousAsync();
     Task<Result<Tuple<User, string>>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId);
     Task<Result<Tuple<User, string>>> Login(string username, string password, string? fcm_token);
 

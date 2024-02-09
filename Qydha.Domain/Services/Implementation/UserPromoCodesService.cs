@@ -1,11 +1,11 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INotificationService notificationService, IPurchaseService purchaseService, IUserRepo userRepo) : IUserPromoCodesService
+public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMediator mediator, IPurchaseService purchaseService, IUserRepo userRepo) : IUserPromoCodesService
 {
     private readonly IUserRepo _userRepo = userRepo;
+    private readonly IMediator _mediator = mediator;
     private readonly IPurchaseService _purchaseService = purchaseService;
-    private readonly INotificationService _notificationService = notificationService;
     private readonly IUserPromoCodesRepo _userPromoCodesRepo = userPromoCodesRepo;
 
     public async Task<Result<UserPromoCode>> AddPromoCode(Guid userId, string code, int numberOfDays, DateTime expireAt)
@@ -14,8 +14,10 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INoti
         return getUserRes
         .OnSuccessAsync(async (user) => await _userPromoCodesRepo.AddAsync<Guid>(new UserPromoCode(userId, code, numberOfDays, expireAt)))
         .OnSuccessAsync<UserPromoCode>(async (promo) =>
-            (await _notificationService.SendToUserPreDefinedNotification(userId, SystemDefaultNotifications.GetTicket)).MapTo(promo)
-        );
+        {
+            await _mediator.Publish(new AddPromoCodeNotification(userId));
+            return Result.Ok(promo);
+        });
     }
 
     public async Task<Result<User>> UsePromoCode(Guid userId, Guid promoId)
@@ -48,9 +50,9 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, INoti
                });
            return Result.Ok(tuple);
        })
-       .OnSuccessAsync(async (tuple) => await _purchaseService.AddPromoCodePurchase(tuple.Item2))
-       .OnSuccessAsync<UserPromoCode>(async promo => (await _userPromoCodesRepo.PatchById(promo.Id, nameof(UserPromoCode.UsedAt), DateTime.UtcNow)).MapTo(promo))
-       .OnSuccessAsync(async (promo) => await _userRepo.GetByIdAsync(promo.UserId));
+       .OnSuccessAsync<Tuple<User, UserPromoCode>>(async (tuple) => (await _purchaseService.AddPromoCodePurchase(tuple.Item2))
+            .MapTo((user) => new Tuple<User, UserPromoCode>(user, tuple.Item2)))
+       .OnSuccessAsync(async tuple => (await _userPromoCodesRepo.PatchById(tuple.Item2.Id, nameof(UserPromoCode.UsedAt), DateTime.UtcNow)).MapTo(tuple.Item1));
     }
 
     public async Task<Result<IEnumerable<UserPromoCode>>> GetUserPromoCodes(Guid userId)

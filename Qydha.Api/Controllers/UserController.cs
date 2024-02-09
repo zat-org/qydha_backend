@@ -289,15 +289,6 @@ public class UserController(IUserService userService, INotificationService notif
             , BadRequest);
     }
 
-    [HttpDelete("me/delete-anonymous")]
-    public IActionResult DeleteAnonymousUser()
-    {
-        return BadRequest(new Error()
-        {
-            Code = ErrorType.InvalidBodyInput,
-            Message = "برجاء تحديث التطبيق"
-        });
-    }
 
     #endregion
 

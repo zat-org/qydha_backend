@@ -171,7 +171,7 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
             {
                 ValidateIssuer = true,
                 ValidateAudience = true,
-                // ValidateLifetime = true,
+                ValidateLifetime = false,
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = _jwtSettings.Issuer,
                 ValidAudience = _jwtSettings.Audience,

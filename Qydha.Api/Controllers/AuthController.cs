@@ -6,16 +6,6 @@ public class AuthController(IAuthService authService) : ControllerBase
 {
     private readonly IAuthService _authService = authService;
 
-    [HttpPost("login-anonymous/")]
-    public IActionResult LoginAsAnonymous()
-    {
-        return BadRequest(new Error()
-        {
-            Code = ErrorType.InvalidBodyInput,
-            Message = "برجاء تحديث التطبيق"
-        });
-    }
-
     [HttpPost("register/")]
     public async Task<IActionResult> Register([FromBody] UserRegisterDTO dto)
     {
@@ -32,16 +22,6 @@ public class AuthController(IAuthService authService) : ControllerBase
                 }),
             BadRequest
         );
-    }
-
-    [HttpPost("register-anonymous/")]
-    public IActionResult RegisterAnonymous([FromBody] UserRegisterDTO dto)
-    {
-        return BadRequest(new Error()
-        {
-            Code = ErrorType.InvalidBodyInput,
-            Message = "برجاء تحديث التطبيق"
-        });
     }
 
     [HttpPost("login/")]

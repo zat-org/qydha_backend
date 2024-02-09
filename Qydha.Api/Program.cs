@@ -61,8 +61,11 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddScoped<ExceptionHandlerAttribute>();
 builder.Services.AddScoped<AuthorizationFilter>();
 #endregion
-
-
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(User).Assembly);
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
@@ -94,12 +97,9 @@ builder.Services.AddSwaggerGen(opt =>
 });
 
 builder.Services.AddMiniProfiler(options =>
-      {
-          options.RouteBasePath = "/profiler"; // Configure the route path as needed
-
-          //   options.ResultsAuthorize = _ => true;
-          //   options.ResultsListAuthorize = _ => true;
-      });
+    {
+        options.RouteBasePath = "/profiler";
+    });
 
 #region Serilog
 var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration)
@@ -154,9 +154,6 @@ builder.Services.Configure<BookSettings>(builder.Configuration.GetSection("BookS
 builder.Services.Configure<UltraMsgSettings>(builder.Configuration.GetSection("UltraMsgSettings"));
 
 builder.Services.Configure<RegisterGiftSetting>(builder.Configuration.GetSection("RegisterGiftSetting"));
-
-
-
 
 
 
