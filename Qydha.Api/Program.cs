@@ -208,7 +208,7 @@ builder.Services.AddSingleton<OtpManager>();
 // else
 //     builder.Services.AddScoped<IMessageService, WhatsAppService>();
 
-builder.Services.AddScoped<IMessageService, UltraMsgService>();
+builder.Services.AddScoped<IMessageService, WhatsAppService>();
 
 
 builder.Services.AddScoped<IMailingService, MailingService>();
