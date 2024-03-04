@@ -146,6 +146,51 @@ public class AuthController(IAuthService authService) : ControllerBase
         );
     }
 
+    [Auth(SystemUserRoles.Admin)]
+    [HttpPost("login-with-qydha")]
+    public async Task<IActionResult> LoginWithQydha(LoginWithQydhaDto dto)
+    {
+        AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
 
+        return (await _authService.SendOtpToLoginWithQydha(dto.Username, "زات"))
+        .Handle<LoginWithQydhaRequest, IActionResult>(
+            (loginReq) =>
+            {
+                return Ok(new
+                {
+                    data = new
+                    {
+                        id = loginReq.Id,
+                    },
+                    message = "otp sent successfully to the user."
+                });
+            },
+            BadRequest
+        );
+    }
+
+    [Auth(SystemUserRoles.Admin)]
+    [HttpPost("confirm-login-with-qydha")]
+    public async Task<IActionResult> ConfirmLoginWithQydha(ConfirmLoginWithQydhaDto dto)
+    {
+        AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
+
+        return (await _authService.ConfirmLoginWithQydha(dto.RequestId, dto.Otp))
+        .Handle<Tuple<User, string>, IActionResult>(
+            (tuple) =>
+            {
+                var mapper = new UserMapper();
+                return Ok(new
+                {
+                    data = new
+                    {
+                        user = mapper.UserToUserDto(tuple.Item1),
+                        token = tuple.Item2
+                    },
+                    message = "user logged in successfully."
+                });
+            }
+            , BadRequest);
+    }
 }
 

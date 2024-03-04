@@ -10,4 +10,7 @@ public interface IAuthService
 
     Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken, Guid? userId);
     Task<Result> Logout(Guid userId);
+
+    Task<Result<LoginWithQydhaRequest>> SendOtpToLoginWithQydha(string username, string serviceConsumerName);
+    Task<Result<Tuple<User, string>>> ConfirmLoginWithQydha(Guid requestId, string otpCode);
 }

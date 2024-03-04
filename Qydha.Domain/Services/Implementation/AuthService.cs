@@ -1,7 +1,7 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo) : IAuthService
+public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, ILoginWithQydhaOtpSenderService loginWithQydhaOtpSenderService, ILoginWithQydhaRequestRepo loginWithQydhaRequestRepo) : IAuthService
 {
     #region  injections
     private readonly IUserRepo _userRepo = userRepo;
@@ -9,7 +9,8 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
     private readonly IRegistrationOTPRequestRepo _registrationOTPRequestRepo = registrationOTPRequestRepo;
     private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
     private readonly IMessageService _messageService = messageService;
-
+    private readonly ILoginWithQydhaOtpSenderService _loginWithQydhaOtpSenderService = loginWithQydhaOtpSenderService;
+    private readonly ILoginWithQydhaRequestRepo _loginWithQydhaRequestRepo = loginWithQydhaRequestRepo;
     private readonly OtpManager _otpManager = otpManager;
     private readonly TokenManager _tokenManager = tokenManager;
     #endregion
@@ -151,4 +152,48 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         })
         .OnSuccess((user) => Result.Ok(new Tuple<User, string>(user, _tokenManager.Generate(user.GetClaims()))));
     }
+
+    public async Task<Result<LoginWithQydhaRequest>> SendOtpToLoginWithQydha(string username, string serviceConsumerName)
+    {
+        return (await _userRepo.GetByUsernameAsync(username))
+        .OnSuccessAsync(async (user) =>
+        {
+            // generate otp 
+            string otp = _otpManager.GenerateOTP();
+            // send otp to the user
+            return (await _loginWithQydhaOtpSenderService.SendOtpAsync(user, otp, serviceConsumerName)).MapTo(new Tuple<User, string>(user, otp));
+        })
+        .OnSuccessAsync(async (tuple) =>
+        {
+            User user = tuple.Item1;
+            string otp = tuple.Item2;
+            // save otp  to be validated 
+            return await _loginWithQydhaRequestRepo.AddAsync<Guid>(new LoginWithQydhaRequest(user.Id, otp));
+        });
+    }
+
+    public async Task<Result<Tuple<User, string>>> ConfirmLoginWithQydha(Guid requestId, string otpCode)
+    {
+        return (await _loginWithQydhaRequestRepo.GetByUniquePropAsync(nameof(LoginWithQydhaRequest.Id), requestId))
+        .OnSuccessAsync<LoginWithQydhaRequest>(async (otp_request) =>
+        {
+            if (otp_request.Otp != otpCode)
+                return Result.Fail<LoginWithQydhaRequest>(new()
+                {
+                    Code = ErrorType.IncorrectOTP,
+                    Message = "InCorrect OTP."
+                });
+
+            if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
+                return Result.Fail<LoginWithQydhaRequest>(new()
+                {
+                    Code = ErrorType.OTPExceededTimeLimit,
+                    Message = "OTP Exceed Time Limit"
+                });
+            return (await _loginWithQydhaRequestRepo.MarkRequestAsUsed(requestId)).MapTo(otp_request);
+        })
+        .OnSuccessAsync(async (request) => await _userRepo.GetByIdAsync(request.UserId))
+        .OnSuccess((user) => Result.Ok(new Tuple<User, string>(user, _tokenManager.Generate(user.GetClaims()))));
+    }
+
 }

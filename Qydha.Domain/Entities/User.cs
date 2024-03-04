@@ -8,7 +8,7 @@ public class User : DbEntity<User>
     public Guid Id { get; set; }
 
     [Column("username")]
-    public string? Username { get; set; }
+    public string Username { get; set; } = null!;
 
     [Column("name")]
     public string? Name { get; set; }
@@ -17,7 +17,7 @@ public class User : DbEntity<User>
     public string? PasswordHash { get; set; }
 
     [Column("phone")]
-    public string? Phone { get; set; }
+    public string Phone { get; set; } = null!;
 
     [Column("email")]
     public string? Email { get; set; }

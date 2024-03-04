@@ -44,6 +44,7 @@ public enum ErrorType
     UpdatePhoneRequestNotFound = 4049,
     UserPromoCodeNotFound = 4050,
     InfluencerCodeCategoryNotFound = 4051,
+    LoginWithQydhaRequestNotFound = 4052,
 
     #endregion
 

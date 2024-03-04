@@ -110,17 +110,18 @@ var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Conf
     .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning);
 // .WriteTo.File(new JsonFormatter(renderMessage: true), "./info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information);
 
-string serviceAccountCredential = File.ReadAllText("googleCloud_private_key.json");
-var googleLoggerConfig = builder.Configuration.GetSection("GoogleLogger");
-
-var googleCloudConfig = new GoogleCloudLoggingSinkOptions
+if (!builder.Environment.IsDevelopment())
 {
-    ProjectId = googleLoggerConfig["ProjectId"],
-    GoogleCredentialJson = serviceAccountCredential,
-    ServiceName = googleLoggerConfig["ServiceName"]
-};
-loggerConfig.WriteTo.GoogleCloudLogging(googleCloudConfig);
-
+    string serviceAccountCredential = File.ReadAllText("googleCloud_private_key.json");
+    var googleLoggerConfig = builder.Configuration.GetSection("GoogleLogger");
+    var googleCloudConfig = new GoogleCloudLoggingSinkOptions
+    {
+        ProjectId = googleLoggerConfig["ProjectId"],
+        GoogleCredentialJson = serviceAccountCredential,
+        ServiceName = googleLoggerConfig["ServiceName"]
+    };
+    loggerConfig.WriteTo.GoogleCloudLogging(googleCloudConfig);
+}
 Log.Logger = loggerConfig.CreateLogger();
 builder.Host.UseSerilog();
 #endregion
@@ -174,8 +175,6 @@ builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IRegistrationOTPRequestRepo, RegistrationOTPRequestRepo>();
 builder.Services.AddScoped<IUpdatePhoneOTPRequestRepo, UpdatePhoneOTPRequestRepo>();
 builder.Services.AddScoped<IPhoneAuthenticationRequestRepo, PhoneAuthenticationRequestRepo>();
-
-
 builder.Services.AddScoped<IUpdateEmailRequestRepo, UpdateEmailRequestRepo>();
 builder.Services.AddScoped<IPurchaseRepo, PurchaseRepo>();
 builder.Services.AddScoped<INotificationRepo, NotificationRepo>();
@@ -187,10 +186,7 @@ builder.Services.AddScoped<IUserHandSettingsRepo, UserHandSettingsRepo>();
 builder.Services.AddScoped<IUserBalootSettingsRepo, UserBalootSettingsRepo>();
 builder.Services.AddScoped<IAppAssetsRepo, AppAssetsRepo>();
 builder.Services.AddScoped<IInfluencerCodesCategoriesRepo, InfluencerCodesCategoriesRepo>();
-
-
-
-
+builder.Services.AddScoped<ILoginWithQydhaRequestRepo, LoginWithQydhaRequestRepo>();
 #endregion
 
 #region SQL Mappers for json
@@ -203,18 +199,17 @@ SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
 builder.Services.AddSingleton<TokenManager>();
 builder.Services.AddSingleton<OtpManager>();
 
-// if (builder.Environment.IsDevelopment())
-//     builder.Services.AddScoped<IMessageService, UltraMsgService>();
-// else
-//     builder.Services.AddScoped<IMessageService, WhatsAppService>();
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IMessageService, UltraMsgService>();
+else
+    builder.Services.AddScoped<IMessageService, WhatsAppService>();
 
-builder.Services.AddScoped<IMessageService, WhatsAppService>();
+// builder.Services.AddScoped<IMessageService, WhatsAppService>();
 
 
 builder.Services.AddScoped<IMailingService, MailingService>();
 builder.Services.AddScoped<IFileService, GoogleCloudFileService>();
 builder.Services.AddScoped<IPushNotificationService, FCMService>();
-
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -224,9 +219,8 @@ builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IInfluencerCodesService, InfluencerCodesService>();
 builder.Services.AddScoped<IAppAssetsService, AppAssetsService>();
 builder.Services.AddScoped<IInfluencerCodeCategoryService, InfluencerCodeCategoryService>();
-
+builder.Services.AddScoped<ILoginWithQydhaOtpSenderService, LoginWithQydhaOtpSenderAsNotification>();
 builder.Services.AddSingleton(new GoogleStorageService("googleCloud_private_key.json"));
-
 #endregion
 
 #region Add Cors

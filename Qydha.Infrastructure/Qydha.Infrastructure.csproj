@@ -13,15 +13,7 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Migrations\022_addBalootSoundsSettings.sql" />
-    <None Remove="Migrations\023_addMaxInfluencedUsersToInfluencersCodestable.sql" />
-    <None Remove="Migrations\024_addAnonymous_clicksToNotificatoinDataTable.sql" />
-    <None Remove="Migrations\025_AddTakweeshPointstoHandSettings.sql" />
-    <None Remove="Migrations\026_AddInfluencerCodeCategories.sql" />
-    <None Remove="Migrations\027_delete_notification_table_and _anonymous_users.sql" />
-  </ItemGroup>
-
+ 
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.24" />
