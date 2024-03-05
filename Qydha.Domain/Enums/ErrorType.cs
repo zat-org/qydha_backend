@@ -74,6 +74,8 @@ public enum ErrorType
     OTPExceededTimeLimit = 4111,
     OTPEmailSendingError = 4112,
     OTPPhoneSendingError = 4113,
+    OTPAlreadyUsedError = 4114,
+
     #endregion
 
     #region files errors

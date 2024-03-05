@@ -177,6 +177,13 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         return (await _loginWithQydhaRequestRepo.GetByUniquePropAsync(nameof(LoginWithQydhaRequest.Id), requestId))
         .OnSuccessAsync<LoginWithQydhaRequest>(async (otp_request) =>
         {
+            if (otp_request.UsedAt is not null)
+                return Result.Fail<LoginWithQydhaRequest>(new()
+                {
+                    Code = ErrorType.OTPAlreadyUsedError,
+                    Message = "OTP Already Used."
+                });
+
             if (otp_request.Otp != otpCode)
                 return Result.Fail<LoginWithQydhaRequest>(new()
                 {
