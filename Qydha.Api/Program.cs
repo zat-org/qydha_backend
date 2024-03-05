@@ -199,7 +199,7 @@ SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
 builder.Services.AddSingleton<TokenManager>();
 builder.Services.AddSingleton<OtpManager>();
 
-if (builder.Environment.IsDevelopment())
+if (!builder.Environment.IsProduction())
     builder.Services.AddScoped<IMessageService, UltraMsgService>();
 else
     builder.Services.AddScoped<IMessageService, WhatsAppService>();
