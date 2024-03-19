@@ -1,38 +1,66 @@
 ﻿namespace Qydha.Infrastructure.Repositories;
 
-public class AppAssetsRepo(IDbConnection dbConnection, ILogger<AppAssetsRepo> logger) : GenericRepository<AppAsset>(dbConnection, logger), IAppAssetsRepo
+public class AppAssetsRepo(QydhaContext dbContext, ILogger<AppAssetsRepo> logger) :IAppAssetsRepo
 {
+    private readonly QydhaContext  _dbCtx = dbContext;
+    private readonly ILogger<AppAssetsRepo> _logger = logger;
     public async Task<Result<BookAsset>> GetBalootBookAssetData()
     {
-        return (await GetByUniquePropAsync(nameof(AppAsset.AssetKey), "baloot_book"))
-        .OnSuccess((asset) =>
-        {
+        var asset = await _dbCtx.AppAssets.FirstOrDefaultAsync((elm) => elm.AssetKey == "baloot_book");
+        if(asset is not null && asset.AssetData is not null){
             BookAsset bookAsset = JsonConvert.DeserializeObject<BookAsset>(asset.AssetData) ??
-                 throw new Exception("baloot_book Deserialization failed book Asset = null");
+                //! TODO :: check this exception position and handling and logging
+                throw new Exception("baloot_book Deserialization failed book Asset = null");
             return Result.Ok(bookAsset);
-        });
+        }else {
+            return Result.Fail<BookAsset>(new(){
+                Code= ErrorType.AssetNotFound,
+                Message = "Baloot Book Asset Not Found"
+            });
+        }
     }
 
     public async Task<Result> UpdateBalootBookAssetData(BookAsset bookAsset)
     {
         string serializedBookData = JsonConvert.SerializeObject(bookAsset);
-        return await PatchById("baloot_book", nameof(AppAsset.AssetData), serializedBookData);
+        var affected = await _dbCtx.AppAssets.Where(asset => asset.AssetKey == "baloot_book").ExecuteUpdateAsync(
+            setter => setter.SetProperty(asset=> asset.AssetData , serializedBookData)
+        );
+        return affected == 1 ? 
+            Result.Ok() :
+            Result.Fail(new(){
+                Code= ErrorType.AssetNotFound,
+                Message = "Baloot Book Asset Not Found"
+            });
     }
 
     public async Task<Result<PopUpAsset>> GetPopupAssetData()
     {
-        return (await GetByUniquePropAsync(nameof(AppAsset.AssetKey), "popup"))
-        .OnSuccess((asset) =>
-        {
+        var asset = await _dbCtx.AppAssets.FirstOrDefaultAsync((elm) => elm.AssetKey == "popup");
+        if(asset is not null && asset.AssetData is not null){
             PopUpAsset popupAsset = JsonConvert.DeserializeObject<PopUpAsset>(asset.AssetData) ??
-                 throw new Exception("Popup Deserialization failed book Asset = null");
+                //! TODO :: check this exception position and handling and logging
+                throw new Exception("Popup Asset Deserialization failed Popup Asset = null ");
             return Result.Ok(popupAsset);
-        });
+        } else {
+            return Result.Fail<PopUpAsset>(new(){
+                Code= ErrorType.AssetNotFound,
+                Message = "Popup Asset Not Found"
+            });
+        }
     }
 
     public async Task<Result> UpdatePopupAssetData(PopUpAsset popupAsset)
     {
         string serializedPopupAsset = JsonConvert.SerializeObject(popupAsset);
-        return await PatchById("popup", nameof(AppAsset.AssetData), serializedPopupAsset);
+        var affected = await _dbCtx.AppAssets.Where(asset => asset.AssetKey == "popup").ExecuteUpdateAsync(
+            setter => setter.SetProperty(asset=> asset.AssetData , serializedPopupAsset)
+        );
+        return affected == 1 ? 
+            Result.Ok() :
+            Result.Fail(new(){
+                Code= ErrorType.AssetNotFound,
+                Message = "popup Asset Not Found"
+            });
     }
 }

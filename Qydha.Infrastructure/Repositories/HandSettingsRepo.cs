@@ -1,10 +1,40 @@
 ﻿
+
 namespace Qydha.Infrastructure.Repositories;
 
-public class UserHandSettingsRepo(IDbConnection dbConnection, ILogger<UserHandSettingsRepo> logger) : GenericRepository<UserHandSettings>(dbConnection, logger), IUserHandSettingsRepo
+public class UserHandSettingsRepo(QydhaContext dbContext, ILogger<UserHandSettingsRepo> logger) : IUserHandSettingsRepo
 {
-    // public override Task<Result<UserGeneralSettings>> GetByUniquePropAsync<IdT>(string propName, IdT propValue)
-    // {
-    //     return base.GetByUniquePropAsync(propName, propValue);
-    // }
+    private readonly QydhaContext _dbCtx = dbContext;
+    private readonly ILogger<UserHandSettingsRepo> _logger = logger;
+
+    public async Task<Result<UserHandSettings>> GetByUserIdAsync(Guid userId)
+    {
+        return await _dbCtx.UserHandSettings.FirstOrDefaultAsync((settings) => settings.UserId == userId) is UserHandSettings settings ?
+          Result.Ok(settings) :
+          Result.Fail<UserHandSettings>(new()
+          {
+              Code = ErrorType.UserHandSettingsNotFound,
+              Message = $"User Hand Settings NotFound:: Entity not found"
+          });
+    }
+
+    public async Task<Result<UserHandSettings>> UpdateByUserIdAsync(UserHandSettings settings)
+    {
+        var affected = await _dbCtx.UserHandSettings.Where(settingsElm => settingsElm.UserId == settings.UserId).ExecuteUpdateAsync(
+           setters => setters
+               .SetProperty(settingsRow => settingsRow.RoundsCount, settings.RoundsCount)
+               .SetProperty(settingsRow => settingsRow.MaxLimit, settings.MaxLimit)
+               .SetProperty(settingsRow => settingsRow.TeamsCount, settings.TeamsCount)
+               .SetProperty(settingsRow => settingsRow.PlayersCountInTeam, settings.PlayersCountInTeam)
+               .SetProperty(settingsRow => settingsRow.WinUsingZat, settings.WinUsingZat)
+               .SetProperty(settingsRow => settingsRow.TakweeshPoints, settings.TakweeshPoints)
+       );
+        return affected == 1 ?
+            Result.Ok(settings) :
+            Result.Fail<UserHandSettings>(new()
+            {
+                Code = ErrorType.UserHandSettingsNotFound,
+                Message = $"User Hand Settings NotFound:: Entity not found"
+            });
+    }
 }

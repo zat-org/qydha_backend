@@ -1,26 +1,21 @@
 ﻿namespace Qydha.Domain.Entities;
-[Table("InfluencerCodes_categories")]
-[NotFoundError(ErrorType.InfluencerCodeCategoryNotFound)]
 
-public class InfluencerCodeCategory : DbEntity<InfluencerCodeCategory>
+public class InfluencerCodeCategory 
 {
-    [Key]
-    [Column("id")]
     public int Id { get; set; }
-    private string categoryName = null!;
-    [Column("category_name")]
+    private string _categoryName = null!;
     public string CategoryName
     {
         get
         {
-            return categoryName;
+            return _categoryName;
         }
         set
         {
-            categoryName = value.Trim().ToUpper();
+            _categoryName = value.Trim().ToUpper();
         }
     }
-    [Column("max_codes_per_user_in_group")]
     public int MaxCodesPerUserInGroup { get; set; }
+    public ICollection<InfluencerCode> InfluencerCodes { get; set; } = [];
 
 }

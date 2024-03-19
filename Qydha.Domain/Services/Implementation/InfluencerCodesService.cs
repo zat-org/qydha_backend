@@ -17,7 +17,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
                 return await _influencerCodesCategoriesRepo.GetByIdAsync(categoryId.Value);
             return Result.Ok();
         })
-        .OnSuccessAsync(async () => await _influencerCodesRepo.AddAsync<Guid>(new InfluencerCode(code, numOfDays, expireDate, MaxInfluencedUsersCount, categoryId)));
+        .OnSuccessAsync(async () => await _influencerCodesRepo.AddAsync(new InfluencerCode(code, numOfDays, expireDate, MaxInfluencedUsersCount, categoryId)));
     }
 
     public async Task<Result<User>> UseInfluencerCode(Guid userId, string code)

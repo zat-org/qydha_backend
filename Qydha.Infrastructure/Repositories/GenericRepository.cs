@@ -280,8 +280,8 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : DbE
               Result.Ok() :
               Result.Fail(new()
               {
-                  Code = _notFoundError,
-                  Message = $"{_notFoundError} :: Entity not found"
+                Code = _notFoundError,
+                Message = $"{_notFoundError} :: Entity not found"
               });
         }
         catch (DbException exp)

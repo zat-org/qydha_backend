@@ -40,7 +40,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
                 ProductSku = productSku,
                 NumberOfDays = tuple.Item2
             };
-            return (await _purchaseRepo.AddAsync<Guid>(purchase)).MapTo(tuple.Item1);
+            return (await _purchaseRepo.AddAsync(purchase)).MapTo(tuple.Item1);
         })
         .OnSuccessAsync<User>(async (user) =>
         {
@@ -69,7 +69,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
                 ProductSku = "free_30",
                 NumberOfDays = _subscriptionSetting.NumberOfDaysInOneSubscription
             };
-            return (await _purchaseRepo.AddAsync<Guid>(purchase)).MapTo(user);
+            return (await _purchaseRepo.AddAsync(purchase)).MapTo(user);
         })
         .OnSuccessAsync<User>(async (user) =>
         {
@@ -80,7 +80,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
 
     public async Task<Result<User>> AddPromoCodePurchase(UserPromoCode promoCode)
     {
-        return (await _purchaseRepo.AddAsync<Guid>(new(promoCode)))
+        return (await _purchaseRepo.AddAsync(new(promoCode)))
         .OnSuccessAsync(async (purchase) =>
         {
             await _mediator.Publish(new AddPurchaseNotification(purchase.UserId, SystemDefaultNotifications.UseTicket));
@@ -89,7 +89,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
     }
     public async Task<Result<User>> AddInfluencerCodePurchase(InfluencerCode code, Guid userId)
     {
-        return (await _purchaseRepo.AddAsync<Guid>(new(code, userId)))
+        return (await _purchaseRepo.AddAsync(new(code, userId)))
        .OnSuccessAsync(async (purchase) =>
        {
            await _mediator.Publish(new AddPurchaseNotification(purchase.UserId, SystemDefaultNotifications.UseInfluencerCode));

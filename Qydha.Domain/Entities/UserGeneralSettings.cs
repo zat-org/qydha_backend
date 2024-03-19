@@ -1,18 +1,10 @@
 ﻿namespace Qydha.Domain.Entities;
 
-[Table("user_general_settings")]
-public class UserGeneralSettings : DbEntity<UserGeneralSettings>
-
+public class UserGeneralSettings
 {
-    [Key]
-    [Column("user_id")]
     public Guid UserId { get; set; }
-    [Column("enable_vibration")]
-    public bool EnableVibration { get; set; } = true;
-    [JsonField]
-    [Column("players_names")]
-    public Json<IEnumerable<string>> PlayersNames { get; set; } = new List<string>();
-    [JsonField]
-    [Column("teams_names")]
-    public Json<IEnumerable<string>> TeamsNames { get; set; } = new List<string>();
+    public bool? EnableVibration { get; set; } = true;
+    public IEnumerable<string> PlayersNames { get; set; } = [];
+    public IEnumerable<string> TeamsNames { get; set; } = [];
+    public User User { get; set; } = null!;
 }

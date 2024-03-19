@@ -12,7 +12,7 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMedi
     {
         Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
         return getUserRes
-        .OnSuccessAsync(async (user) => await _userPromoCodesRepo.AddAsync<Guid>(new UserPromoCode(userId, code, numberOfDays, expireAt)))
+        .OnSuccessAsync(async (user) => await _userPromoCodesRepo.AddAsync(new UserPromoCode(userId, code, numberOfDays, expireAt)))
         .OnSuccessAsync<UserPromoCode>(async (promo) =>
         {
             await _mediator.Publish(new AddPromoCodeNotification(userId));
@@ -22,7 +22,7 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMedi
 
     public async Task<Result<User>> UsePromoCode(Guid userId, Guid promoId)
     {
-        Result<UserPromoCode> getPromoRes = await _userPromoCodesRepo.GetByUniquePropAsync(nameof(UserPromoCode.Id), promoId);
+        Result<UserPromoCode> getPromoRes = await _userPromoCodesRepo.GetByIdAsync(promoId);
         return getPromoRes.OnSuccessAsync(async (promo) =>
                (await _userRepo.GetByIdAsync(promo.UserId))
                .MapTo(user => new Tuple<User, UserPromoCode>(user, promo)))
@@ -52,7 +52,7 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMedi
        })
        .OnSuccessAsync<Tuple<User, UserPromoCode>>(async (tuple) => (await _purchaseService.AddPromoCodePurchase(tuple.Item2))
             .MapTo((user) => new Tuple<User, UserPromoCode>(user, tuple.Item2)))
-       .OnSuccessAsync(async tuple => (await _userPromoCodesRepo.PatchById(tuple.Item2.Id, nameof(UserPromoCode.UsedAt), DateTime.UtcNow)).MapTo(tuple.Item1));
+       .OnSuccessAsync(async tuple => (await _userPromoCodesRepo.MarkAsUsedByIdAsync(tuple.Item2.Id)).MapTo(tuple.Item1));
     }
 
     public async Task<Result<IEnumerable<UserPromoCode>>> GetUserPromoCodes(Guid userId)

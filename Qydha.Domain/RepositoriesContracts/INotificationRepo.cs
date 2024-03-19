@@ -1,7 +1,8 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface INotificationRepo : IGenericRepository<NotificationData>
+public interface INotificationRepo
 {
+    
     Task<Result<int>> AssignNotificationToUser(Guid userId, int notificationId);
     Task<Result<int>> AssignNotificationToUser(Guid userId, NotificationData notification);
     Task<Result<int>> AssignNotificationToAllUsers(NotificationData notification);

@@ -6,6 +6,8 @@ using Newtonsoft.Json.Converters;
 using StackExchange.Profiling.Data;
 using Serilog.Sinks.GoogleCloudLogging;
 using Serilog.Exceptions;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 
 FirebaseApp.Create(new AppOptions()
@@ -31,6 +33,8 @@ builder.Services.AddControllers((options) =>
 }).AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.Converters.Add(new StringEnumConverter());
+    options.SerializerSettings.ReferenceLoopHandling  = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+
 });
 
 #region fluent validation
@@ -105,10 +109,10 @@ builder.Services.AddMiniProfiler(options =>
 var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration)
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Information)
     .Enrich.WithExceptionDetails()
     .WriteTo.Console()
     .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning);
-// .WriteTo.File(new JsonFormatter(renderMessage: true), "./info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information);
 
 if (!builder.Environment.IsDevelopment())
 {
@@ -159,6 +163,14 @@ builder.Services.Configure<RegisterGiftSetting>(builder.Configuration.GetSection
 
 
 // db connection
+builder.Services.AddDbContext<QydhaContext>(
+    (opt) => {
+        opt.UseNpgsql(connectionString)
+        .EnableSensitiveDataLogging()
+        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    }
+);
+
 builder.Services.AddScoped<IDbConnection, ProfiledDbConnection>(
     sp =>
     {
@@ -192,6 +204,9 @@ builder.Services.AddScoped<ILoginWithQydhaRequestRepo, LoginWithQydhaRequestRepo
 #region SQL Mappers for json
 SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
 
+// builder.Services.ConfigureHttpJsonOptions(options=>
+//     options.SerializerOptions.ReferenceHandler= ReferenceHandler.IgnoreCycles
+// );
 
 #endregion
 

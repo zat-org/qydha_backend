@@ -1,24 +1,15 @@
 ﻿namespace Qydha.Domain.Entities;
-
-[Table("update_phone_requests")]
-[NotFoundError(ErrorType.UpdatePhoneRequestNotFound)]
-
-public class UpdatePhoneRequest : DbEntity<UpdatePhoneRequest>
+public class UpdatePhoneRequest
 {
-    [Key]
-    [Column("id")]
+
     public Guid Id { get; set; }
 
-    [Column("phone")]
-    public string Phone { get; set; } = string.Empty;
+    public string Phone { get; set; } = null!;
 
-    [Column("otp")]
-    public string OTP { get; set; } = string.Empty;
+    public string OTP { get; set; } = null!;
 
-    [Column("created_on")]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-    [Column("user_id")]
     public Guid UserId { get; set; }
 
     public UpdatePhoneRequest()
@@ -30,6 +21,7 @@ public class UpdatePhoneRequest : DbEntity<UpdatePhoneRequest>
         Phone = phone;
         OTP = otp;
         UserId = user_id;
-        CreatedAt = DateTime.UtcNow;
+        //! TODO convert to utc
+        CreatedAt = DateTime.Now;
     }
 }

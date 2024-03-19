@@ -1,6 +1,7 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IUserHandSettingsRepo : IGenericRepository<UserHandSettings>
+public interface IUserHandSettingsRepo
 {
-
+    Task<Result<UserHandSettings>> GetByUserIdAsync(Guid userId);
+    Task<Result<UserHandSettings>> UpdateByUserIdAsync(UserHandSettings settings);
 }

@@ -1,7 +1,11 @@
 ﻿namespace Qydha.Domain.Repositories;
-public interface IUserRepo : IGenericRepository<User>
+public interface IUserRepo
 {
-    Task<Result<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>> GetUserWithSettingsByIdAsync(Guid userId);
+    Task<Result<User>> AddAsync(User user);
+    Task<Result<User>> UpdateAsync(User user);
+    Task<Result> DeleteAsync(Guid userId);
+
+    Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
     Task<Result<IEnumerable<User>>> GetAllRegularUsers();
     Task<Result<User>> GetByIdAsync(Guid id);
     Task<Result<User>> GetByPhoneAsync(string phone);

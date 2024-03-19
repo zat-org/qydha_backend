@@ -21,7 +21,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
 
     #region Get User 
     public async Task<Result<User>> GetUserById(Guid userId) => await _userRepo.GetByIdAsync(userId);
-    public async Task<Result<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>> GetUserWithSettingsByIdAsync(Guid userId) =>
+    public async Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId) =>
         await _userRepo.GetUserWithSettingsByIdAsync(userId);
 
     public async Task<Result> IsUserNameAvailable(string username) => await _userRepo.IsUsernameAvailable(username);
@@ -33,7 +33,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     #region Update User
 
     public async Task<Result<User>> UpdateUser(User user) =>
-                await _userRepo.PutByIdAsync(user);
+                await _userRepo.UpdateAsync(user);
 
     public async Task<Result<User>> UpdateUserPassword(Guid userId, string oldPassword, string newPassword)
     {
@@ -50,7 +50,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
         return getUserRes
         .OnSuccessAsync(
             async (user) =>
-                (await _phoneAuthenticationRequestRepo.GetByUniquePropAsync(nameof(PhoneAuthenticationRequest.Id), phoneAuthReqId))
+                (await _phoneAuthenticationRequestRepo.GetByIdAsync(phoneAuthReqId))
                 .MapTo((request) => new Tuple<User, PhoneAuthenticationRequest>(user, request)))
         .OnSuccess((tuple) =>
         {
@@ -106,11 +106,11 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                 var otp = _otpManager.GenerateOTP();
                 return (await _messageService.SendOtpAsync(newPhone, user.Username!, otp)).MapTo(otp);
             })
-            .OnSuccessAsync(async (otp) => await _updatePhoneOTPRequestRepo.AddAsync<Guid>(new(newPhone, otp, userId)));
+            .OnSuccessAsync(async (otp) => await _updatePhoneOTPRequestRepo.AddAsync(new(newPhone, otp, userId)));
     }
     public async Task<Result<User>> ConfirmPhoneUpdate(Guid userId, string code, Guid requestId)
     {
-        Result<UpdatePhoneRequest> getUPhoneRes = await _updatePhoneOTPRequestRepo.GetByUniquePropAsync(nameof(UpdatePhoneRequest.Id), requestId);
+        Result<UpdatePhoneRequest> getUPhoneRes = await _updatePhoneOTPRequestRepo.GetByIdAsync(requestId);
         return getUPhoneRes.OnSuccess<UpdatePhoneRequest>((otp_request) =>
             {
                 if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
@@ -147,12 +147,11 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                 return (await _mailingService.SendEmailAsync(newEmail, emailSubject, emailBody))
                         .MapTo(new Tuple<string, Guid>(otp, requestId));
             })
-            .OnSuccessAsync(async (tuple) => await _updateEmailRequestRepo.AddAsync<Guid>(new(tuple.Item2, newEmail, tuple.Item1, userId)));
+            .OnSuccessAsync(async (tuple) => await _updateEmailRequestRepo.AddAsync(new(tuple.Item2, newEmail, tuple.Item1, userId)));
     }
     public async Task<Result<User>> ConfirmEmailUpdate(Guid userId, string code, Guid requestId)
     {
-
-        Result<UpdateEmailRequest> getUEmailRes = await _updateEmailRequestRepo.GetByUniquePropAsync(nameof(UpdateEmailRequest.Id), requestId);
+        Result<UpdateEmailRequest> getUEmailRes = await _updateEmailRequestRepo.GetByIdAsync(requestId);
         return getUEmailRes.OnSuccess<UpdateEmailRequest>((otp_request) =>
         {
             if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
@@ -234,7 +233,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                 });
             return Result.Ok(user);
         })
-        .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteByIdAsync(user.Id)).MapTo(user))
+        .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteAsync(user.Id)).MapTo(user))
         .OnSuccessAsync<User>(async (user) =>
         {
             if (user.AvatarPath is not null)
@@ -263,25 +262,25 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                 });
             return Result.Ok(user);
         })
-        .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteByIdAsync(user.Id)).MapTo(user));
+        .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteAsync(user.Id)).MapTo(user));
     }
     #endregion
 
     #region user  settings
     public async Task<Result<UserGeneralSettings>> GetUserGeneralSettings(Guid userId) =>
-        await _userGeneralSettingsRepo.GetByUniquePropAsync(nameof(UserGeneralSettings.UserId), userId);
+        await _userGeneralSettingsRepo.GetByUserIdAsync(userId);
 
     public async Task<Result<UserHandSettings>> GetUserHandSettings(Guid userId) =>
-        await _userHandSettingsRepo.GetByUniquePropAsync(nameof(UserHandSettings.UserId), userId);
+        await _userHandSettingsRepo.GetByUserIdAsync(userId);
 
     public async Task<Result<UserBalootSettings>> GetUserBalootSettings(Guid userId) =>
-        await _userBalootSettingsRepo.GetByUniquePropAsync(nameof(UserBalootSettings.UserId), userId);
+        await _userBalootSettingsRepo.GetByUserIdAsync(userId);
 
     public async Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(UserGeneralSettings settings) =>
-           await _userGeneralSettingsRepo.PutByIdAsync(settings);
+           await _userGeneralSettingsRepo.UpdateByUserIdAsync(settings);
     public async Task<Result<UserHandSettings>> UpdateUserHandSettings(UserHandSettings settings) =>
-            await _userHandSettingsRepo.PutByIdAsync(settings);
+            await _userHandSettingsRepo.UpdateByUserIdAsync(settings);
     public async Task<Result<UserBalootSettings>> UpdateUserBalootSettings(UserBalootSettings settings) =>
-            await _userBalootSettingsRepo.PutByIdAsync(settings);
+            await _userBalootSettingsRepo.UpdateByUserIdAsync(settings);
     #endregion
 }

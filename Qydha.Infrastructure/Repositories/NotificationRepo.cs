@@ -1,7 +1,10 @@
 ﻿
 namespace Qydha.Infrastructure.Repositories;
-public class NotificationRepo(IDbConnection dbConnection, ILogger<NotificationRepo> logger) : GenericRepository<NotificationData>(dbConnection, logger), INotificationRepo
+public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRepo> logger) : INotificationRepo
 {
+    private readonly QydhaContext _dbCtx = qydhaContext;
+    private readonly ILogger<NotificationRepo> _logger = logger;
+    
     public async Task<Result<int>> AssignNotificationToUser(Guid userId, int notificationId)
     {
         string sql = @$"INSERT INTO Notifications_Users_Link 

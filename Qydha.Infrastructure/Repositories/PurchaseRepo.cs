@@ -1,79 +1,54 @@
 ﻿
 namespace Qydha.Infrastructure.Repositories;
-public class PurchaseRepo(IDbConnection dbConnection, ILogger<PurchaseRepo> logger) : GenericRepository<Purchase>(dbConnection, logger), IPurchaseRepo
+public class PurchaseRepo(QydhaContext qydhaContext, ILogger<PurchaseRepo> logger) : IPurchaseRepo
 {
+    private readonly QydhaContext _dbCtx = qydhaContext;
+    private readonly ILogger<PurchaseRepo> _logger = logger;
     public async Task<Result<IEnumerable<Purchase>>> GetAllByUserIdAsync(Guid userId)
     {
-        return await GetAllAsync($"{Purchase.GetColumnName(nameof(Purchase.UserId))} = @userId",
-                            new { userId },
-                            $"{Purchase.GetColumnName(nameof(Purchase.PurchaseDate))} DESC");
+        var codes = await _dbCtx.Purchases
+           .Where(purchase => purchase.UserId == userId).OrderByDescending(purchase => purchase.PurchaseDate).ToListAsync();
+        return Result.Ok((IEnumerable<Purchase>)codes);
     }
 
     public async Task<Result<int>> GetInfluencerCodeUsageByUserIdCountAsync(Guid userId, string code)
     {
-        try
-        {
-            var sql = @$"SELECT Count(*) FROM {Purchase.GetTableName()} 
-                        where {Purchase.GetColumnName(nameof(Purchase.UserId))} = @userId AND
-                        {Purchase.GetColumnName(nameof(Purchase.ProductSku))} = @code AND
-                        {Purchase.GetColumnName(nameof(Purchase.Type))} = @type ;";
-            _logger.LogTrace("Before Execute Query :: {sql}", sql);
-            int num = await _dbConnection.ExecuteScalarAsync<int>(sql, new { userId, code, type = "Influencer" });
-            return Result.Ok(num);
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical(exp, "Error from db : {msg} ", exp.Message);
-            throw;
-        }
+        return Result.Ok(await _dbCtx.Purchases
+           .Where(purchase => purchase.UserId == userId && purchase.Type == "Influencer" && purchase.ProductSku == code)
+           .CountAsync());
     }
 
     public async Task<Result<int>> GetInfluencerCodeUsageByAllUsersCountAsync(string code)
     {
-        try
-        {
-            var sql = @$"SELECT Count(*) FROM {Purchase.GetTableName()} 
-                        WHERE 
-                        {Purchase.GetColumnName(nameof(Purchase.ProductSku))} = @code AND
-                        {Purchase.GetColumnName(nameof(Purchase.Type))} = @type ;";
-            _logger.LogTrace("Before Execute Query :: {sql}", sql);
-            int num = await _dbConnection.ExecuteScalarAsync<int>(sql, new { code, type = "Influencer" });
-            return Result.Ok(num);
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical(exp, "Error from db : {msg} ", exp.Message);
-            throw;
-        }
+        return Result.Ok(await _dbCtx.Purchases
+           .Where(purchase => purchase.Type == "Influencer" && purchase.ProductSku == code)
+           .CountAsync());
     }
 
     public async Task<Result<int>> GetInfluencerCodeUsageCountByCategoryForUserAsync(Guid userId, int categoryId)
     {
-        try
+        //! TODO Refactor here by create relation between purchases and influencer Codes
+        List<string> purchases = await _dbCtx.Purchases
+           .Where(purchase => purchase.UserId == userId && purchase.Type == "Influencer")
+           .Select(p => p.ProductSku)
+           .ToListAsync();
+        List<string> codes = await _dbCtx.InfluencerCodes
+           .Where(code => code.CategoryId == categoryId)
+           .Select(code => code.Code)
+           .ToListAsync();
+        int counter = 0;
+        purchases.ForEach((p) =>
         {
-            var sql = @$"                    
-                    SELECT Count(*) FROM {Purchase.GetTableName()} 
-                        WHERE 
-                        {Purchase.GetColumnName(nameof(Purchase.UserId))} = @UserId AND
-                        {Purchase.GetColumnName(nameof(Purchase.Type))} = @Type AND
-                        {Purchase.GetColumnName(nameof(Purchase.ProductSku))} IN (
-                            SELECT {InfluencerCode.GetColumnName(nameof(InfluencerCode.Code))} 
-                            FROM {InfluencerCode.GetTableName()} 
-                            WHERE {InfluencerCode.GetColumnName(nameof(InfluencerCode.CategoryId))} = @CategoryId 
-                        );";
-            _logger.LogTrace("Before Execute Query :: {sql}", sql);
-            int num = await _dbConnection.ExecuteScalarAsync<int>(sql, new
-            {
-                UserId = userId,
-                CategoryId = categoryId,
-                Type = "Influencer"
-            });
-            return Result.Ok(num);
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical(exp, "Error from db : {msg} ", exp.Message);
-            throw;
-        }
+            if (codes.Contains(p))
+                counter++;
+        });
+        return Result.Ok(counter);
+    } 
+
+    public async Task<Result<Purchase>> AddAsync(Purchase purchase)
+    {
+        await _dbCtx.Purchases.AddAsync(purchase);
+        await _dbCtx.SaveChangesAsync();
+        return Result.Ok(purchase);
     }
 }

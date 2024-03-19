@@ -1,6 +1,6 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IAdminUserRepo : IGenericRepository<AdminUser>
+public interface IAdminUserRepo //: IGenericRepository<AdminUser>
 {
     Task<Result<AdminUser>> GetByIdAsync(Guid id);
     Task<Result<AdminUser>> GetByUsernameAsync(string username);

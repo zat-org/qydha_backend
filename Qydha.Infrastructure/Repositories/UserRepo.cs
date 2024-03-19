@@ -3,135 +3,66 @@ using static Dapper.SqlMapper;
 
 namespace Qydha.Infrastructure.Repositories;
 
-public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : GenericRepository<User>(dbConnection, logger), IUserRepo
+public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUserRepo
 {
+    private readonly QydhaContext _dbCtx = qydhaContext;
+    private readonly ILogger<UserRepo> _logger = logger;
+    private readonly Error NotFoundError = new()
+    {
+        Code = ErrorType.UserNotFound,
+        Message = $"User Not Found :: Entity not found"
+    };
 
     #region  add User
-    public override async Task<Result<User>> AddAsync<IdT>(User entity, bool excludeKey = true)
+    public async Task<Result<User>> AddAsync(User user)
     {
-
-        var insertUserParameters = new DynamicParameters();
-        var insertSettingsParameters = new DynamicParameters();
-        var userTableTuple = User.GetInsertQueryData(entity, excludeKey: true);
-        var generalTableTuple = UserGeneralSettings.GetInsertQueryData(new UserGeneralSettings(), excludeKey: true);
-        var handTableTuple = UserHandSettings.GetInsertQueryData(new UserHandSettings(), excludeKey: true);
-        var balootTableTuple = UserBalootSettings.GetInsertQueryData(new UserBalootSettings(), excludeKey: true);
-
-        insertUserParameters.AddDynamicParams(userTableTuple.Item3);
-        insertSettingsParameters.AddDynamicParams(generalTableTuple.Item3);
-        insertSettingsParameters.AddDynamicParams(handTableTuple.Item3);
-        insertSettingsParameters.AddDynamicParams(balootTableTuple.Item3);
-
-        string insertUserQuery = @$"
-            INSERT INTO {User.GetTableName()}  ({userTableTuple.Item1}) 
-            VALUES ({userTableTuple.Item2}) 
-            RETURNING {User.GetKeyColumnName()};
-            ";
-        string insertSettingsQuery = @$"
-                INSERT INTO {UserGeneralSettings.GetTableName()} 
-                ( {UserGeneralSettings.GetKeyColumnName()} , {generalTableTuple.Item1})
-                VALUES ( @new_user_id, {generalTableTuple.Item2} );
-
-                INSERT INTO {UserHandSettings.GetTableName()} 
-                ( {UserHandSettings.GetKeyColumnName()} ,{handTableTuple.Item1})
-                VALUES  (@new_user_id , {handTableTuple.Item2}) ;
-
-                INSERT INTO {UserBalootSettings.GetTableName()} 
-                ( {UserBalootSettings.GetKeyColumnName()}  , {balootTableTuple.Item1})
-                VALUES  (@new_user_id , {balootTableTuple.Item2}) ;
-            ";
-        using var transaction = dbConnection.BeginTransaction();
-
-        try
-        {
-
-            Guid entityId = await _dbConnection.QuerySingleAsync<Guid>(insertUserQuery, insertUserParameters, transaction);
-            entity.Id = entityId;
-            insertSettingsParameters.Add("@new_user_id", entityId);
-            await _dbConnection.ExecuteAsync(insertSettingsQuery, insertSettingsParameters, transaction);
-            transaction.Commit();
-            return Result.Ok(entity);
-        }
-        catch (Exception exp)
-        {
-            transaction.Rollback();
-            _logger.LogCritical(exp, $"error from db : {exp.Message} ");
-            return Result.Fail<User>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
-        }
-
+        await _dbCtx.Users.AddAsync(user);
+        //! TODO check tracking here
+        user.UserGeneralSettings = new UserGeneralSettings();
+        user.UserBalootSettings = new UserBalootSettings();
+        user.UserHandSettings = new UserHandSettings();
+        await _dbCtx.SaveChangesAsync();
+        return Result.Ok(user);
     }
     #endregion
 
     #region getUser
-    public async Task<Result<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>> GetUserWithSettingsByIdAsync(Guid userId)
+    public async Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId)
     {
-        try
-        {
-            string sql = @$"
-            SELECT {User.GetColumnsAndPropsForGet(excludeKey: false)}
-            from {User.GetTableName()}
-            where {User.GetKeyColumnName()} = @userId;
-
-            SELECT {UserGeneralSettings.GetColumnsAndPropsForGet(excludeKey: false)}
-            from {UserGeneralSettings.GetTableName()}
-            where {UserGeneralSettings.GetKeyColumnName()} = @userId;
-
-            SELECT {UserHandSettings.GetColumnsAndPropsForGet(excludeKey: false)}
-            from {UserHandSettings.GetTableName()}
-            where {UserHandSettings.GetKeyColumnName()} = @userId;
-
-            SELECT {UserBalootSettings.GetColumnsAndPropsForGet(excludeKey: false)}
-            from {UserBalootSettings.GetTableName()}
-            where {UserBalootSettings.GetKeyColumnName()} = @userId;
-            ";
-            using GridReader multi = await _dbConnection.QueryMultipleAsync(sql, new { userId });
-            User? user = await multi.ReadSingleOrDefaultAsync<User>();
-            UserGeneralSettings? userGeneralSettings = await multi.ReadSingleOrDefaultAsync<UserGeneralSettings>();
-            UserHandSettings? userHandSettings = await multi.ReadSingleOrDefaultAsync<UserHandSettings>();
-            UserBalootSettings? userBalootSettings = await multi.ReadSingleOrDefaultAsync<UserBalootSettings>();
-            if (user is null)
-                return Result.Fail<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>(new()
-                {
-                    Code = _notFoundError,
-                    Message = $"{_notFoundError} :: Entity not found"
-                });
-            if (userGeneralSettings is null || userHandSettings is null || userBalootSettings is null)
-            {
-                _logger.LogError("user with {id} do not have one of this settings => general settings : {hasGS} , hand settings : {hasHS} , baloot settings : {hasBS}", user.Id, userGeneralSettings is null, userHandSettings is null, userBalootSettings is null);
-            }
-            return Result.Ok(new Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>(user, userGeneralSettings, userHandSettings, userBalootSettings));
-        }
-        catch (Exception exp)
-        {
-            _logger.LogCritical(exp, "error from db : {msg} ", exp.Message);
-            return Result.Fail<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>(new()
-            {
-                Code = ErrorType.ServerErrorOnDB,
-                Message = exp.Message
-            });
-        }
+        return await _dbCtx.Users.Include(user => user.UserGeneralSettings)
+            .Include(user => user.UserBalootSettings)
+            .Include(user => user.UserHandSettings)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync((user) => user.Id == userId) is User user ?
+            Result.Ok(user) :
+            Result.Fail<User>(NotFoundError);
     }
 
-    public async Task<Result<IEnumerable<User>>> GetAllRegularUsers() =>
-         await GetAllAsync(filterCriteria: $"{User.GetColumnName(nameof(User.IsAnonymous))} = false",
-                                parameters: new { },
-                                orderCriteria: "");
+    public async Task<Result<IEnumerable<User>>> GetAllRegularUsers()
+    {
+        var users = await _dbCtx.Users.Where(user => user.IsAnonymous == false).ToListAsync();
+        return Result.Ok((IEnumerable<User>)users);
+    }
 
     public async Task<Result<User>> GetByIdAsync(Guid id) =>
-        await GetByUniquePropAsync(nameof(User.Id), id);
+        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Id == id) is User user ?
+            Result.Ok(user) :
+            Result.Fail<User>(NotFoundError);
 
     public async Task<Result<User>> GetByPhoneAsync(string phone) =>
-        await GetByUniquePropAsync(nameof(User.Phone), phone);
+       await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Phone == phone) is User user ?
+            Result.Ok(user) :
+            Result.Fail<User>(NotFoundError);
 
     public async Task<Result<User>> GetByEmailAsync(string email) =>
-        await GetByUniquePropAsync(nameof(User.NormalizedEmail), email.ToUpper());
+        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Email == email.ToUpper()) is User user ?
+            Result.Ok(user) :
+            Result.Fail<User>(NotFoundError);
 
     public async Task<Result<User>> GetByUsernameAsync(string username) =>
-        await GetByUniquePropAsync(nameof(User.NormalizedUsername), username.ToUpper());
+        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Username == username.ToUpper()) is User user ?
+            Result.Ok(user) :
+            Result.Fail<User>(NotFoundError);
 
     public async Task<Result> IsUsernameAvailable(string username, Guid? userId = null)
     {
@@ -172,46 +103,81 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
     #endregion
 
     #region editUser    
-    public async Task<Result> UpdateUserLastLoginToNow(Guid userId) =>
-                await PatchById(userId,
-                                nameof(User.LastLogin),
-                                 DateTime.UtcNow);
+    public async Task<Result> UpdateUserLastLoginToNow(Guid userId)
+    {
+        var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(user => user.LastLogin, DateTime.Now)
+            //! TODO Convert it to utc now 
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(NotFoundError);
+    }
+    public async Task<Result> UpdateUserFCMToken(Guid userId, string fcmToken)
+    {
+        var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(user => user.FCMToken, fcmToken)
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(NotFoundError);
+    }
+    public async Task<Result> UpdateUserPassword(Guid userId, string passwordHash)
+    {
+        var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(user => user.PasswordHash, passwordHash)
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(NotFoundError);
+    }
+    public async Task<Result> UpdateUserUsername(Guid userId, string username)
+    {
+        var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(user => user.Username, username)
+                .SetProperty(user => user.NormalizedEmail, username.ToUpper())
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(NotFoundError);
+    }
+    public async Task<Result> UpdateUserPhone(Guid userId, string phone)
+    {
+        var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(user => user.Phone, phone)
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(NotFoundError);
+    }
+    public async Task<Result> UpdateUserEmail(Guid userId, string email)
+    {
+        var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(user => user.Email, email)
+                .SetProperty(user => user.NormalizedEmail, email.ToUpper())
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(NotFoundError);
+    }
+    public async Task<Result> UpdateUserAvatarData(Guid userId, string avatarPath, string avatarUrl)
+    {
+        var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(user => user.AvatarPath, avatarPath)
+                .SetProperty(user => user.AvatarUrl, avatarUrl)
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(NotFoundError);
+    }
 
-    public async Task<Result> UpdateUserFCMToken(Guid userId, string fcmToken) =>
-                await PatchById(userId,
-                                nameof(User.FCMToken),
-                               fcmToken);
-
-    public async Task<Result> UpdateUserPassword(Guid userId, string passwordHash) =>
-                await PatchById(userId,
-                                nameof(User.PasswordHash),
-                                passwordHash);
-    public async Task<Result> UpdateUserUsername(Guid userId, string username) =>
-                await PatchById(userId,
-                    new Dictionary<string, object>(){
-                        { nameof(User.Username) ,username},
-                        { nameof(User.NormalizedUsername),username.ToUpper()}
-                    });
-    public async Task<Result> UpdateUserPhone(Guid userId, string phone) =>
-                   await PatchById(userId,
-                                nameof(User.Phone),
-                                phone);
-
-    public async Task<Result> UpdateUserEmail(Guid userId, string email) =>
-                await PatchById(userId,
-                new Dictionary<string, object>(){
-                        { nameof(User.Email),email},
-                        { nameof(User.NormalizedEmail),email.ToUpper()},
-                        { nameof(User.IsEmailConfirmed) ,true}
-                    });
-
-
-    public async Task<Result> UpdateUserAvatarData(Guid userId, string avatarPath, string avatarUrl) =>
-                await PatchById(userId,
-                 new Dictionary<string, object>(){
-                        { nameof(User.AvatarPath),avatarPath},
-                        { nameof(User.AvatarUrl),avatarUrl}
-                    });
 
     #endregion
 
@@ -245,5 +211,27 @@ public class UserRepo(IDbConnection dbConnection, ILogger<UserRepo> logger) : Ge
         });
     }
 
+    public async Task<Result<User>> UpdateAsync(User user)
+    {
+        var affected = await _dbCtx.Users.Where(userRaw => userRaw.Id == user.Id).ExecuteUpdateAsync(
+           setters => setters
+               .SetProperty(userRaw => userRaw.Name, user.Name)
+               .SetProperty(userRaw => userRaw.BirthDate, user.BirthDate)
+       );
+        return affected == 1 ?
+            Result.Ok(user) :
+            Result.Fail<User>(NotFoundError);
+    }
 
+    public async Task<Result> DeleteAsync(Guid userId)
+    {
+        var affected = await _dbCtx.Users.Where(c => c.Id == userId).ExecuteDeleteAsync();
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(new Error()
+            {
+                Code = ErrorType.UserNotFound,
+                Message = "User Not Found :: Entity Not Found"
+            });
+    }
 }

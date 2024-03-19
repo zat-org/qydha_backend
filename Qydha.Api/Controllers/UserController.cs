@@ -34,23 +34,18 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userService.GetUserWithSettingsByIdAsync(user.Id))
-       .Handle<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>, IActionResult>(
-           (userDataType) =>
+       .Handle<User, IActionResult>(
+           (userData) =>
            {
-               User user = userDataType.Item1;
-               var generalSettings = userDataType.Item2;
-               var handSettings = userDataType.Item3;
-               var balootSettings = userDataType.Item4;
-
                var mapper = new UserMapper();
                return Ok(new
                {
                    data = new
                    {
-                       user = mapper.UserToUserDto(user),
-                       generalSettings = generalSettings is null ? null : mapper.UserGeneralSettingsToDto(generalSettings),
-                       handSettings = handSettings is null ? null : mapper.UserHandSettingsToDto(handSettings),
-                       balootSettings = balootSettings is null ? null : mapper.UserBalootSettingsToDto(balootSettings)
+                       user = mapper.UserToUserDto(userData),
+                       generalSettings = userData.UserGeneralSettings is null ? null : mapper.UserGeneralSettingsToDto(userData.UserGeneralSettings),
+                       handSettings = userData.UserHandSettings is null ? null : mapper.UserHandSettingsToDto(userData.UserHandSettings),
+                       balootSettings = userData.UserBalootSettings is null ? null : mapper.UserBalootSettingsToDto(userData.UserBalootSettings)
                    },
                    message = "User fetched successfully."
                });

@@ -1,15 +1,31 @@
 ﻿namespace Qydha.Infrastructure.Repositories;
 
-public class AdminUserRepo(IDbConnection dbConnection, ILogger<AdminUserRepo> logger) : GenericRepository<AdminUser>(dbConnection, logger), IAdminUserRepo
+public class AdminUserRepo(QydhaContext dbContext ,ILogger<AdminUserRepo> logger) : IAdminUserRepo
 {
+    private readonly QydhaContext _dbCtx = dbContext;
+    private readonly ILogger<AdminUserRepo> _logger = logger;
+
 
     #region getUser
 
-    public async Task<Result<AdminUser>> GetByIdAsync(Guid id) =>
-        await GetByUniquePropAsync(nameof(AdminUser.Id), id);
+    public async Task<Result<AdminUser>> GetByIdAsync(Guid id) {
+        return await _dbCtx.Admins.FirstOrDefaultAsync((admin)=> admin.Id == id) is AdminUser admin ?
+            Result.Ok(admin):
+            Result.Fail<AdminUser>(new(){
+                    Code = ErrorType.AdminUserNotFound,
+                    Message = $"Admin User Not Found :: Entity not found"
+                });
+    }
 
-    public async Task<Result<AdminUser>> GetByUsernameAsync(string username) =>
-        await GetByUniquePropAsync(nameof(AdminUser.NormalizedUsername), username.ToUpper());
+    public async Task<Result<AdminUser>> GetByUsernameAsync(string username) 
+    {
+        return await _dbCtx.Admins.FirstOrDefaultAsync((admin)=> admin.NormalizedUsername == username.ToUpper()) is AdminUser admin ?
+            Result.Ok(admin):
+            Result.Fail<AdminUser>(new(){
+                    Code = ErrorType.AdminUserNotFound,
+                    Message = $"Admin User Not Found :: Entity not found"
+                });
+    }
 
     public async Task<Result> IsUsernameAvailable(string username, Guid? userId = null)
     {
@@ -27,19 +43,33 @@ public class AdminUserRepo(IDbConnection dbConnection, ILogger<AdminUserRepo> lo
 
     #region editUser
 
-    public async Task<Result> UpdateUserPassword(Guid userId, string passwordHash) =>
-                await PatchById(userId,
-                            nameof(AdminUser.PasswordHash),
-                            passwordHash);
+    public async Task<Result> UpdateUserPassword(Guid adminId, string passwordHash) {
+        var affected = await _dbCtx.Admins.Where(admin => admin.Id == adminId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(admin => admin.PasswordHash , passwordHash)
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(new(){
+                Code = ErrorType.AdminUserNotFound,
+                Message = $"Admin User Not Found :: Entity not found"
+            });
+    }
 
-    public async Task<Result> UpdateUserUsername(Guid userId, string username) =>
-                await PatchById(userId,
-                    new Dictionary<string, object>()
-                    {
-                        {nameof(AdminUser.Username) ,username},
-                        {nameof(AdminUser.NormalizedUsername) , username.ToUpper()}
-                    });
-
+    public async Task<Result> UpdateUserUsername(Guid adminId, string username)
+    {
+        var affected = await _dbCtx.Admins.Where(admin => admin.Id == adminId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(admin => admin.Username , username)
+                .SetProperty(admin => admin.NormalizedUsername , username.ToUpper())
+        );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(new(){
+                Code = ErrorType.AdminUserNotFound,
+                Message = $"Admin User Not Found :: Entity not found"
+            });
+    }
     #endregion
 
 

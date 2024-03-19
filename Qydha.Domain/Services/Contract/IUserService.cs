@@ -3,7 +3,7 @@ public interface IUserService
 {
     Task<Result<IEnumerable<User>>> GetAllRegularUsers();
     Task<Result<User>> GetUserById(Guid userId);
-    Task<Result<Tuple<User, UserGeneralSettings?, UserHandSettings?, UserBalootSettings?>>> GetUserWithSettingsByIdAsync(Guid userId);
+    Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
 
     Task<Result> IsUserNameAvailable(string username);
 

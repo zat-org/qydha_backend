@@ -18,7 +18,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
     public async Task<Result<Tuple<User, string>>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId)
     {
 
-        return (await _registrationOTPRequestRepo.GetByUniquePropAsync(nameof(RegistrationOTPRequest.Id), requestId))
+        return (await _registrationOTPRequestRepo.GetByIdAsync(requestId))
         .OnSuccess<RegistrationOTPRequest>(otp_request =>
         {
             if (otp_request.OTP != otpCode)
@@ -84,7 +84,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         {
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
             RegistrationOTPRequest registrationOTP = new(username, phone, passwordHash, otp, userId, fcmToken);
-            return await _registrationOTPRequestRepo.AddAsync<Guid>(registrationOTP);
+            return await _registrationOTPRequestRepo.AddAsync(registrationOTP);
         });
     }
 
@@ -98,9 +98,9 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         if (otpRequest.UserId.HasValue)
             saveUserRes = (await _userRepo.GetByIdAsync(otpRequest.UserId.Value))
                                 .OnSuccess<User>((user) => Result.Ok(user.UpdateUserFromRegisterRequest(otpRequest)))
-                                .OnSuccessAsync<User>(_userRepo.PutByIdAsync);
+                                .OnSuccessAsync<User>(_userRepo.UpdateAsync);
         else
-            saveUserRes = await _userRepo.AddAsync<Guid>(User.CreateUserFromRegisterRequest(otpRequest));
+            saveUserRes = await _userRepo.AddAsync(User.CreateUserFromRegisterRequest(otpRequest));
 
         return saveUserRes.OnSuccessAsync<User>(async (user) =>
         {
@@ -119,13 +119,13 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
            return (await _messageService.SendOtpAsync(user.Phone!, user.Username!, otp)).MapTo(new Tuple<User, string>(user, otp));
        })
        .OnSuccessAsync(async (tuple) =>
-           await _phoneAuthenticationRequestRepo.AddAsync<Guid>(new PhoneAuthenticationRequest(tuple.Item1.Phone!, tuple.Item2))
+           await _phoneAuthenticationRequestRepo.AddAsync(new PhoneAuthenticationRequest(tuple.Item1.Phone!, tuple.Item2))
        );
     }
 
     public async Task<Result<Tuple<User, string>>> ConfirmPhoneAuthentication(Guid requestId, string otpCode, string? fcmToken)
     {
-        return (await _phoneAuthenticationRequestRepo.GetByUniquePropAsync(nameof(PhoneAuthenticationRequest.Id), requestId))
+        return (await _phoneAuthenticationRequestRepo.GetByIdAsync(requestId))
         .OnSuccess<PhoneAuthenticationRequest>((otp_request) =>
         {
             if (otp_request.Otp != otpCode)

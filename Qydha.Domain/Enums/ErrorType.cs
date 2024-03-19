@@ -45,6 +45,10 @@ public enum ErrorType
     UserPromoCodeNotFound = 4050,
     InfluencerCodeCategoryNotFound = 4051,
     LoginWithQydhaRequestNotFound = 4052,
+    AssetNotFound = 4053,
+    UserGeneralSettingsNotFound = 4054,
+    UserBalootSettingsNotFound = 4055,
+    UserHandSettingsNotFound = 4056,
 
     #endregion
 

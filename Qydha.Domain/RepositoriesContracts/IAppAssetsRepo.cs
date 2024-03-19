@@ -1,6 +1,6 @@
 ﻿namespace Qydha.Domain.Repositories;
 
-public interface IAppAssetsRepo : IGenericRepository<AppAsset>
+public interface IAppAssetsRepo
 {
     Task<Result<BookAsset>> GetBalootBookAssetData();
     Task<Result> UpdateBalootBookAssetData(BookAsset bookAsset);
