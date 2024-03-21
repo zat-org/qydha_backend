@@ -61,7 +61,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                     Message = "Invalid Operation On Anonymous User"
                 });
 
-            if (tuple.Item1.Phone != tuple.Item2.Phone)
+            if (tuple.Item1.Id != tuple.Item2.UserId)
                 return Result.Fail<User>(new()
                 {
                     Code = ErrorType.InvalidForgetPasswordRequest,
@@ -111,7 +111,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     public async Task<Result<User>> ConfirmPhoneUpdate(Guid userId, string code, Guid requestId)
     {
         Result<UpdatePhoneRequest> getUPhoneRes = await _updatePhoneOTPRequestRepo.GetByIdAsync(requestId);
-        return getUPhoneRes.OnSuccess<UpdatePhoneRequest>((otp_request) =>
+        return getUPhoneRes.OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) =>
             {
                 if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                     return Result.Fail<UpdatePhoneRequest>(new()
@@ -127,7 +127,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                         Message = "Incorrect OTP."
                     });
 
-                return Result.Ok(otp_request);
+                return (await _updatePhoneOTPRequestRepo.MarkRequestAsUsed(requestId)).MapTo(otp_request);
             })
             .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.IsPhoneAvailable(otp_request.Phone)).MapTo(otp_request))
             .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.UpdateUserPhone(otp_request.UserId, otp_request.Phone)).MapTo(otp_request))
@@ -138,7 +138,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
         Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, password);
         return checkingRes
             .OnSuccessAsync<User>(async (user) => (await _userRepo.IsEmailAvailable(newEmail, user.Id)).MapTo(user))
-            .OnSuccessAsync<User, Tuple<string, Guid>>(async (user) =>
+            .OnSuccessAsync(async (user) =>
             {
                 string otp = _otpManager.GenerateOTP();
                 Guid requestId = Guid.NewGuid();
@@ -152,7 +152,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     public async Task<Result<User>> ConfirmEmailUpdate(Guid userId, string code, Guid requestId)
     {
         Result<UpdateEmailRequest> getUEmailRes = await _updateEmailRequestRepo.GetByIdAsync(requestId);
-        return getUEmailRes.OnSuccess<UpdateEmailRequest>((otp_request) =>
+        return getUEmailRes.OnSuccessAsync<UpdateEmailRequest>(async (otp_request) =>
         {
             if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
                 return Result.Fail<UpdateEmailRequest>(new()
@@ -168,7 +168,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                     Message = "Incorrect OTP."
                 });
 
-            return Result.Ok(otp_request);
+            return (await _updateEmailRequestRepo.MarkRequestAsUsed(requestId)).MapTo(otp_request);
         })
         .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) => (await _userRepo.IsEmailAvailable(otp_request.Email, otp_request.UserId)).MapTo(otp_request))
         .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) =>

@@ -11,12 +11,7 @@ public class Notification
     public string ActionPath { get; set; } = string.Empty;
     public NotificationActionType ActionType { get; set; } = NotificationActionType.NoAction;
 
-    public string PayloadStr { get; set; } = null!;
-    public Dictionary<string, object> Payload
-    {
-        get => JsonConvert.DeserializeObject<Dictionary<string, object>>(PayloadStr) ?? [];
-        set => PayloadStr = JsonConvert.SerializeObject(value);
-    }
+    public Dictionary<string, object> Payload = [];
     public Guid UserId { get; set; }
     public DateTime? ReadAt { get; set; }
     public DateTime SentAt { get; set; } = DateTime.UtcNow;

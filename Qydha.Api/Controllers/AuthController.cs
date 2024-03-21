@@ -9,7 +9,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("register/")]
     public async Task<IActionResult> Register([FromBody] UserRegisterDTO dto)
     {
-        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken, null))
+        return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken))
         .Handle<RegistrationOTPRequest, IActionResult>(
             (req) => Ok(
                 new

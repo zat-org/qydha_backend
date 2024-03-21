@@ -24,8 +24,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
             UserId = userId,
             NotificationId = notificationId,
             ReadAt = null,
-            //! utc
-            SentAt = DateTime.Now
+            SentAt = DateTime.UtcNow
         };
         await _dbCtx.NotificationUserLinks.AddAsync(notificationLink);
         await _dbCtx.SaveChangesAsync();
@@ -39,8 +38,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
         {
             UserId = userId,
             ReadAt = null,
-            //! utc
-            SentAt = DateTime.Now
+            SentAt = DateTime.UtcNow
         };
         await _dbCtx.NotificationsData.AddAsync(notification);
         notification.NotificationUserLinks.Add(notificationLink);
@@ -58,8 +56,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
             {
                 UserId = u.Id,
                 ReadAt = null,
-                //! utc
-                SentAt = DateTime.Now
+                SentAt = DateTime.UtcNow
             });
         });
         await _dbCtx.SaveChangesAsync();
@@ -131,10 +128,9 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
 
     public async Task<Result<int>> MarkAllAsReadByUserIdAsync(Guid userId)
     {
-        // ! TODO UTC
         var affected = await _dbCtx.NotificationUserLinks.Where(ul => ul.UserId == userId).ExecuteUpdateAsync(
            setters => setters
-               .SetProperty(ul => ul.ReadAt, DateTime.Now)
+               .SetProperty(ul => ul.ReadAt, DateTime.UtcNow)
        );
         return affected > 0 ?
             Result.Ok(affected) :
@@ -143,12 +139,11 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
 
     public async Task<Result<int>> MarkNotificationAsReadByUserIdAsync(Guid userId, int notificationId)
     {
-        // ! TODO UTC
         var affected = await _dbCtx.NotificationUserLinks
             .Where(ul => ul.UserId == userId && ul.Id == notificationId)
             .ExecuteUpdateAsync(
             setters => setters
-                .SetProperty(ul => ul.ReadAt, DateTime.Now)
+                .SetProperty(ul => ul.ReadAt, DateTime.UtcNow)
             );
         return affected == 1 ?
             Result.Ok(affected) :

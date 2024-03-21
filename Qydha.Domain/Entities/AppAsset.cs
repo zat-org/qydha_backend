@@ -2,5 +2,5 @@
 public class AppAsset
 {
     public string AssetKey { get; set; } = null!;
-    public string? AssetData { get; set; } 
+    public string AssetData { get; set; } = null!;
 }

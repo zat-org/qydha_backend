@@ -106,8 +106,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     {
         var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
             setters => setters
-                .SetProperty(user => user.LastLogin, DateTime.Now)
-            //! TODO Convert it to utc now 
+                .SetProperty(user => user.LastLogin, DateTime.UtcNow)
         );
         return affected == 1 ?
             Result.Ok() :

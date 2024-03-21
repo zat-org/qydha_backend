@@ -36,8 +36,7 @@ public class UserPromoCodesRepo(QydhaContext qydhaContext, ILogger<UserPromoCode
     {
         var affected = await _dbCtx.UserPromoCodes.Where(code => code.Id == codeId).ExecuteUpdateAsync(
             setters => setters
-                .SetProperty(code => code.UsedAt, DateTime.Now)
-        //! convert to utc
+                .SetProperty(code => code.UsedAt, DateTime.UtcNow)
         );
         return affected == 1 ?
             Result.Ok() :

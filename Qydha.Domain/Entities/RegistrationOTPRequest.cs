@@ -6,19 +6,17 @@ public class RegistrationOTPRequest
     public string PasswordHash { get; set; } = null!;
     public string Phone { get; set; } = null!;
     public string OTP { get; set; } = null!;
-    // ! todo convert to utc
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
-    public Guid? UserId { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string? FCMToken { get; set; }
+    public DateTime? UsedAt { get; set; } = null;
 
     public RegistrationOTPRequest() { }
-    public RegistrationOTPRequest(string username, string phone, string passwordHash, string otp, Guid? userId, string? fcmToken)
+    public RegistrationOTPRequest(string username, string phone, string passwordHash, string otp, string? fcmToken)
     {
         Username = username;
         Phone = phone;
         PasswordHash = passwordHash;
         OTP = otp;
-        UserId = userId is not null ? userId : null;
         FCMToken = fcmToken;
     }
 }

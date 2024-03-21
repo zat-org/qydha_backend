@@ -7,7 +7,7 @@ public partial class QydhaContext : DbContext
         : base(options)
     {
     }
-
+    #region  dbSets
     public virtual DbSet<AdminUser> Admins { get; set; }
     public virtual DbSet<AppAsset> AppAssets { get; set; }
     public virtual DbSet<InfluencerCode> InfluencerCodes { get; set; }
@@ -27,11 +27,14 @@ public partial class QydhaContext : DbContext
     public virtual DbSet<NotificationData> NotificationsData { get; set; }
 
     public virtual DbSet<NotificationUserLink> NotificationUserLinks { get; set; }
-
+    #endregion
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresExtension("uuid--");
+        modelBuilder.HasPostgresExtension("uuid-ossp");
 
+
+
+        #region Entities_Configuration
         modelBuilder.Entity<AdminUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("admins_pkey");
@@ -46,7 +49,7 @@ public partial class QydhaContext : DbContext
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.NormalizedUsername)
                 .HasMaxLength(100)
@@ -80,13 +83,13 @@ public partial class QydhaContext : DbContext
 
         modelBuilder.Entity<InfluencerCode>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("influencercodes_pkey");
+            entity.HasKey(e => e.Id).HasName("influencer_codes_pkey");
 
-            entity.ToTable("influencercodes");
+            entity.ToTable("influencer_codes");
 
-            entity.HasIndex(e => e.Code, "influencercodes_code_key").IsUnique();
+            entity.HasIndex(e => e.Code, "influencer_codes_code_key").IsUnique();
 
-            entity.HasIndex(e => e.NormalizedCode, "influencercodes_normalized_code_key").IsUnique();
+            entity.HasIndex(e => e.NormalizedCode, "influencer_codes_normalized_code_key").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("uuid_generate_v4()")
@@ -96,10 +99,10 @@ public partial class QydhaContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("code");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.ExpireAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("expire_at");
             entity.Property(e => e.MaxInfluencedUsersCount)
                 .HasDefaultValue(0)
@@ -116,11 +119,11 @@ public partial class QydhaContext : DbContext
 
         modelBuilder.Entity<InfluencerCodeCategory>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("influencercodes_categories_pkey");
+            entity.HasKey(e => e.Id).HasName("influencer_codes_categories_pkey");
 
-            entity.ToTable("influencercodes_categories");
+            entity.ToTable("influencer_codes_categories");
 
-            entity.HasIndex(e => e.CategoryName, "influencercodes_categories_category_name_key").IsUnique();
+            entity.HasIndex(e => e.CategoryName, "influencer_codes_categories_category_name_key").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CategoryName)
@@ -158,13 +161,13 @@ public partial class QydhaContext : DbContext
                 .HasColumnName("avatar_url");
             entity.Property(e => e.BirthDate).HasColumnName("birth_date");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_on");
             entity.Property(e => e.Email)
                 .HasMaxLength(200)
                 .HasColumnName("email");
             entity.Property(e => e.ExpireDate)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("expire_date");
             entity.Property(e => e.FCMToken)
                 .HasMaxLength(200)
@@ -182,7 +185,7 @@ public partial class QydhaContext : DbContext
                 .HasDefaultValue(false)
                 .HasColumnName("is_phone_confirmed");
             entity.Property(e => e.LastLogin)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("last_login");
             entity.Property(e => e.Name)
                 .HasMaxLength(200)
@@ -314,7 +317,7 @@ public partial class QydhaContext : DbContext
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_on");
             entity.Property(e => e.Email)
                 .HasMaxLength(100)
@@ -335,7 +338,7 @@ public partial class QydhaContext : DbContext
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_on");
             entity.Property(e => e.OTP)
                 .HasMaxLength(6)
@@ -356,14 +359,11 @@ public partial class QydhaContext : DbContext
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_on");
             entity.Property(e => e.Otp)
                 .HasMaxLength(6)
                 .HasColumnName("otp");
-            entity.Property(e => e.Phone)
-                .HasMaxLength(30)
-                .HasColumnName("phone");
         });
 
         modelBuilder.Entity<RegistrationOTPRequest>(entity =>
@@ -376,7 +376,7 @@ public partial class QydhaContext : DbContext
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_on");
             entity.Property(e => e.FCMToken)
                 .HasMaxLength(200)
@@ -390,7 +390,6 @@ public partial class QydhaContext : DbContext
             entity.Property(e => e.Phone)
                 .HasMaxLength(30)
                 .HasColumnName("phone");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.Username)
                 .HasMaxLength(100)
                 .HasColumnName("username");
@@ -409,14 +408,14 @@ public partial class QydhaContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("code");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.ExpireAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("expire_at");
             entity.Property(e => e.NumberOfDays).HasColumnName("number_of_days");
             entity.Property(e => e.UsedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("used_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
@@ -442,7 +441,7 @@ public partial class QydhaContext : DbContext
                 .HasMaxLength(15)
                 .HasColumnName("productsku");
             entity.Property(e => e.PurchaseDate)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("purchase_date");
             entity.Property(e => e.Type)
                 .HasMaxLength(10)
@@ -464,13 +463,13 @@ public partial class QydhaContext : DbContext
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.Otp)
                 .HasMaxLength(6)
                 .HasColumnName("otp");
             entity.Property(e => e.UsedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("used_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
@@ -494,7 +493,7 @@ public partial class QydhaContext : DbContext
                 .HasDefaultValue(0)
                 .HasColumnName("anonymous_clicks");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.Description)
                 .HasMaxLength(512)
@@ -522,10 +521,10 @@ public partial class QydhaContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.NotificationId).HasColumnName("notification_id");
             entity.Property(e => e.ReadAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("read_at");
             entity.Property(e => e.SentAt)
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .HasColumnName("sent_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
@@ -537,10 +536,6 @@ public partial class QydhaContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("fk_user_at_notification_link_table");
         });
-
-        #region comment
-
-
         #endregion
 
         OnModelCreatingPartial(modelBuilder);

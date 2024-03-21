@@ -11,12 +11,12 @@ public class InfluencerCode
     public int MaxInfluencedUsersCount { get; set; }
     public int? CategoryId { get; set; }
     public InfluencerCodeCategory? Category { get; set; }
-    public InfluencerCode(){}
+    public InfluencerCode() { }
     public InfluencerCode(string code, int numOfDays, DateTime? expireDate, int maxInfluencedUsers, int? categoryId)
     {
         Code = code;
         NormalizedCode = code.ToUpper();
-        CreatedAt = DateTime.Now;
+        CreatedAt = DateTime.UtcNow;
         ExpireAt = expireDate;
         NumberOfDays = numOfDays;
         MaxInfluencedUsersCount = maxInfluencedUsers;

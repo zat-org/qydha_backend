@@ -29,8 +29,7 @@ public class LoginWithQydhaRequestRepo(QydhaContext qydhaContext, ILogger<LoginW
     {
         var affected = await _dbCtx.LoginWithQydhaRequests.Where(req => req.Id == requestId).ExecuteUpdateAsync(
                setters => setters
-                   .SetProperty(req => req.UsedAt, DateTime.Now)
-           //! utc
+                   .SetProperty(req => req.UsedAt, DateTime.UtcNow)
            );
         return affected == 1 ?
             Result.Ok() :

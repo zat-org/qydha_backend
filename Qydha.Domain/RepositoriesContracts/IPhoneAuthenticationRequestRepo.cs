@@ -4,4 +4,5 @@ public interface IPhoneAuthenticationRequestRepo
 {
     Task<Result<PhoneAuthenticationRequest>> AddAsync(PhoneAuthenticationRequest request);
     Task<Result<PhoneAuthenticationRequest>> GetByIdAsync(Guid requestId);
+    Task<Result> MarkRequestAsUsed(Guid requestId);
 }

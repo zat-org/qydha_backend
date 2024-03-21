@@ -19,7 +19,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
     {
 
         return (await _registrationOTPRequestRepo.GetByIdAsync(requestId))
-        .OnSuccess<RegistrationOTPRequest>(otp_request =>
+        .OnSuccessAsync<RegistrationOTPRequest>(async otp_request =>
         {
             if (otp_request.OTP != otpCode)
                 return Result.Fail<RegistrationOTPRequest>(new()
@@ -34,7 +34,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
                     Code = ErrorType.OTPExceededTimeLimit,
                     Message = "OTP Exceed Time Limit"
                 });
-            return Result.Ok(otp_request);
+            return (await _registrationOTPRequestRepo.MarkRequestAsUsed(requestId)).MapTo(otp_request);
         })
         .OnSuccessAsync<RegistrationOTPRequest>(async (otp_request) => (await _userRepo.IsUsernameAvailable(otp_request.Username)).MapTo(otp_request))
         .OnSuccessAsync<RegistrationOTPRequest>(async (otp_request) => (await _userRepo.IsPhoneAvailable(otp_request.Phone)).MapTo(otp_request))
@@ -63,16 +63,9 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         });
     }
 
-    public async Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken, Guid? userId)
+    public async Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken)
     {
-        Result result;
-
-        if (userId is not null)
-            result = (await _userRepo.GetByIdAsync(userId.Value))
-            .OnSuccessAsync(async () => await _userRepo.IsUsernameAvailable(username));
-        else
-            result = await _userRepo.IsUsernameAvailable(username);
-
+        Result result = await _userRepo.IsUsernameAvailable(username);
         return result
         .OnSuccessAsync(async () => await _userRepo.IsPhoneAvailable(phone))
         .OnSuccessAsync(async () =>
@@ -83,7 +76,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         .OnSuccessAsync(async (otp) =>
         {
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-            RegistrationOTPRequest registrationOTP = new(username, phone, passwordHash, otp, userId, fcmToken);
+            RegistrationOTPRequest registrationOTP = new(username, phone, passwordHash, otp, fcmToken);
             return await _registrationOTPRequestRepo.AddAsync(registrationOTP);
         });
     }
@@ -94,20 +87,12 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
 
     private async Task<Result<User>> SaveUserFromRegistrationOTPRequest(RegistrationOTPRequest otpRequest)
     {
-        Result<User> saveUserRes;
-        if (otpRequest.UserId.HasValue)
-            saveUserRes = (await _userRepo.GetByIdAsync(otpRequest.UserId.Value))
-                                .OnSuccess<User>((user) => Result.Ok(user.UpdateUserFromRegisterRequest(otpRequest)))
-                                .OnSuccessAsync<User>(_userRepo.UpdateAsync);
-        else
-            saveUserRes = await _userRepo.AddAsync(User.CreateUserFromRegisterRequest(otpRequest));
-
+        Result<User> saveUserRes = await _userRepo.AddAsync(User.CreateUserFromRegisterRequest(otpRequest));
         return saveUserRes.OnSuccessAsync<User>(async (user) =>
         {
             await _mediator.Publish(new UserRegistrationNotification(saveUserRes.Value));
             return Result.Ok(user);
         });
-
     }
 
     public async Task<Result<PhoneAuthenticationRequest>> RequestPhoneAuthentication(string phone)
@@ -119,14 +104,14 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
            return (await _messageService.SendOtpAsync(user.Phone!, user.Username!, otp)).MapTo(new Tuple<User, string>(user, otp));
        })
        .OnSuccessAsync(async (tuple) =>
-           await _phoneAuthenticationRequestRepo.AddAsync(new PhoneAuthenticationRequest(tuple.Item1.Phone!, tuple.Item2))
+           await _phoneAuthenticationRequestRepo.AddAsync(new PhoneAuthenticationRequest(tuple.Item1.Id, tuple.Item2))
        );
     }
 
     public async Task<Result<Tuple<User, string>>> ConfirmPhoneAuthentication(Guid requestId, string otpCode, string? fcmToken)
     {
         return (await _phoneAuthenticationRequestRepo.GetByIdAsync(requestId))
-        .OnSuccess<PhoneAuthenticationRequest>((otp_request) =>
+        .OnSuccessAsync<PhoneAuthenticationRequest>(async (otp_request) =>
         {
             if (otp_request.Otp != otpCode)
                 return Result.Fail<PhoneAuthenticationRequest>(new()
@@ -141,9 +126,9 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
                     Code = ErrorType.OTPExceededTimeLimit,
                     Message = "OTP Exceed Time Limit"
                 });
-            return Result.Ok(otp_request);
+            return (await _phoneAuthenticationRequestRepo.MarkRequestAsUsed(requestId)).MapTo(otp_request);
         })
-        .OnSuccessAsync(async (request) => await _userRepo.GetByPhoneAsync(request.Phone))
+        .OnSuccessAsync(async (request) => await _userRepo.GetByIdAsync(request.UserId))
         .OnSuccessAsync<User>(async (user) =>
         {
             if (!string.IsNullOrWhiteSpace(fcmToken))

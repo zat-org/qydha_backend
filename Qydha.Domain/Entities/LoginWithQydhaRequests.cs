@@ -15,7 +15,6 @@ public class LoginWithQydhaRequest
     {
         UserId = userId;
         Otp = otp;
-        // ! utc
-        CreatedAt = DateTime.Now;
+        CreatedAt = DateTime.UtcNow;
     }
 }

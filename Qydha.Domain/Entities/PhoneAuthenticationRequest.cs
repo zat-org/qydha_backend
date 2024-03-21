@@ -3,16 +3,16 @@
 public class PhoneAuthenticationRequest
 {
     public Guid Id { get; set; }
-    public string Phone { get; set; } = null!;
     public string Otp { get; set; } = null!;
-    //! TODO to utc 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public Guid UserId { get; set; }
+    public DateTime? UsedAt { get; set; } = null;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public PhoneAuthenticationRequest() { }
-    public PhoneAuthenticationRequest(string phone, string otp)
+    public PhoneAuthenticationRequest(Guid userId, string otp)
     {
-        Phone = phone;
+        UserId = userId;
         Otp = otp;
-        //! TODO to utc 
-        CreatedAt = DateTime.Now;
+        CreatedAt = DateTime.UtcNow;
     }
 }

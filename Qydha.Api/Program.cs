@@ -133,7 +133,7 @@ builder.Host.UseSerilog();
 builder.Services.AddDbContext<QydhaContext>(
     (opt) =>
     {
-        opt.UseNpgsql(connectionString)
+        opt.UseNpgsql(connectionString, b => b.MigrationsAssembly("Qydha.Api"))
         .EnableSensitiveDataLogging()
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }

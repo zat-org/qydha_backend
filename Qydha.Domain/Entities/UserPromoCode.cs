@@ -27,8 +27,7 @@ public class UserPromoCode
         Code = code;
         NumberOfDays = numberOfDays;
         ExpireAt = expireAt;
-        // ! utc
-        CreatedAt = DateTime.Now;
+        CreatedAt = DateTime.UtcNow;
         UsedAt = null;
     }
 }

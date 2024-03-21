@@ -5,6 +5,11 @@ public class UpdateEmailRequestRepo(QydhaContext qydhaContext, ILogger<UpdateEma
 {
     private readonly QydhaContext _dbCtx = qydhaContext;
     private readonly ILogger<UpdateEmailRequestRepo> _logger = logger;
+    private readonly Error NotFoundError = new()
+    {
+        Code = ErrorType.UpdateEmailRequestNotFound,
+        Message = "Update Email Request NotFound :: Entity Not Found"
+    };
     public async Task<Result<UpdateEmailRequest>> AddAsync(UpdateEmailRequest request)
     {
         await _dbCtx.UpdateEmailRequests.AddAsync(request);
@@ -16,10 +21,16 @@ public class UpdateEmailRequestRepo(QydhaContext qydhaContext, ILogger<UpdateEma
     {
         return await _dbCtx.UpdateEmailRequests.FirstOrDefaultAsync(req => req.Id == requestId) is UpdateEmailRequest req ?
                 Result.Ok(req) :
-                Result.Fail<UpdateEmailRequest>(new()
-                {
-                    Code = ErrorType.UpdateEmailRequestNotFound,
-                    Message = "Update Email Request NotFound :: Entity Not Found"
-                });
+                Result.Fail<UpdateEmailRequest>(NotFoundError);
+    }
+    public async Task<Result> MarkRequestAsUsed(Guid requestId)
+    {
+        var affected = await _dbCtx.UpdateEmailRequests.Where(req => req.Id == requestId).ExecuteUpdateAsync(
+               setters => setters
+                   .SetProperty(req => req.UsedAt, DateTime.UtcNow)
+           );
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(NotFoundError);
     }
 }

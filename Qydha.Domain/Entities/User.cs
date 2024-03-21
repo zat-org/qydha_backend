@@ -9,7 +9,7 @@ public class User
 
     public string? Name { get; set; }
 
-    public string? PasswordHash { get; set; }
+    public string PasswordHash { get; set; } = null!;
 
     public string Phone { get; set; } = null!;
 
@@ -37,19 +37,20 @@ public class User
 
     public string FCMToken { get; set; } = string.Empty;
 
-    public string? NormalizedUsername { get; set; }
+    public string NormalizedUsername { get; set; } = null!;
 
-    public string? NormalizedEmail { get; set; }
+    public string? NormalizedEmail { get; set; } = null!;
 
-    public UserGeneralSettings? UserGeneralSettings { get; set; }
-    public UserBalootSettings? UserBalootSettings { get; set; }
-    public UserHandSettings? UserHandSettings { get; set; }
+    public UserGeneralSettings UserGeneralSettings { get; set; } = null!;
+    public UserBalootSettings UserBalootSettings { get; set; } = null!;
+    public UserHandSettings UserHandSettings { get; set; } = null!;
     public virtual ICollection<UserPromoCode> UserPromoCodes { get; set; } = [];
     public virtual ICollection<Purchase> Purchases { get; set; } = [];
-
     public virtual ICollection<LoginWithQydhaRequest> LoginWithQydhaRequests { get; set; } = [];
-
     public virtual ICollection<NotificationUserLink> NotificationUserLinks { get; set; } = [];
+    public virtual ICollection<UpdateEmailRequest> UpdateEmailRequests { get; set; } = [];
+    public virtual ICollection<UpdatePhoneRequest> UpdatePhoneRequests { get; set; } = [];
+    public virtual ICollection<PhoneAuthenticationRequest> PhoneAuthenticationRequests { get; set; } = [];
 
     public IEnumerable<Claim> GetClaims()
     {
@@ -67,33 +68,16 @@ public class User
     {
         return new User()
         {
-            //TODO! Convert To UTC AGAIN
             Username = otpRequest.Username,
             NormalizedUsername = otpRequest.Username.ToUpper(),
             PasswordHash = otpRequest.PasswordHash,
             Phone = otpRequest.Phone,
-            CreatedAt = DateTime.Now,
-            LastLogin = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
+            LastLogin = DateTime.UtcNow,
             IsPhoneConfirmed = true,
             IsAnonymous = false,
             FCMToken = otpRequest.FCMToken ?? ""
         };
     }
-    public User UpdateUserFromRegisterRequest(RegistrationOTPRequest otpRequest)
-    {
-        //TODO! Convert To UTC AGAIN
-        return new User()
-        {
-            Id = Id,
-            Username = otpRequest.Username,
-            NormalizedUsername = otpRequest.Username.ToUpper(),
-            PasswordHash = otpRequest.PasswordHash,
-            Phone = otpRequest.Phone,
-            CreatedAt = CreatedAt,
-            LastLogin = DateTime.Now,
-            IsPhoneConfirmed = true,
-            IsAnonymous = false,
-            FCMToken = !string.IsNullOrEmpty(otpRequest.FCMToken) ? otpRequest.FCMToken : FCMToken
-        };
-    }
+
 }
