@@ -20,9 +20,4 @@ public partial class UserMapper
 
     public partial UserGeneralSettings DtoToUserGeneralSettings(UserGeneralSettingsDto dto);
 
-    private IEnumerable<string> JsonToStringArray(Json<IEnumerable<string>> jsonStringArr)
-    {
-        return jsonStringArr.Value ?? new List<string>();
-    }
-
 }

@@ -1,5 +1,4 @@
 
-using static Dapper.SqlMapper;
 
 namespace Qydha.Infrastructure.Repositories;
 

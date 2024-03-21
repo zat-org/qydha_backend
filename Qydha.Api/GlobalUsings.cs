@@ -40,11 +40,9 @@ global using Serilog.Formatting.Json;
 global using FirebaseAdmin;
 global using Google.Apis.Auth.OAuth2;
 global using Microsoft.IdentityModel.Tokens;
-global using Npgsql;
 
 global using FluentValidation;
 global using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-global using Qydha.Infrastructure.SqlMappersHandlers;
 
 global using Microsoft.AspNetCore.JsonPatch.Exceptions;
 

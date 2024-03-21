@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qydha.Infrastructure", "Qyd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qydha.Domain", "Qydha.Domain\Qydha.Domain.csproj", "{38F38F3A-D128-4895-8BBD-B0EB3C8731FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "scafolding", "scafolding\scafolding.csproj", "{EC0B52E7-9349-4C85-BF29-15C4E1D7FD1B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{38F38F3A-D128-4895-8BBD-B0EB3C8731FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38F38F3A-D128-4895-8BBD-B0EB3C8731FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38F38F3A-D128-4895-8BBD-B0EB3C8731FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EC0B52E7-9349-4C85-BF29-15C4E1D7FD1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EC0B52E7-9349-4C85-BF29-15C4E1D7FD1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EC0B52E7-9349-4C85-BF29-15C4E1D7FD1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EC0B52E7-9349-4C85-BF29-15C4E1D7FD1B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

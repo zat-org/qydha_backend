@@ -4,263 +4,167 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
 {
     private readonly QydhaContext _dbCtx = qydhaContext;
     private readonly ILogger<NotificationRepo> _logger = logger;
-    
+    private readonly Error NotFoundError = new()
+    {
+        Code = ErrorType.NotificationNotFound,
+        Message = $"Notifications NotFound:: Entity not found"
+    };
+    public async Task<Result<NotificationData>> GetNotificationDataByIdAsync(int notificationDataId)
+    {
+        return await _dbCtx.NotificationsData.FirstOrDefaultAsync(n => n.Id == notificationDataId) is NotificationData notification ?
+               Result.Ok(notification) :
+               Result.Fail<NotificationData>(NotFoundError);
+    }
+
+
     public async Task<Result<int>> AssignNotificationToUser(Guid userId, int notificationId)
     {
-        string sql = @$"INSERT INTO Notifications_Users_Link 
-                            (Notification_Id ,User_Id ,Read_At ,Sent_At)
-                        VALUES 
-                            (@notificationId ,@userId ,NULL , NOW() )";
-        try
+        var notificationLink = new NotificationUserLink()
         {
-            int effectedRows = await _dbConnection.ExecuteAsync(sql, new { userId, notificationId });
-            return Result.Ok(effectedRows);
-        }
-        catch (DbException exp)
-        {
-            if (IsForeignKeyConstraintViolation(exp))
-            {
-                _logger.LogWarning("Foreign Key Constrain Violation in {sql} at userId = {userId} , notificationId = {notificationId}", sql, userId, notificationId);
-                return Result.Fail<int>(new Error()
-                {
-                    Code = ErrorType.DbForeignKeyViolation,
-                    Message = $"Foreign Key Constrain Violation : {exp.Message} "
-                });
-            }
-            else
-            {
-                _logger.LogCritical("Db Error at {sql} with error message : {msg} ", sql, exp.Message);
-                throw;
-            }
-        }
+            UserId = userId,
+            NotificationId = notificationId,
+            ReadAt = null,
+            //! utc
+            SentAt = DateTime.Now
+        };
+        await _dbCtx.NotificationUserLinks.AddAsync(notificationLink);
+        await _dbCtx.SaveChangesAsync();
+        return Result.Ok(1);
     }
 
     public async Task<Result<int>> AssignNotificationToUser(Guid userId, NotificationData notification)
     {
-        var notificationDataTableTuple = NotificationData.GetInsertQueryData(notification, excludeKey: true);
-        var parameters = new DynamicParameters(notificationDataTableTuple.Item3);
-        parameters.Add("@userId", userId);
-        string query = @$"
-            WITH inserted_notification AS (
-                INSERT INTO {NotificationData.GetTableName()}  ({notificationDataTableTuple.Item1}) 
-                VALUES ({notificationDataTableTuple.Item2}) 
-                RETURNING {NotificationData.GetKeyColumnName()})
-            
-            INSERT INTO Notifications_Users_Link
-                (Notification_Id, User_Id, Read_At, Sent_At)
-            SELECT
-                inserted_notification.id, @userId, NULL, NOW()  FROM inserted_notification;";
-        try
+        notification.Visibility = NotificationVisibility.Private;
+        var notificationLink = new NotificationUserLink()
         {
-            int effectedRows = await _dbConnection.ExecuteAsync(query, parameters);
-            return Result.Ok(effectedRows);
-
-        }
-        catch (DbException exp)
-        {
-            if (IsForeignKeyConstraintViolation(exp))
-            {
-                _logger.LogWarning("Foreign Key Constrain Violation in {sql} at userId = {userId} ", query, userId);
-                return Result.Fail<int>(new Error()
-                {
-                    Code = ErrorType.DbForeignKeyViolation,
-                    Message = $"Foreign Key Constrain Violation : {exp.Message} "
-                });
-            }
-            else
-            {
-                _logger.LogCritical("Db Error at {sql} with error message : {msg} ", query, exp.Message);
-                throw;
-            }
-        }
+            UserId = userId,
+            ReadAt = null,
+            //! utc
+            SentAt = DateTime.Now
+        };
+        await _dbCtx.NotificationsData.AddAsync(notification);
+        notification.NotificationUserLinks.Add(notificationLink);
+        await _dbCtx.SaveChangesAsync();
+        return Result.Ok(notification.NotificationUserLinks.Count);
     }
 
     public async Task<Result<int>> AssignNotificationToAllUsers(NotificationData notification)
     {
         notification.Visibility = NotificationVisibility.Public;
-        var notificationDataTableTuple = NotificationData.GetInsertQueryData(notification, excludeKey: true);
-        var parameters = new DynamicParameters(notificationDataTableTuple.Item3);
-        string query = @$"
-            WITH inserted_notification AS (
-                INSERT INTO {NotificationData.GetTableName()}  ({notificationDataTableTuple.Item1}) 
-                VALUES ({notificationDataTableTuple.Item2}) 
-                RETURNING {NotificationData.GetKeyColumnName()})
-            
-            INSERT INTO Notifications_Users_Link
-                (Notification_Id, User_Id, Read_At, Sent_At)    
-            SELECT
-                inserted_notification.id, users.id , NULL, NOW()  FROM inserted_notification join users on users.is_Anonymous = false;";
-
-        try
+        await _dbCtx.NotificationsData.AddAsync(notification);
+        await _dbCtx.Users.Where(u => !u.IsAnonymous).ForEachAsync((u) =>
         {
-            int effectedRows = await _dbConnection.ExecuteAsync(query, parameters);
-            return Result.Ok(effectedRows);
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical("Db Error at {sql} with error message : {msg} ", query, exp.Message);
-            throw;
-        }
+            notification.NotificationUserLinks.Add(new()
+            {
+                UserId = u.Id,
+                ReadAt = null,
+                //! utc
+                SentAt = DateTime.Now
+            });
+        });
+        await _dbCtx.SaveChangesAsync();
+        return Result.Ok(notification.NotificationUserLinks.Count);
     }
 
     public async Task<Result<NotificationData>> AssignNotificationToAllAnonymousUsers(NotificationData notification)
     {
         notification.Visibility = NotificationVisibility.Anonymous;
-        return await AddAsync<int>(notification);
+        await _dbCtx.NotificationsData.AddAsync(notification);
+        await _dbCtx.SaveChangesAsync();
+        return Result.Ok(notification);
     }
 
     public async Task<Result<IEnumerable<Notification>>> GetAllNotificationsOfUserById(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null)
     {
-        var dynamicParameters = new DynamicParameters();
-        dynamicParameters.Add("@userId", userId);
-        dynamicParameters.Add("@Limit", pageSize);
-        dynamicParameters.Add("@Offset", (pageNumber - 1) * pageSize);
-
-        string isReadCondition = isRead switch
-        {
-            null => "",
-            true => $"AND nul.read_at is not null",
-            false => $"AND nul.read_at is null"
-        };
-
-        string query = @$"
-            SELECT nul.id , nd.title , nd.description , nd.action_path as ActionPath , nd.action_type as ActionType , nd.payload as payloadStr , nul.user_id as UserId  , nul.read_at as ReadAt , nul.sent_at as SentAt
-            FROM notifications_data nd JOIN notifications_users_link nul ON nul.notification_id = nd.id
-            WHERE nul.user_id = @userId {isReadCondition}
-            ORDER BY nul.sent_at DESC
-            LIMIT @Limit OFFSET @Offset  ;";
-
-        try
-        {
-            var notifications = await _dbConnection.QueryAsync<Notification>(query, dynamicParameters);
-            return Result.Ok(notifications);
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical("Db Error at {sql} with error message : {msg} ", query, exp.Message);
-            throw;
-        }
+        //! TODO remove isRead OR apply it 
+        List<Notification> notifications = await _dbCtx.NotificationUserLinks.Where(ul => ul.UserId == userId)
+            .Include(ul => ul.Notification)
+            .Select(ul => new Notification()
+            {
+                Id = ul.Id,
+                Title = ul.Notification.Title,
+                Description = ul.Notification.Description,
+                ActionPath = ul.Notification.ActionPath,
+                ActionType = ul.Notification.ActionType,
+                Payload = ul.Notification.Payload,
+                UserId = ul.UserId,
+                ReadAt = ul.ReadAt,
+                SentAt = ul.SentAt
+            })
+            .OrderByDescending(ul => ul.SentAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return Result.Ok((IEnumerable<Notification>)notifications);
     }
 
     public async Task<Result<IEnumerable<NotificationData>>> GetAllAnonymousUserNotification(int pageSize = 10, int pageNumber = 1)
     {
         NotificationVisibility[] visibilities = [NotificationVisibility.Public, NotificationVisibility.Anonymous];
-        return (await GetAllAsync(
-                    @$"{NotificationData.GetColumnName(nameof(NotificationData.Visibility))} IN  @Visibilities",
-                    new { Visibilities = visibilities },
-                    pageSize,
-                    pageNumber,
-                    $" {NotificationData.GetColumnName(nameof(NotificationData.CreatedAt))} Desc"))
-                .OnSuccess<IEnumerable<NotificationData>>((notifications) =>
-                {
-                    notifications = notifications.OrderByDescending(n => n.CreatedAt);
-                    return Result.Ok(notifications);
-                });
+        List<NotificationData> notifications = await _dbCtx.NotificationsData.Where(n => visibilities.Contains(n.Visibility))
+            .OrderByDescending(n => n.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return Result.Ok((IEnumerable<NotificationData>)notifications);
     }
 
     public async Task<Result<int>> DeleteAllByUserIdAsync(Guid userId)
     {
-        try
-        {
-            string query = $"DELETE FROM notifications_users_link WHERE user_id = @userId ;";
-            _logger.LogTrace("Before Execute Query :: {query}", query);
-            int effectedRows = await _dbConnection.ExecuteAsync(query, new { userId });
-            return Result.Ok(effectedRows);
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical(exp, "Error from db : {msg} ", exp.Message);
-            throw;
-        }
+        //! TODO Check IF notification deleted only from the link not from notifications Data => delete data that not connected to any user
+        var affected = await _dbCtx.NotificationUserLinks.Where(ul => ul.UserId == userId).ExecuteDeleteAsync();
+        return affected > 0 ?
+            Result.Ok(affected) :
+            Result.Fail<int>(NotFoundError);
     }
 
     public async Task<Result<int>> DeleteNotificationByUserIdAsync(Guid userId, int notificationId)
     {
-        try
-        {
-            string query = $"DELETE FROM notifications_users_link WHERE user_id = @userId AND id = @notificationId ;";
-            _logger.LogTrace("Before Execute Query :: {query}", query);
-            int effectedRows = await _dbConnection.ExecuteAsync(query, new { userId, notificationId });
-            return effectedRows == 1 ?
-                Result.Ok(effectedRows) :
-                Result.Fail<int>(new()
-                {
-                    Code = ErrorType.NotificationNotFound,
-                    Message = $"NotificationNotFound :: Entity not found"
-                });
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical(exp, "Error from db : {msg}", [exp.Message]);
-            throw;
-        }
-
+        //! TODO Check IF notification deleted only from the link not from notifications Data => delete data that not connected to any user
+        var affected = await _dbCtx.NotificationUserLinks
+                .Where(ul => ul.UserId == userId && ul.Id == notificationId)
+                .ExecuteDeleteAsync();
+        return affected == 1 ?
+            Result.Ok(affected) :
+            Result.Fail<int>(NotFoundError);
     }
 
     public async Task<Result<int>> MarkAllAsReadByUserIdAsync(Guid userId)
     {
-        try
-        {
-            string query = $"UPDATE notifications_users_link SET read_at = NOW()  WHERE user_id = @Id ;";
-            _logger.LogTrace("Before Execute Query :: {query}", query);
-            int effectedRows = await _dbConnection.ExecuteAsync(query, new { Id = userId });
-            return Result.Ok(effectedRows);
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical(exp, "Error from db : {msg} ", exp.Message);
-            throw;
-        }
+        // ! TODO UTC
+        var affected = await _dbCtx.NotificationUserLinks.Where(ul => ul.UserId == userId).ExecuteUpdateAsync(
+           setters => setters
+               .SetProperty(ul => ul.ReadAt, DateTime.Now)
+       );
+        return affected > 0 ?
+            Result.Ok(affected) :
+            Result.Fail<int>(NotFoundError);
     }
 
     public async Task<Result<int>> MarkNotificationAsReadByUserIdAsync(Guid userId, int notificationId)
     {
-        try
-        {
-            string query = $"UPDATE notifications_users_link SET read_at = NOW()  WHERE user_id = @userId AND id = @notificationId ;";
-            _logger.LogTrace("Before Execute Query :: {query}", query);
-            int effectedRows = await _dbConnection.ExecuteAsync(query, new { userId, notificationId });
-            return effectedRows == 1 ?
-                Result.Ok(effectedRows) :
-                Result.Fail<int>(new()
-                {
-                    Code = ErrorType.NotificationNotFound,
-                    Message = $"NotificationNotFound :: Entity not found"
-                });
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical(exp, "Error from db : {msg}", [exp.Message]);
-            throw;
-        }
-
+        // ! TODO UTC
+        var affected = await _dbCtx.NotificationUserLinks
+            .Where(ul => ul.UserId == userId && ul.Id == notificationId)
+            .ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(ul => ul.ReadAt, DateTime.Now)
+            );
+        return affected == 1 ?
+            Result.Ok(affected) :
+            Result.Fail<int>(NotFoundError);
     }
 
     public async Task<Result> ApplyAnonymousClickOnNotification(int notificationId)
     {
-        var anonymousClicksColumnName = NotificationData.GetColumnName(nameof(NotificationData.AnonymousClicks));
-        NotificationVisibility[] visibilities = [NotificationVisibility.Public, NotificationVisibility.Anonymous];
-        string query = @$"
-            UPDATE {NotificationData.GetTableName()} 
-            SET {anonymousClicksColumnName} = {anonymousClicksColumnName} + 1 
-            WHERE {NotificationData.GetKeyColumnName()} = @Id AND 
-                {NotificationData.GetColumnName(nameof(NotificationData.Visibility))} IN  @Visibilities ;";
-        try
-        {
-            int effectedRows = await _dbConnection.ExecuteAsync(query, new { Id = notificationId, Visibilities = visibilities });
-            if (effectedRows == 1)
-                return Result.Ok(effectedRows);
-            else
-                return Result.Fail(new()
-                {
-                    Code = ErrorType.NotificationNotFound,
-                    Message = "Notification Not Found"
-                });
-        }
-        catch (DbException exp)
-        {
-            _logger.LogCritical("Db Error at {sql} with error message : {msg} ", query, exp.Message);
-            throw;
-        }
+        var affected = await _dbCtx.NotificationsData
+            .Where(n => n.Id == notificationId)
+            .ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(ul => ul.AnonymousClicks, ul => ul.AnonymousClicks + 1)
+            );
+        return affected == 1 ?
+            Result.Ok(affected) :
+            Result.Fail<int>(NotFoundError);
     }
 }

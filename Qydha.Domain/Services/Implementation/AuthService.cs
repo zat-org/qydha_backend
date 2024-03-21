@@ -168,13 +168,13 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
             User user = tuple.Item1;
             string otp = tuple.Item2;
             // save otp  to be validated 
-            return await _loginWithQydhaRequestRepo.AddAsync<Guid>(new LoginWithQydhaRequest(user.Id, otp));
+            return await _loginWithQydhaRequestRepo.AddAsync(new LoginWithQydhaRequest(user.Id, otp));
         });
     }
 
     public async Task<Result<Tuple<User, string>>> ConfirmLoginWithQydha(Guid requestId, string otpCode)
     {
-        return (await _loginWithQydhaRequestRepo.GetByUniquePropAsync(nameof(LoginWithQydhaRequest.Id), requestId))
+        return (await _loginWithQydhaRequestRepo.GetByIdAsync(requestId))
         .OnSuccessAsync<LoginWithQydhaRequest>(async (otp_request) =>
         {
             if (otp_request.UsedAt is not null)

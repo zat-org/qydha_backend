@@ -3,7 +3,7 @@
 namespace Qydha.Domain.Entities;
 public class NotificationData
 {
-
+    // ! convert id to long 
     public int Id { get; set; }
 
     public string Title { get; set; } = string.Empty;

@@ -24,17 +24,13 @@ public partial class QydhaContext : DbContext
     public virtual DbSet<Purchase> Purchases { get; set; }
     public virtual DbSet<LoginWithQydhaRequest> LoginWithQydhaRequests { get; set; }
 
-    // public virtual DbSet<NotificationsDatum> NotificationsData { get; set; }
+    public virtual DbSet<NotificationData> NotificationsData { get; set; }
 
-    // public virtual DbSet<NotificationsUsersLink> NotificationsUsersLinks { get; set; }
-
-
-    // public virtual DbSet<Schemaversion> Schemaversions { get; set; }
-
+    public virtual DbSet<NotificationUserLink> NotificationUserLinks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresExtension("uuid-ossp");
+        modelBuilder.HasPostgresExtension("uuid--");
 
         modelBuilder.Entity<AdminUser>(entity =>
         {
@@ -259,7 +255,7 @@ public partial class QydhaContext : DbContext
                 .HasColumnName("players_names")
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<IEnumerable<string>>(v) ?? new List<string>()
+                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>()
                 );
             entity.Property(e => e.TeamsNames)
                 .HasDefaultValueSql("'[]'::jsonb")
@@ -267,7 +263,7 @@ public partial class QydhaContext : DbContext
                 .HasColumnName("teams_names")
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<IEnumerable<string>>(v) ?? new List<string>()
+                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>()
                 );
 
             entity.HasOne(d => d.User).WithOne(p => p.UserGeneralSettings)

@@ -1,13 +1,9 @@
-using StackExchange.Profiling;
 using System.Globalization;
-using Dapper;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
-using StackExchange.Profiling.Data;
 using Serilog.Sinks.GoogleCloudLogging;
 using Serilog.Exceptions;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
 
 
 FirebaseApp.Create(new AppOptions()
@@ -33,8 +29,7 @@ builder.Services.AddControllers((options) =>
 }).AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.Converters.Add(new StringEnumConverter());
-    options.SerializerSettings.ReferenceLoopHandling  = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 });
 
 #region fluent validation
@@ -65,12 +60,15 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddScoped<ExceptionHandlerAttribute>();
 builder.Services.AddScoped<AuthorizationFilter>();
 #endregion
+
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(User).Assembly);
 });
+
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(opt =>
 {
     opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Qydha", Version = "v1" });
@@ -95,15 +93,11 @@ builder.Services.AddSwaggerGen(opt =>
                     Id="Bearer"
                 }
             },
-            new string[]{}
+            Array.Empty<string>()
         }
     });
 });
 
-builder.Services.AddMiniProfiler(options =>
-    {
-        options.RouteBasePath = "/profiler";
-    });
 
 #region Serilog
 var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration)
@@ -114,7 +108,7 @@ var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Conf
     .WriteTo.Console()
     .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning);
 
-if (!builder.Environment.IsDevelopment())
+if (builder.Environment.IsProduction())
 {
     string serviceAccountCredential = File.ReadAllText("googleCloud_private_key.json");
     var googleLoggerConfig = builder.Configuration.GetSection("GoogleLogger");
@@ -126,9 +120,24 @@ if (!builder.Environment.IsDevelopment())
     };
     loggerConfig.WriteTo.GoogleCloudLogging(googleCloudConfig);
 }
+else
+{
+    loggerConfig.WriteTo.File(new JsonFormatter(renderMessage: true), "./Info_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information);
+}
+
 Log.Logger = loggerConfig.CreateLogger();
 builder.Host.UseSerilog();
 #endregion
+
+// db connection
+builder.Services.AddDbContext<QydhaContext>(
+    (opt) =>
+    {
+        opt.UseNpgsql(connectionString)
+        .EnableSensitiveDataLogging()
+        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    }
+);
 
 #region DI settings
 // otp options  
@@ -160,25 +169,6 @@ builder.Services.Configure<UltraMsgSettings>(builder.Configuration.GetSection("U
 
 builder.Services.Configure<RegisterGiftSetting>(builder.Configuration.GetSection("RegisterGiftSetting"));
 
-
-
-// db connection
-builder.Services.AddDbContext<QydhaContext>(
-    (opt) => {
-        opt.UseNpgsql(connectionString)
-        .EnableSensitiveDataLogging()
-        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-    }
-);
-
-builder.Services.AddScoped<IDbConnection, ProfiledDbConnection>(
-    sp =>
-    {
-        var connection = new NpgsqlConnection(connectionString);
-        var profiledConnection = new ProfiledDbConnection(connection, MiniProfiler.Current);
-        profiledConnection.Open(); // Open the connection when it's created
-        return profiledConnection;
-    });
 #endregion
 
 #region DI Repos
@@ -199,15 +189,6 @@ builder.Services.AddScoped<IUserBalootSettingsRepo, UserBalootSettingsRepo>();
 builder.Services.AddScoped<IAppAssetsRepo, AppAssetsRepo>();
 builder.Services.AddScoped<IInfluencerCodesCategoriesRepo, InfluencerCodesCategoriesRepo>();
 builder.Services.AddScoped<ILoginWithQydhaRequestRepo, LoginWithQydhaRequestRepo>();
-#endregion
-
-#region SQL Mappers for json
-SqlMapper.AddTypeHandler(new JsonTypeHandler<IEnumerable<string>>());
-
-// builder.Services.ConfigureHttpJsonOptions(options=>
-//     options.SerializerOptions.ReferenceHandler= ReferenceHandler.IgnoreCycles
-// );
-
 #endregion
 
 #region DI Services
@@ -252,19 +233,6 @@ builder.Services.AddCors(options =>
     });
 });
 #endregion
-
-if (connectionString is not null)
-{
-    var configSec = builder.Configuration.GetSection("AdminCredentials");
-
-    var variables = new Dictionary<string, string>(){
-            {"password",BCrypt.Net.BCrypt.HashPassword(configSec["password"] ?? "admin@123") },
-            {"username",configSec["username"] ?? "admin"},
-            {"capitalUsername" , (configSec["username"] ?? "admin").ToUpper()}
-        };
-    DbMigrator.Migrate(connectionString, variables);
-}
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -273,11 +241,6 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-if (app.Configuration.GetValue<bool>("UseMiniProfiler"))
-{
-    app.UseMiniProfiler();
-}
-
 
 app.UseCors(MyAllowSpecificOrigins);
 

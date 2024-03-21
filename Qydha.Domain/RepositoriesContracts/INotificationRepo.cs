@@ -2,7 +2,7 @@
 
 public interface INotificationRepo
 {
-    
+    Task<Result<NotificationData>> GetNotificationDataByIdAsync(int notificationDataId);
     Task<Result<int>> AssignNotificationToUser(Guid userId, int notificationId);
     Task<Result<int>> AssignNotificationToUser(Guid userId, NotificationData notification);
     Task<Result<int>> AssignNotificationToAllUsers(NotificationData notification);

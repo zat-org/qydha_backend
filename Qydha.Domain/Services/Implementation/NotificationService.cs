@@ -38,7 +38,7 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
     }
     public async Task<Result<User>> SendToUserPreDefinedNotification(User user, int notificationId)
     {
-        return (await _notificationRepo.GetByUniquePropAsync(nameof(NotificationData.Id), notificationId))
+        return (await _notificationRepo.GetNotificationDataByIdAsync(notificationId))
         .OnSuccessAsync<NotificationData>(async (notification) => (await _notificationRepo.AssignNotificationToUser(user.Id, notification.Id)).MapTo(notification))
         .OnSuccessAsync(async (notification) =>
         {
