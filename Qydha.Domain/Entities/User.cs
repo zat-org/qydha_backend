@@ -15,11 +15,11 @@ public class User
 
     public string? Email { get; set; }
 
-    public DateTime? BirthDate { get; set; }
+    public DateTimeOffset? BirthDate { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 
-    public DateTime? LastLogin { get; set; }
+    public DateTimeOffset? LastLogin { get; set; }
 
     public bool IsAnonymous { get; set; }
 
@@ -31,11 +31,11 @@ public class User
 
     public string? AvatarPath { get; set; }
 
-    public DateTime? ExpireDate { get; set; } = null;
+    public DateTimeOffset? ExpireDate { get; set; } = null;
 
     public int FreeSubscriptionUsed { get; set; } = 0;
 
-    public string FCMToken { get; set; } = string.Empty;
+    public string? FCMToken { get; set; }
 
     public string NormalizedUsername { get; set; } = null!;
 
@@ -44,6 +44,7 @@ public class User
     public UserGeneralSettings UserGeneralSettings { get; set; } = null!;
     public UserBalootSettings UserBalootSettings { get; set; } = null!;
     public UserHandSettings UserHandSettings { get; set; } = null!;
+    public RegistrationOTPRequest? RegistrationOTPRequest { get; set; }
     public virtual ICollection<UserPromoCode> UserPromoCodes { get; set; } = [];
     public virtual ICollection<Purchase> Purchases { get; set; } = [];
     public virtual ICollection<LoginWithQydhaRequest> LoginWithQydhaRequests { get; set; } = [];
@@ -72,11 +73,11 @@ public class User
             NormalizedUsername = otpRequest.Username.ToUpper(),
             PasswordHash = otpRequest.PasswordHash,
             Phone = otpRequest.Phone,
-            CreatedAt = DateTime.UtcNow,
-            LastLogin = DateTime.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+            LastLogin = DateTimeOffset.UtcNow,
             IsPhoneConfirmed = true,
             IsAnonymous = false,
-            FCMToken = otpRequest.FCMToken ?? ""
+            FCMToken = otpRequest.FCMToken
         };
     }
 

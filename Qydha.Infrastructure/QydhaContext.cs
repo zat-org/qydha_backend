@@ -1,12 +1,10 @@
 ﻿
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+
 namespace Qydha.Infrastructure;
 
-public partial class QydhaContext : DbContext
+public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbContext(options)
 {
-    public QydhaContext(DbContextOptions<QydhaContext> options)
-        : base(options)
-    {
-    }
     #region  dbSets
     public virtual DbSet<AdminUser> Admins { get; set; }
     public virtual DbSet<AppAsset> AppAssets { get; set; }
@@ -30,10 +28,111 @@ public partial class QydhaContext : DbContext
     #endregion
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        #region data creation for seeding
+        var superAdmin = new AdminUser()
+        {
+            Id = Guid.Parse("d2705466-4304-4830-b48a-3e44e031927e"),
+            Username = "Admin",
+            NormalizedUsername = "ADMIN",
+            Role = AdminType.SuperAdmin,
+            CreatedAt = DateTimeOffset.Parse("2023-11-01T00:00:00.000000Z"),
+            PasswordHash = "$2a$11$V0A5.EYwXlFUjK3RIis3...A9rfzUm.mO.88MUYW9.uHSZLjURNsC"
+        };
+
+        var automaticNotifications = new NotificationData[] {
+            new() {
+                Id = 1,
+                Title = "مرحباً بك في قيدها ♥",
+                Description = "نتمنى لك تجربة جميلة، ارسلنا لك هدية بقسم المتجر 😉",
+                CreatedAt = DateTimeOffset.Parse("2023-11-01T00:00:00.000000Z"),
+                Payload = new(),
+                ActionPath = "_",
+                ActionType = NotificationActionType.NoAction,
+                Visibility = NotificationVisibility.Private,
+                SendingMechanism=NotificationSendingMechanism.Automatic,
+                AnonymousClicks = 0
+            },
+            new() {
+                Id = 2,
+                Title = "شكرا لثقتك بقيدها..",
+                Description = "نتمنى لك تجربة جميلة، لا تنسى قيدها ليس مجرد حاسبة",
+                CreatedAt = DateTimeOffset.Parse("2023-11-01T00:00:00.000000Z"),
+                Payload = new(),
+                ActionPath = "_",
+                ActionType = NotificationActionType.NoAction,
+                Visibility = NotificationVisibility.Private,
+                SendingMechanism=NotificationSendingMechanism.Automatic,
+                AnonymousClicks = 0
+            },
+            new() {
+                Id = 3,
+                Title = "وصلتك هدية.. 🎁",
+                Description = "شيك على المتجر .. تتهنى ♥",
+                CreatedAt = DateTimeOffset.Parse("2023-11-01T00:00:00.000000Z"),
+                Payload = new(),
+                ActionPath = "_",
+                ActionType = NotificationActionType.NoAction,
+                Visibility = NotificationVisibility.Private,
+                SendingMechanism=NotificationSendingMechanism.Automatic,
+                AnonymousClicks = 0
+            },
+            new() {
+                Id = 4,
+                Title = "تستاهل ما جاك",
+                Description = "نتمنى لك تجربة ممتعة ♥",
+                CreatedAt = DateTimeOffset.Parse("2023-11-01T00:00:00.000000Z"),
+                Payload = new(),
+                ActionPath = "_",
+                ActionType = NotificationActionType.NoAction,
+                Visibility = NotificationVisibility.Private,
+                SendingMechanism=NotificationSendingMechanism.Automatic,
+                AnonymousClicks = 0
+            },
+            new() {
+                Id = 5,
+                Title = "تم تفعيل الكود",
+                Description = "إذا عجبك التطبيق لا تنسى تنشره بين أخوياك",
+                CreatedAt = DateTimeOffset.Parse("2023-11-01T00:00:00.000000Z"),
+                Payload = new(),
+                ActionPath = "_",
+                ActionType = NotificationActionType.NoAction,
+                Visibility = NotificationVisibility.Private,
+                SendingMechanism=NotificationSendingMechanism.Automatic,
+                AnonymousClicks = 0
+            },
+            new() {
+                Id = 6,
+                Title = "تسجيل دخول الى {ServiceName}",
+                Description = "رمز الدخول هو {Otp} تستطيع استخدامه لتسجيل الدخول على {ServiceName} باستخدام حسابك بتطبيق قيدها",
+                CreatedAt = DateTimeOffset.Parse("2023-11-01T00:00:00.000000Z"),
+                Payload = new(),
+                ActionPath = "_",
+                ActionType = NotificationActionType.NoAction,
+                Visibility = NotificationVisibility.Private,
+                SendingMechanism=NotificationSendingMechanism.Automatic,
+                AnonymousClicks = 0
+            }
+        };
+
+        var AppAssets = new AppAsset[] {
+            new(){
+                AssetKey = "baloot_book",
+                AssetData = "{}"
+                },
+            new(){
+                AssetKey = "popup",
+                AssetData = "{}"
+            }
+        };
+
+        #endregion
+
         modelBuilder.HasPostgresExtension("uuid-ossp");
 
+        modelBuilder.Entity<AdminUser>().HasData(superAdmin);
 
-
+        modelBuilder.Entity<NotificationData>().HasData(automaticNotifications);
+        modelBuilder.Entity<AppAsset>().HasData(AppAssets);
         #region Entities_Configuration
         modelBuilder.Entity<AdminUser>(entity =>
         {
@@ -258,15 +357,23 @@ public partial class QydhaContext : DbContext
                 .HasColumnName("players_names")
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>()
-                );
+                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>(),
+                    new ValueComparer<List<string>>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToList())
+                    );
             entity.Property(e => e.TeamsNames)
                 .HasDefaultValueSql("'[]'::jsonb")
                 .HasColumnType("jsonb")
                 .HasColumnName("teams_names")
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>()
+                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>(),
+                    new ValueComparer<List<string>>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToList())
                 );
 
             entity.HasOne(d => d.User).WithOne(p => p.UserGeneralSettings)
@@ -504,12 +611,28 @@ public partial class QydhaContext : DbContext
                 .HasColumnName("payload")
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<Dictionary<string, object>>(v) ?? new Dictionary<string, object>()
+                    v => JsonConvert.DeserializeObject<NotificationDataPayload>(v) ?? new()
                 );
             entity.Property(e => e.Title)
                 .HasMaxLength(255)
                 .HasColumnName("title");
-            entity.Property(e => e.Visibility).HasColumnName("visibility");
+            entity.Property(e => e.Visibility)
+                .HasColumnName("visibility")
+                .HasConversion<string>();
+            entity.Property(e => e.SendingMechanism)
+                .HasColumnName("sending_mechanism")
+                .HasConversion<string>();
+            entity.Property(e => e.TemplateValues)
+                .HasDefaultValueSql("'{}'::jsonb")
+                .HasColumnType("jsonb")
+                .HasColumnName("template_values")
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v),
+                    v => JsonConvert.DeserializeObject<Dictionary<string, string>>(v) ?? new(),
+                    new ValueComparer<Dictionary<string, string>>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToDictionary()));
         });
 
         modelBuilder.Entity<NotificationUserLink>(entity =>
@@ -526,6 +649,19 @@ public partial class QydhaContext : DbContext
             entity.Property(e => e.SentAt)
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("sent_at");
+
+            entity.Property(e => e.TemplateValues)
+                .HasDefaultValueSql("'{}'::jsonb")
+                .HasColumnType("jsonb")
+                .HasColumnName("template_values")
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v),
+                    v => JsonConvert.DeserializeObject<Dictionary<string, string>>(v) ?? new(),
+                    new ValueComparer<Dictionary<string, string>>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToDictionary())
+            );
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.Notification).WithMany(p => p.NotificationUserLinks)

@@ -26,7 +26,7 @@ public class PhoneAuthenticationRequestRepo(QydhaContext qydhaContext, ILogger<P
     {
         var affected = await _dbCtx.PhoneAuthenticationRequests.Where(req => req.Id == requestId).ExecuteUpdateAsync(
                setters => setters
-                   .SetProperty(req => req.UsedAt, DateTime.UtcNow)
+                   .SetProperty(req => req.UsedAt, DateTimeOffset.UtcNow)
            );
         return affected == 1 ?
             Result.Ok() :

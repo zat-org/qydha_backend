@@ -7,13 +7,13 @@ public class UserPromoCode
 
     public int NumberOfDays { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 
-    public DateTime ExpireAt { get; set; }
+    public DateTimeOffset ExpireAt { get; set; }
 
     public Guid UserId { get; set; }
 
-    public DateTime? UsedAt { get; set; }
+    public DateTimeOffset? UsedAt { get; set; }
 
     public virtual User User { get; set; } = null!;
 
@@ -21,13 +21,13 @@ public class UserPromoCode
     {
 
     }
-    public UserPromoCode(Guid userId, string code, int numberOfDays, DateTime expireAt)
+    public UserPromoCode(Guid userId, string code, int numberOfDays, DateTimeOffset expireAt)
     {
         UserId = userId;
         Code = code;
         NumberOfDays = numberOfDays;
         ExpireAt = expireAt;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTimeOffset.UtcNow;
         UsedAt = null;
     }
 }

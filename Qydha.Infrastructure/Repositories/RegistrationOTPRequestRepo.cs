@@ -21,11 +21,12 @@ public class RegistrationOTPRequestRepo(QydhaContext qydhaContext, ILogger<Regis
                 Result.Ok(req) :
                 Result.Fail<RegistrationOTPRequest>(NotFoundError);
     }
-    public async Task<Result> MarkRequestAsUsed(Guid requestId)
+    public async Task<Result> MarkRequestAsUsed(Guid requestId, Guid userId)
     {
         var affected = await _dbCtx.RegistrationOtpRequests.Where(req => req.Id == requestId).ExecuteUpdateAsync(
                setters => setters
-                   .SetProperty(req => req.UsedAt, DateTime.UtcNow)
+                   .SetProperty(req => req.UsedAt, DateTimeOffset.UtcNow)
+                   .SetProperty(req => req.UserId, userId)
            );
         return affected == 1 ?
             Result.Ok() :

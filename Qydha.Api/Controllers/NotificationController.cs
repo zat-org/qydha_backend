@@ -13,8 +13,8 @@ public class NotificationController(INotificationService notificationService) : 
     [AllowAnonymous]
     public async Task<IActionResult> GetPublicNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
     {
-        return (await _notificationService.GetAllAnonymousUserNotification(pageSize, pageNumber))
-        .Handle<IEnumerable<NotificationData>, IActionResult>(
+        return (await _notificationService.GetAllAnonymous(pageSize, pageNumber))
+        .Handle<IEnumerable<Notification>, IActionResult>(
             (notificationsData) =>
             {
                 var mapper = new NotificationMapper();
@@ -22,7 +22,7 @@ public class NotificationController(INotificationService notificationService) : 
                 return Ok(
                     new
                     {
-                        data = new { notifications = notificationsData.Select(n => mapper.NotificationDataToGetNotificationDto(n)) },
+                        data = new { notifications = notificationsData.Select(n => mapper.NotificationToGetNotificationDto(n)) },
                         message = "Notifications Fetched successfully."
                     });
             }
@@ -34,7 +34,7 @@ public class NotificationController(INotificationService notificationService) : 
     [AllowAnonymous]
     public async Task<IActionResult> ApplyAnonymousClickOnNotification([FromRoute] int notificationId)
     {
-        return (await _notificationService.ApplyAnonymousClickOnNotification(notificationId))
+        return (await _notificationService.ApplyAnonymousClick(notificationId))
         .Handle<IActionResult>(
             () => Ok(
                     new
@@ -60,17 +60,16 @@ public class NotificationController(INotificationService notificationService) : 
         })
         .OnSuccessAsync(async (fileData) =>
         {
-            if (dto.PopUpImage is not null)
-                payload.Add("image", fileData);
             return await _notificationService.SendToUser(dto.UserId, new NotificationData()
             {
                 Title = dto.Title,
                 Description = dto.Description,
                 ActionPath = dto.ActionPath,
                 ActionType = dto.ActionType,
-                CreatedAt = DateTime.UtcNow,
-                Payload = payload
-            });
+                CreatedAt = DateTimeOffset.UtcNow,
+                Payload = new() { Image = dto.PopUpImage is not null ? fileData : null },
+                TemplateValues = []
+            }, templateValues: []);
         })
         .Handle<User, IActionResult>((user) =>
             Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" })
@@ -92,17 +91,16 @@ public class NotificationController(INotificationService notificationService) : 
         })
         .OnSuccessAsync(async (fileData) =>
         {
-            if (dto.PopUpImage is not null)
-                payload.Add("image", fileData);
             return await _notificationService.SendToAllUsers(new NotificationData()
             {
                 Title = dto.Title,
                 Description = dto.Description,
                 ActionPath = dto.ActionPath,
                 ActionType = dto.ActionType,
-                CreatedAt = DateTime.UtcNow,
-                Payload = payload
-            });
+                CreatedAt = DateTimeOffset.UtcNow,
+                Payload = new() { Image = dto.PopUpImage is not null ? fileData : null },
+                TemplateValues = []
+            }, templateValues: []);
         })
         .Handle<int, IActionResult>((usersCount) =>
             Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" })
@@ -123,19 +121,18 @@ public class NotificationController(INotificationService notificationService) : 
         })
         .OnSuccessAsync(async (fileData) =>
         {
-            if (dto.PopUpImage is not null)
-                payload.Add("image", fileData);
             return await _notificationService.SendToAnonymousUsers(new NotificationData()
             {
                 Title = dto.Title,
                 Description = dto.Description,
                 ActionPath = dto.ActionPath,
                 ActionType = dto.ActionType,
-                CreatedAt = DateTime.UtcNow,
-                Payload = payload
+                CreatedAt = DateTimeOffset.UtcNow,
+                Payload = new() { Image = dto.PopUpImage is not null ? fileData : null },
+                TemplateValues = []
             });
         })
-        .Handle<NotificationData, IActionResult>((notification) =>
+        .Handle<Notification, IActionResult>((notification) =>
             Ok(new { message = $"Notification sent to the Anonymous users" })
         , BadRequest);
     }

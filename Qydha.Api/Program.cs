@@ -159,7 +159,7 @@ builder.Services.Configure<ProductsSettings>(builder.Configuration.GetSection("P
 // Subscription Settings
 builder.Services.Configure<SubscriptionSetting>(builder.Configuration.GetSection("SubscriptionSetting"));
 // Notifications Settings
-builder.Services.Configure<NotificationsSettings>(builder.Configuration.GetSection("NotificationsSettings"));
+builder.Services.Configure<PushNotificationsSettings>(builder.Configuration.GetSection("PushNotificationsSettings"));
 // Notification Image Settings
 builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetSection("NotificationImageSettings"));
 // Book Settings

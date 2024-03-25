@@ -294,7 +294,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
 
-        return (await _notificationService.GetAllNotificationsOfUserById(user.Id, pageSize, pageNumber, isRead))
+        return (await _notificationService.GetByUserId(user.Id, pageSize, pageNumber, isRead))
         .Handle<IEnumerable<Notification>, IActionResult>((notifications) =>
             {
                 var mapper = new NotificationMapper();
@@ -319,7 +319,7 @@ public class UserController(IUserService userService, INotificationService notif
     }
     [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/notifications/mark-all-as-read/")]
-    public async Task<IActionResult> MarkAllNotificationAsRead([FromRoute] int notificationId)
+    public async Task<IActionResult> MarkAllNotificationAsRead()
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _notificationService.MarkAllNotificationsOfUserAsRead(user.Id))

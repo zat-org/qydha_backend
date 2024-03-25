@@ -5,7 +5,7 @@ public class AddInfluencerCodeDto
     public string Code { get; set; } = null!;
     public int? CategoryId { get; set; }
     public int NumberOfDays { get; set; }
-    public DateTime? ExpireAt { get; set; }
+    public DateTimeOffset? ExpireAt { get; set; }
     public int MaxInfluencedUsersCount { get; set; }
 
 
@@ -31,7 +31,7 @@ public class AddInfluencerCodeDtoValidator : AbstractValidator<AddInfluencerCode
         {
             RuleFor(dto => dto.ExpireAt)
                    .NotEmpty()
-                   .Must(val => val > DateTime.UtcNow);
+                   .Must(val => val > DateTimeOffset.UtcNow);
         });
 
         RuleFor(dto => dto.MaxInfluencedUsersCount)

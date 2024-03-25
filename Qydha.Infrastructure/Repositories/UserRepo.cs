@@ -54,12 +54,12 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Fail<User>(NotFoundError);
 
     public async Task<Result<User>> GetByEmailAsync(string email) =>
-        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Email == email.ToUpper()) is User user ?
+        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.NormalizedEmail == email.ToUpper()) is User user ?
             Result.Ok(user) :
             Result.Fail<User>(NotFoundError);
 
     public async Task<Result<User>> GetByUsernameAsync(string username) =>
-        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Username == username.ToUpper()) is User user ?
+        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.NormalizedUsername == username.ToUpper()) is User user ?
             Result.Ok(user) :
             Result.Fail<User>(NotFoundError);
 
@@ -106,7 +106,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     {
         var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
             setters => setters
-                .SetProperty(user => user.LastLogin, DateTime.UtcNow)
+                .SetProperty(user => user.LastLogin, DateTimeOffset.UtcNow)
         );
         return affected == 1 ?
             Result.Ok() :

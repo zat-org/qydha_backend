@@ -21,7 +21,7 @@ public class AppAssetsService(IAppAssetsRepo appAssetsRepo, IFileService fileSer
                 (await _fileService.DeleteFile(tuple.Item1.Path)).OnFailure(() =>
                 {
                     //! Handle Error On Delete File 
-                    _logger.LogError("Can't delete the old book with the path : {path}",tuple.Item1.Path);
+                    _logger.LogError("Can't delete the old book with the path : {path}", tuple.Item1.Path);
                 });
             return Result.Ok(tuple.Item2);
         })
@@ -29,7 +29,7 @@ public class AppAssetsService(IAppAssetsRepo appAssetsRepo, IFileService fileSer
         {
             var bookAsset = new BookAsset()
             {
-                LastUpdateAt = DateTime.UtcNow,
+                LastUpdateAt = DateTimeOffset.UtcNow,
                 Path = fileData.Path,
                 Url = fileData.Url
             };

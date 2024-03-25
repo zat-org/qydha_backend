@@ -68,7 +68,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                     Message = "User phone is not the same in the phone login request"
                 });
 
-            if (tuple.Item2.CreatedAt.AddDays(1) < DateTime.UtcNow)
+            if (tuple.Item2.CreatedAt.AddDays(1) < DateTimeOffset.UtcNow)
                 return Result.Fail<User>(new()
                 {
                     Code = ErrorType.ForgetPasswordRequestExceedTime,

@@ -21,7 +21,7 @@ public class UserPromoCodesRepo(QydhaContext qydhaContext, ILogger<UserPromoCode
     public async Task<Result<IEnumerable<UserPromoCode>>> GetAllUserValidPromoCodeAsync(Guid userId)
     {
         var codes = await _dbCtx.UserPromoCodes
-            .Where(code => code.UserId == userId && code.UsedAt == null && code.ExpireAt >= DateTime.Now).ToListAsync();
+            .Where(code => code.UserId == userId && code.UsedAt == null && code.ExpireAt >= DateTimeOffset.Now).ToListAsync();
         return Result.Ok((IEnumerable<UserPromoCode>)codes);
     }
 
@@ -36,7 +36,7 @@ public class UserPromoCodesRepo(QydhaContext qydhaContext, ILogger<UserPromoCode
     {
         var affected = await _dbCtx.UserPromoCodes.Where(code => code.Id == codeId).ExecuteUpdateAsync(
             setters => setters
-                .SetProperty(code => code.UsedAt, DateTime.UtcNow)
+                .SetProperty(code => code.UsedAt, DateTimeOffset.UtcNow)
         );
         return affected == 1 ?
             Result.Ok() :

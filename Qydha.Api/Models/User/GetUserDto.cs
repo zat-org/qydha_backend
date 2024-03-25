@@ -7,14 +7,14 @@ public class GetUserDto
     public string? Name { get; set; }
     public string? Phone { get; set; }
     public string? Email { get; set; }
-    public DateTime? BirthDate { get; set; }
-    public DateTime CreatedOn { get; set; }
-    public DateTime? LastLogin { get; set; }
+    public DateTimeOffset? BirthDate { get; set; }
+    public DateTimeOffset CreatedOn { get; set; }
+    public DateTimeOffset? LastLogin { get; set; }
     public bool IsAnonymous { get; set; }
     public bool IsPhoneConfirmed { get; set; }
     public bool IsEmailConfirmed { get; set; }
     public string? AvatarUrl { get; set; }
-    public DateTime? ExpireDate { get; set; }
+    public DateTimeOffset? ExpireDate { get; set; }
     public int FreeSubscriptionUsed { get; set; }
 }
 

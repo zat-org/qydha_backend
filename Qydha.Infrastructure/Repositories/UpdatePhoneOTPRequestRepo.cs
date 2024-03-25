@@ -28,7 +28,7 @@ public class UpdatePhoneOTPRequestRepo(QydhaContext qydhaContext, ILogger<Update
     {
         var affected = await _dbCtx.UpdatePhoneRequests.Where(req => req.Id == requestId).ExecuteUpdateAsync(
                setters => setters
-                   .SetProperty(req => req.UsedAt, DateTime.UtcNow)
+                   .SetProperty(req => req.UsedAt, DateTimeOffset.UtcNow)
            );
         return affected == 1 ?
             Result.Ok() :

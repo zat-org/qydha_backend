@@ -31,7 +31,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("uuid_generate_v4()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -69,6 +69,17 @@ namespace Qydha.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("admins", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d2705466-4304-4830-b48a-3e44e031927e"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            NormalizedUsername = "ADMIN",
+                            PasswordHash = "$2a$11$V0A5.EYwXlFUjK3RIis3...A9rfzUm.mO.88MUYW9.uHSZLjURNsC",
+                            Role = "SuperAdmin",
+                            Username = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("Qydha.Domain.Entities.AppAsset", b =>
@@ -87,6 +98,18 @@ namespace Qydha.Api.Migrations
                         .HasName("app_assets_pkey");
 
                     b.ToTable("app_assets", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            AssetKey = "baloot_book",
+                            AssetData = "{}"
+                        },
+                        new
+                        {
+                            AssetKey = "popup",
+                            AssetData = "{}"
+                        });
                 });
 
             modelBuilder.Entity("Qydha.Domain.Entities.InfluencerCode", b =>
@@ -107,11 +130,11 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime?>("ExpireAt")
+                    b.Property<DateTimeOffset?>("ExpireAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expire_at");
 
@@ -183,7 +206,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("uuid_generate_v4()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -193,7 +216,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(6)")
                         .HasColumnName("otp");
 
-                    b.Property<DateTime?>("UsedAt")
+                    b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("used_at");
 
@@ -234,7 +257,7 @@ namespace Qydha.Api.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("anonymous_clicks");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -251,20 +274,119 @@ namespace Qydha.Api.Migrations
                         .HasColumnName("payload")
                         .HasDefaultValueSql("'{}'::jsonb");
 
+                    b.Property<string>("SendingMechanism")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sending_mechanism");
+
+                    b.Property<string>("TemplateValues")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("template_values")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("title");
 
-                    b.Property<int>("Visibility")
-                        .HasColumnType("integer")
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("visibility");
 
                     b.HasKey("Id")
                         .HasName("notifications_data_pkey");
 
                     b.ToTable("notifications_data", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ActionPath = "_",
+                            ActionType = 1,
+                            AnonymousClicks = 0,
+                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "نتمنى لك تجربة جميلة، ارسلنا لك هدية بقسم المتجر 😉",
+                            Payload = "{\"Image\":null}",
+                            SendingMechanism = "Automatic",
+                            TemplateValues = "{}",
+                            Title = "مرحباً بك في قيدها ♥",
+                            Visibility = "Private"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ActionPath = "_",
+                            ActionType = 1,
+                            AnonymousClicks = 0,
+                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "نتمنى لك تجربة جميلة، لا تنسى قيدها ليس مجرد حاسبة",
+                            Payload = "{\"Image\":null}",
+                            SendingMechanism = "Automatic",
+                            TemplateValues = "{}",
+                            Title = "شكرا لثقتك بقيدها..",
+                            Visibility = "Private"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ActionPath = "_",
+                            ActionType = 1,
+                            AnonymousClicks = 0,
+                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "شيك على المتجر .. تتهنى ♥",
+                            Payload = "{\"Image\":null}",
+                            SendingMechanism = "Automatic",
+                            TemplateValues = "{}",
+                            Title = "وصلتك هدية.. 🎁",
+                            Visibility = "Private"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ActionPath = "_",
+                            ActionType = 1,
+                            AnonymousClicks = 0,
+                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "نتمنى لك تجربة ممتعة ♥",
+                            Payload = "{\"Image\":null}",
+                            SendingMechanism = "Automatic",
+                            TemplateValues = "{}",
+                            Title = "تستاهل ما جاك",
+                            Visibility = "Private"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ActionPath = "_",
+                            ActionType = 1,
+                            AnonymousClicks = 0,
+                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "إذا عجبك التطبيق لا تنسى تنشره بين أخوياك",
+                            Payload = "{\"Image\":null}",
+                            SendingMechanism = "Automatic",
+                            TemplateValues = "{}",
+                            Title = "تم تفعيل الكود",
+                            Visibility = "Private"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ActionPath = "_",
+                            ActionType = 1,
+                            AnonymousClicks = 0,
+                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "رمز الدخول هو {Otp} تستطيع استخدامه لتسجيل الدخول على {ServiceName} باستخدام حسابك بتطبيق قيدها",
+                            Payload = "{\"Image\":null}",
+                            SendingMechanism = "Automatic",
+                            TemplateValues = "{}",
+                            Title = "تسجيل دخول الى {ServiceName}",
+                            Visibility = "Private"
+                        });
                 });
 
             modelBuilder.Entity("Qydha.Domain.Entities.NotificationUserLink", b =>
@@ -280,13 +402,20 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("notification_id");
 
-                    b.Property<DateTime?>("ReadAt")
+                    b.Property<DateTimeOffset?>("ReadAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("read_at");
 
-                    b.Property<DateTime>("SentAt")
+                    b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("sent_at");
+
+                    b.Property<string>("TemplateValues")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("template_values")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -310,7 +439,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("uuid_generate_v4()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on");
 
@@ -320,7 +449,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(6)")
                         .HasColumnName("otp");
 
-                    b.Property<DateTime?>("UsedAt")
+                    b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
@@ -358,7 +487,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(15)")
                         .HasColumnName("productsku");
 
-                    b.Property<DateTime>("PurchaseDate")
+                    b.Property<DateTimeOffset>("PurchaseDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("purchase_date");
 
@@ -388,7 +517,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("uuid_generate_v4()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on");
 
@@ -414,8 +543,11 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("phone");
 
-                    b.Property<DateTime?>("UsedAt")
+                    b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -425,6 +557,9 @@ namespace Qydha.Api.Migrations
 
                     b.HasKey("Id")
                         .HasName("registration_otp_request_pkey");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("registration_otp_request", (string)null);
                 });
@@ -437,7 +572,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("uuid_generate_v4()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on");
 
@@ -453,7 +588,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(6)")
                         .HasColumnName("otp");
 
-                    b.Property<DateTime?>("UsedAt")
+                    b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
@@ -476,7 +611,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("uuid_generate_v4()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on");
 
@@ -492,7 +627,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("phone");
 
-                    b.Property<DateTime?>("UsedAt")
+                    b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
@@ -523,11 +658,11 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying")
                         .HasColumnName("avatar_url");
 
-                    b.Property<DateTime?>("BirthDate")
+                    b.Property<DateTimeOffset?>("BirthDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("birth_date");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on");
 
@@ -536,12 +671,11 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("email");
 
-                    b.Property<DateTime?>("ExpireDate")
+                    b.Property<DateTimeOffset?>("ExpireDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expire_date");
 
                     b.Property<string>("FCMToken")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("fcm_token");
@@ -570,7 +704,7 @@ namespace Qydha.Api.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_phone_confirmed");
 
-                    b.Property<DateTime?>("LastLogin")
+                    b.Property<DateTimeOffset?>("LastLogin")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_login");
 
@@ -770,11 +904,11 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("code");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime>("ExpireAt")
+                    b.Property<DateTimeOffset>("ExpireAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expire_at");
 
@@ -782,7 +916,7 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("number_of_days");
 
-                    b.Property<DateTime?>("UsedAt")
+                    b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("used_at");
 
@@ -858,6 +992,15 @@ namespace Qydha.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_user");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Qydha.Domain.Entities.RegistrationOTPRequest", b =>
+                {
+                    b.HasOne("Qydha.Domain.Entities.User", "User")
+                        .WithOne("RegistrationOTPRequest")
+                        .HasForeignKey("Qydha.Domain.Entities.RegistrationOTPRequest", "UserId");
 
                     b.Navigation("User");
                 });
@@ -947,6 +1090,8 @@ namespace Qydha.Api.Migrations
                     b.Navigation("PhoneAuthenticationRequests");
 
                     b.Navigation("Purchases");
+
+                    b.Navigation("RegistrationOTPRequest");
 
                     b.Navigation("UpdateEmailRequests");
 

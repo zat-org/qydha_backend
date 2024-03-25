@@ -5,6 +5,6 @@ public class AddPurchaseHandler(INotificationService notificationService) : INot
     private readonly INotificationService _notificationService = notificationService;
     public async Task Handle(AddPurchaseNotification notification, CancellationToken cancellationToken)
     {
-        await _notificationService.SendToUserPreDefinedNotification(notification.UserId, notification.NotificationId);
+        await _notificationService.SendToUserPreDefinedNotification(notification.UserId, notification.NotificationId, []);
     }
 }

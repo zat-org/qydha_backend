@@ -8,7 +8,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
     private readonly SubscriptionSetting _subscriptionSetting = subscriptionOptions.Value;
     private readonly ProductsSettings _productsSettings = productSettings.Value;
 
-    public async Task<Result<User>> AddPurchase(string purchaseId, Guid userId, string productSku, DateTime created_at)
+    public async Task<Result<User>> AddPurchase(string purchaseId, Guid userId, string productSku, DateTimeOffset created_at)
     {
         Result<User> getUserRes = (await _userRepo.GetByIdAsync(userId))
                     .OnFailure((err) => new()
@@ -65,7 +65,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
                 IAPHubPurchaseId = Guid.NewGuid().ToString(),
                 UserId = userId,
                 Type = "free_30",
-                PurchaseDate = DateTime.UtcNow,
+                PurchaseDate = DateTimeOffset.UtcNow,
                 ProductSku = "free_30",
                 NumberOfDays = _subscriptionSetting.NumberOfDaysInOneSubscription
             };

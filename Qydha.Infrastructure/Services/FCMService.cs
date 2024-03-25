@@ -1,9 +1,12 @@
 ﻿using FirebaseAdmin.Messaging;
+using Qydha.Domain.Settings;
 
 namespace Qydha.Infrastructure.Services;
 
-public class FCMService : IPushNotificationService
+public class FCMService(IOptions<PushNotificationsSettings> pushNotificationsSettings) : IPushNotificationService
 {
+    private readonly PushNotificationsSettings _pushNotificationsSettings = pushNotificationsSettings.Value;
+
     private static Message CreateSingleTokenNotificationMessage(string userToken, string title, string body)
     {
         return new Message()
@@ -72,40 +75,6 @@ public class FCMService : IPushNotificationService
             }
         };
     }
-    private static MulticastMessage CreateNotificationMulticastMessage(IEnumerable<string> tokens, string title, string body)
-    {
-        return new MulticastMessage()
-        {
-            Tokens = tokens.ToList(),
-            Notification = new()
-            {
-                Title = title,
-                Body = body,
-            },
-            Android = new AndroidConfig()
-            {
-                Notification = new AndroidNotification()
-                {
-                    Sound = "notification_alert",
-                    ChannelId = "qydha",
-                    DefaultSound = false,
-                    Priority = NotificationPriority.MAX
-                }
-            },
-            Apns = new ApnsConfig()
-            {
-                Aps = new Aps()
-                {
-                    CriticalSound = new CriticalSound()
-                    {
-                        Critical = true,
-                        Name = "notification_alert.wav",
-                        Volume = 1
-                    }
-                }
-            }
-        };
-    }
 
     public async Task<Result> SendToToken(string userToken, string title, string body)
     {
@@ -116,6 +85,7 @@ public class FCMService : IPushNotificationService
                 Message = $" Invalid FCM Token Value : '{userToken}' "
             });
         var msg = CreateSingleTokenNotificationMessage(userToken, title, body);
+
         try
         {
             var res = await FirebaseMessaging.DefaultInstance.SendAsync(msg);
@@ -143,8 +113,7 @@ public class FCMService : IPushNotificationService
             );
         }
     }
-
-    public async Task<Result> SendToTopic(string topicName, string title, string body)
+    private static async Task<Result> SendToTopic(string topicName, string title, string body)
     {
         if (string.IsNullOrEmpty(topicName))
             return Result.Fail(new()
@@ -182,41 +151,9 @@ public class FCMService : IPushNotificationService
         }
     }
 
-    public async Task<Result> SendToTokens(IEnumerable<string> tokens, string title, string body)
-    {
-        // if (tokens.Count() > 0)
-        //     return Result.Fail(new()
-        //     {
-        //         Code = ErrorType.InvalidFCMTokensArray,
-        //         Message = $" Invalid Tokens Array  : '{tokens}' "
-        //     });
-
-        var msg = CreateNotificationMulticastMessage(tokens, title, body);
-        try
-        {
-            var res = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(msg);
-            return Result.Ok();
-        }
-        catch (FirebaseMessagingException exp)
-        {
-            // TODO :: Handle the MessagingErrorCode enum cases here 
-            return Result.Fail(
-                new()
-                {
-                    Code = ErrorType.FcmMessagingException,
-                    Message = $"Error [FirebaseMessagingException] In Sending Push Notification to Tokens , Message = {exp.Message} , Code = {exp.ErrorCode} , Messaging Error Code = {exp.MessagingErrorCode}"
-                });
-        }
-        catch (Exception exp)
-        {
-            return Result.Fail(
-                new()
-                {
-                    Code = ErrorType.FcmRegularException,
-                    Message = $"Error [Exception] In Sending Push Notification to user , Message = {exp.Message}"
-                }
-            );
-        }
-    }
+    public async Task<Result> SendToAnonymousUsers(Domain.Entities.Notification notification) =>
+        await SendToTopic(_pushNotificationsSettings.ToAnonymousTopicName, notification.Title, notification.Description);
+    public async Task<Result> SendToAllUsers(Domain.Entities.Notification notification) =>
+        await SendToTopic(_pushNotificationsSettings.ToAllTopicName, notification.Title, notification.Description);
 }
 

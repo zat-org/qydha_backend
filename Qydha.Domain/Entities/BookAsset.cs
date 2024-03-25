@@ -2,7 +2,7 @@
 
 public class BookAsset
 {
-    public DateTime LastUpdateAt { get; set; }
-    public string Path { get; set; } = null!;
-    public string Url { get; set; } = null!;
+    public DateTimeOffset? LastUpdateAt { get; set; } = null;
+    public string Path { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 }

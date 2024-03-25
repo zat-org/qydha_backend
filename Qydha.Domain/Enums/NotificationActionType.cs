@@ -18,5 +18,10 @@ public enum NotificationVisibility
 {
     Public = 1,
     Anonymous = 2,
-    Private = 3
+    Private = 3,
+}
+public enum NotificationSendingMechanism
+{
+    Manual = 1,
+    Automatic = 2
 }

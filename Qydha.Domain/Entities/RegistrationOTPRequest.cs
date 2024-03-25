@@ -6,9 +6,11 @@ public class RegistrationOTPRequest
     public string PasswordHash { get; set; } = null!;
     public string Phone { get; set; } = null!;
     public string OTP { get; set; } = null!;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public string? FCMToken { get; set; }
-    public DateTime? UsedAt { get; set; } = null;
+    public DateTimeOffset? UsedAt { get; set; } = null;
+    public Guid? UserId { get; set; }
+    public virtual User? User { get; set; }
 
     public RegistrationOTPRequest() { }
     public RegistrationOTPRequest(string username, string phone, string passwordHash, string otp, string? fcmToken)

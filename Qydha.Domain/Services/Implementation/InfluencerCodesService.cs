@@ -7,7 +7,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
     private readonly IInfluencerCodesCategoriesRepo _influencerCodesCategoriesRepo = influencerCodesCategoriesRepo;
     private readonly IPurchaseService _purchaseService = purchaseService;
 
-    public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTime? expireDate, int MaxInfluencedUsersCount, int? categoryId)
+    public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTimeOffset? expireDate, int MaxInfluencedUsersCount, int? categoryId)
     {
         var getCodeRes = await _influencerCodesRepo.IsCodeAvailable(code);
         return getCodeRes
@@ -26,7 +26,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
         return getCodeRes
         .OnSuccess<InfluencerCode>((influencerCode) =>
         {
-            if (influencerCode.ExpireAt is not null && influencerCode.ExpireAt.Value < DateTime.UtcNow)
+            if (influencerCode.ExpireAt is not null && influencerCode.ExpireAt.Value < DateTimeOffset.UtcNow)
                 return Result.Fail<InfluencerCode>(new()
                 {
                     Code = ErrorType.InfluencerCodeExpired,

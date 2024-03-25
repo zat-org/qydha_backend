@@ -8,7 +8,7 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMedi
     private readonly IPurchaseService _purchaseService = purchaseService;
     private readonly IUserPromoCodesRepo _userPromoCodesRepo = userPromoCodesRepo;
 
-    public async Task<Result<UserPromoCode>> AddPromoCode(Guid userId, string code, int numberOfDays, DateTime expireAt)
+    public async Task<Result<UserPromoCode>> AddPromoCode(Guid userId, string code, int numberOfDays, DateTimeOffset expireAt)
     {
         Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
         return getUserRes
@@ -39,10 +39,10 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMedi
                return Result.Fail<Tuple<User, UserPromoCode>>(new()
                {
                    Code = ErrorType.PromoCodeAlreadyUsed,
-                   Message = $"Promo Code Already Used before at : {promo.UsedAt.Value.ToShortDateString()}"
+                   Message = $"Promo Code Already Used before at : {promo.UsedAt.Value.ToLocalTime()}"
                });
 
-           if (promo.ExpireAt.Date < DateTime.UtcNow.Date)
+           if (promo.ExpireAt.Date < DateTimeOffset.UtcNow.Date)
                return Result.Fail<Tuple<User, UserPromoCode>>(new()
                {
                    Code = ErrorType.PromoCodeExpired,

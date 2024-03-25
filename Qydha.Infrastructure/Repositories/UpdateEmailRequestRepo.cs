@@ -27,7 +27,7 @@ public class UpdateEmailRequestRepo(QydhaContext qydhaContext, ILogger<UpdateEma
     {
         var affected = await _dbCtx.UpdateEmailRequests.Where(req => req.Id == requestId).ExecuteUpdateAsync(
                setters => setters
-                   .SetProperty(req => req.UsedAt, DateTime.UtcNow)
+                   .SetProperty(req => req.UsedAt, DateTimeOffset.UtcNow)
            );
         return affected == 1 ?
             Result.Ok() :

@@ -5,9 +5,9 @@ public class UpdatePhoneRequest
     public Guid Id { get; set; }
     public string Phone { get; set; } = null!;
     public string OTP { get; set; } = null!;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public Guid UserId { get; set; }
-    public DateTime? UsedAt { get; set; } = null;
+    public DateTimeOffset? UsedAt { get; set; } = null;
 
     public UpdatePhoneRequest()
     {
@@ -18,6 +18,6 @@ public class UpdatePhoneRequest
         Phone = phone;
         OTP = otp;
         UserId = user_id;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTimeOffset.UtcNow;
     }
 }

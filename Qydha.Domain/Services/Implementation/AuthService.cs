@@ -19,7 +19,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
     {
 
         return (await _registrationOTPRequestRepo.GetByIdAsync(requestId))
-        .OnSuccessAsync<RegistrationOTPRequest>(async otp_request =>
+        .OnSuccess<RegistrationOTPRequest>(otp_request =>
         {
             if (otp_request.OTP != otpCode)
                 return Result.Fail<RegistrationOTPRequest>(new()
@@ -34,11 +34,12 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
                     Code = ErrorType.OTPExceededTimeLimit,
                     Message = "OTP Exceed Time Limit"
                 });
-            return (await _registrationOTPRequestRepo.MarkRequestAsUsed(requestId)).MapTo(otp_request);
+            return Result.Ok(otp_request);
         })
         .OnSuccessAsync<RegistrationOTPRequest>(async (otp_request) => (await _userRepo.IsUsernameAvailable(otp_request.Username)).MapTo(otp_request))
         .OnSuccessAsync<RegistrationOTPRequest>(async (otp_request) => (await _userRepo.IsPhoneAvailable(otp_request.Phone)).MapTo(otp_request))
         .OnSuccessAsync(SaveUserFromRegistrationOTPRequest)
+        .OnSuccessAsync<User>(async (user) => (await _registrationOTPRequestRepo.MarkRequestAsUsed(requestId, user.Id)).MapTo(user))
         .OnSuccess((user) =>
         {
             var jwtToken = _tokenManager.Generate(user.GetClaims());
