@@ -10,3 +10,4 @@ public class Error
         return $"Code = {Code} , Message = {Message}";
     }
 }
+

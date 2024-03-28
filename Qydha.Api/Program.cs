@@ -166,8 +166,11 @@ builder.Services.Configure<NotificationImageSettings>(builder.Configuration.GetS
 builder.Services.Configure<BookSettings>(builder.Configuration.GetSection("BookSettings"));
 // UltraMsg Settings
 builder.Services.Configure<UltraMsgSettings>(builder.Configuration.GetSection("UltraMsgSettings"));
-
+// RegisterGiftSetting
 builder.Services.Configure<RegisterGiftSetting>(builder.Configuration.GetSection("RegisterGiftSetting"));
+// WaApiSettings
+builder.Services.Configure<WaApiSettings>(builder.Configuration.GetSection("WaApiSettings"));
+
 
 #endregion
 
@@ -195,13 +198,11 @@ builder.Services.AddScoped<ILoginWithQydhaRequestRepo, LoginWithQydhaRequestRepo
 builder.Services.AddSingleton<TokenManager>();
 builder.Services.AddSingleton<OtpManager>();
 
-if (builder.Configuration.GetValue<bool>("UseUltraMessage"))
-    builder.Services.AddScoped<IMessageService, UltraMsgService>();
-else
-    builder.Services.AddScoped<IMessageService, WhatsAppService>();
-
-// builder.Services.AddScoped<IMessageService, UltraMsgService>();
-
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<WaApiService>();
+builder.Services.AddScoped<WhatsAppService>();
+builder.Services.AddSingleton<WaApiInstancesTracker>();
+builder.Services.AddScoped<IMessageService, OtpSenderByWhatsAppService>();
 
 builder.Services.AddScoped<IMailingService, MailingService>();
 builder.Services.AddScoped<IFileService, GoogleCloudFileService>();

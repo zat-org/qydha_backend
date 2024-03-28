@@ -364,6 +364,7 @@ FodyWeavers.xsd
 
 app_keys.json
 app_keys.Development.json
+app_keys.Staging.json
 firebase_private_key.json
 googleCloud_private_key.json
 

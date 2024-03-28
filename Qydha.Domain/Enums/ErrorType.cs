@@ -82,6 +82,13 @@ public enum ErrorType
 
     #endregion
 
+    #region WaApi Errors
+    WaApiInstanceNotReady = 4130,
+    WaApiUnknownError = 4131,
+
+    #endregion
+
+
     #region files errors
     FileUploadError = 4120,
     FileDeleteError = 4121,

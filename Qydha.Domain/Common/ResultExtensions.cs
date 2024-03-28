@@ -120,6 +120,32 @@ public static class ResultExtensions
     // {
     //     return func(result);
     // }
+
+    // public static Result<OutT> OnSuccessAsync<InT, OutT>(this Result<InT> result, Func<InT, Task<Result<OutT>>> func)
+    //     {
+    //         if (result.IsSuccess)
+    //         {
+    //             Task<Result<OutT>> awaitableTask = func(result.Value);
+    //             Result<OutT> res = awaitableTask.GetAwaiter().GetResult();
+    //             return res;
+    //         }
+    //         return Result.Fail<OutT>(result.Error);
+    //     }
+
+    public static T HandleAsync<T>(this Result result, Func<T> OnSuccessFunc, Func<Error, Task<T>> OnFailureFunc)
+    {
+        if (result.IsSuccess)
+        {
+            return OnSuccessFunc();
+        }
+        else
+        {
+            Task<T> awaitableTask = OnFailureFunc(result.Error);
+            T res = awaitableTask.GetAwaiter().GetResult();
+            return res;
+        }
+    }
+
     public static T Handle<T>(this Result result, Func<T> OnSuccessFunc, Func<Error, T> OnFailureFunc)
     {
         if (result.IsSuccess)
