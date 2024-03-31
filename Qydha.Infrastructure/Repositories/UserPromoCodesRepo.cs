@@ -18,10 +18,12 @@ public class UserPromoCodesRepo(QydhaContext qydhaContext, ILogger<UserPromoCode
         return Result.Ok(code);
     }
 
-    public async Task<Result<IEnumerable<UserPromoCode>>> GetAllUserValidPromoCodeAsync(Guid userId)
+    public async Task<Result<IEnumerable<UserPromoCode>>> GetUserValidPromoCodeAsync(Guid userId)
     {
         var codes = await _dbCtx.UserPromoCodes
-            .Where(code => code.UserId == userId && code.UsedAt == null && code.ExpireAt >= DateTimeOffset.Now).ToListAsync();
+            .Where(code => code.UserId == userId && code.UsedAt == null && code.ExpireAt >= DateTimeOffset.UtcNow)
+            .OrderBy(code => code.ExpireAt)
+            .ToListAsync();
         return Result.Ok((IEnumerable<UserPromoCode>)codes);
     }
 

@@ -9,8 +9,6 @@ public class RegistrationOTPRequest
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public string? FCMToken { get; set; }
     public DateTimeOffset? UsedAt { get; set; } = null;
-    public Guid? UserId { get; set; }
-    public virtual User? User { get; set; }
 
     public RegistrationOTPRequest() { }
     public RegistrationOTPRequest(string username, string phone, string passwordHash, string otp, string? fcmToken)

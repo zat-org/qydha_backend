@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Qydha.Infrastructure;
@@ -11,9 +12,11 @@ using Qydha.Infrastructure;
 namespace Qydha.Api.Migrations
 {
     [DbContext(typeof(QydhaContext))]
-    partial class QydhaContextModelSnapshot : ModelSnapshot
+    [Migration("20240329015743_AddInfluenserCodeUserLink")]
+    partial class AddInfluenserCodeUserLink
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -572,6 +575,9 @@ namespace Qydha.Api.Migrations
                     b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -580,6 +586,9 @@ namespace Qydha.Api.Migrations
 
                     b.HasKey("Id")
                         .HasName("registration_otp_request_pkey");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("registration_otp_request", (string)null);
                 });
@@ -678,8 +687,8 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("character varying")
                         .HasColumnName("avatar_url");
 
-                    b.Property<DateOnly?>("BirthDate")
-                        .HasColumnType("DATE")
+                    b.Property<DateTimeOffset?>("BirthDate")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("birth_date");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -699,6 +708,12 @@ namespace Qydha.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("fcm_token");
+
+                    b.Property<int>("FreeSubscriptionUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("free_subscription_used");
 
                     b.Property<bool>("IsAnonymous")
                         .ValueGeneratedOnAdd()
@@ -1031,6 +1046,15 @@ namespace Qydha.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Qydha.Domain.Entities.RegistrationOTPRequest", b =>
+                {
+                    b.HasOne("Qydha.Domain.Entities.User", "User")
+                        .WithOne("RegistrationOTPRequest")
+                        .HasForeignKey("Qydha.Domain.Entities.RegistrationOTPRequest", "UserId");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Qydha.Domain.Entities.UpdateEmailRequest", b =>
                 {
                     b.HasOne("Qydha.Domain.Entities.User", null)
@@ -1123,6 +1147,8 @@ namespace Qydha.Api.Migrations
                     b.Navigation("PhoneAuthenticationRequests");
 
                     b.Navigation("Purchases");
+
+                    b.Navigation("RegistrationOTPRequest");
 
                     b.Navigation("UpdateEmailRequests");
 

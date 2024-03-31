@@ -33,7 +33,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
     public async Task<IActionResult> GetAllUserPromoCodes()
     {
         User user = (User)HttpContext.Items["User"]!;
-        return (await _userPromoCodesService.GetUserPromoCodes(user.Id))
+        return (await _userPromoCodesService.GetUserValidPromoCodeAsync(user.Id))
         .Handle<IEnumerable<UserPromoCode>, IActionResult>((promoCodes) =>
         {
             var mapper = new UserPromoCodeMapper();

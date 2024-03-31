@@ -85,7 +85,6 @@ public class FCMService(IOptions<PushNotificationsSettings> pushNotificationsSet
                 Message = $" Invalid FCM Token Value : '{userToken}' "
             });
         var msg = CreateSingleTokenNotificationMessage(userToken, title, body);
-
         try
         {
             var res = await FirebaseMessaging.DefaultInstance.SendAsync(msg);

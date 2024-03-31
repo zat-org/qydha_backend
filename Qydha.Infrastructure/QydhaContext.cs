@@ -25,6 +25,8 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
     public virtual DbSet<NotificationData> NotificationsData { get; set; }
 
     public virtual DbSet<NotificationUserLink> NotificationUserLinks { get; set; }
+    public virtual DbSet<InfluencerCodeUserLink> InfluencerCodeUserLinks { get; set; }
+
     #endregion
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -132,8 +134,11 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
         modelBuilder.Entity<AdminUser>().HasData(superAdmin);
 
         modelBuilder.Entity<NotificationData>().HasData(automaticNotifications);
+        
         modelBuilder.Entity<AppAsset>().HasData(AppAssets);
+        
         #region Entities_Configuration
+     
         modelBuilder.Entity<AdminUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("admins_pkey");
@@ -258,7 +263,9 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
             entity.Property(e => e.AvatarUrl)
                 .HasColumnType("character varying")
                 .HasColumnName("avatar_url");
-            entity.Property(e => e.BirthDate).HasColumnName("birth_date");
+            entity.Property(e => e.BirthDate)
+                .HasColumnType("DATE")
+                .HasColumnName("birth_date");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_on");
@@ -271,9 +278,7 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
             entity.Property(e => e.FCMToken)
                 .HasMaxLength(200)
                 .HasColumnName("fcm_token");
-            entity.Property(e => e.FreeSubscriptionUsed)
-                .HasDefaultValue(0)
-                .HasColumnName("free_subscription_used");
+
             entity.Property(e => e.IsAnonymous)
                 .HasDefaultValue(false)
                 .HasColumnName("is_anonymous");
@@ -500,6 +505,7 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
             entity.Property(e => e.Username)
                 .HasMaxLength(100)
                 .HasColumnName("username");
+
         });
 
         modelBuilder.Entity<UserPromoCode>(entity =>
@@ -557,7 +563,8 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
 
             entity.HasOne(d => d.User).WithMany(p => p.Purchases)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("fk_user");
+                .HasConstraintName("fk_user")
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<LoginWithQydhaRequest>(entity =>
@@ -671,6 +678,30 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
             entity.HasOne(d => d.User).WithMany(p => p.NotificationUserLinks)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("fk_user_at_notification_link_table");
+        });
+       
+        modelBuilder.Entity<InfluencerCodeUserLink>(entity =>
+        {
+            entity.HasKey(e => new { e.InfluencerCodeId, e.UserId }).HasName("influencer_code_users_link_pkey");
+
+            entity.ToTable("influencer_code_users_link");
+
+            entity.Property(e => e.UsedAt)
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("used_at");
+            entity.Property(e => e.NumberOfDays)
+                .HasColumnName("number_of_days");
+
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.InfluencerCodeId).HasColumnName("influencer_code_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.InfluencerCodes)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("fk_user_at_influencer_code_user_link_table");
+
+            entity.HasOne(d => d.InfluencerCode).WithMany(p => p.Users)
+                .HasForeignKey(d => d.InfluencerCodeId)
+                .HasConstraintName("fk_influencer_code_at_influencer_code_link_table");
         });
         #endregion
 

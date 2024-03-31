@@ -26,7 +26,6 @@ public class RegistrationOTPRequestRepo(QydhaContext qydhaContext, ILogger<Regis
         var affected = await _dbCtx.RegistrationOtpRequests.Where(req => req.Id == requestId).ExecuteUpdateAsync(
                setters => setters
                    .SetProperty(req => req.UsedAt, DateTimeOffset.UtcNow)
-                   .SetProperty(req => req.UserId, userId)
            );
         return affected == 1 ?
             Result.Ok() :

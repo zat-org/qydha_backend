@@ -3,7 +3,7 @@
 public class UpdateUserDto
 {
     public string Name { get; set; } = string.Empty;
-    public DateTimeOffset? BirthDate { get; set; } = null;
+    public DateTime? BirthDate { get; set; } = null;
 }
 public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
 {

@@ -16,7 +16,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     public async Task<Result<User>> AddAsync(User user)
     {
         await _dbCtx.Users.AddAsync(user);
-        //! TODO check tracking here
         user.UserGeneralSettings = new UserGeneralSettings();
         user.UserBalootSettings = new UserBalootSettings();
         user.UserHandSettings = new UserHandSettings();
@@ -159,6 +158,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             setters => setters
                 .SetProperty(user => user.Email, email)
                 .SetProperty(user => user.NormalizedEmail, email.ToUpper())
+                .SetProperty(user => user.IsEmailConfirmed, true)
         );
         return affected == 1 ?
             Result.Ok() :
@@ -176,7 +176,37 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Fail(NotFoundError);
     }
 
+    public async Task<Result<User>> UpdateUserExpireDate(Guid userId)
+    {
+        var allTransactions = await _dbCtx.UserPromoCodes
+            .Where(p => p.UsedAt != null && p.UserId == userId)
+            .Select(p => new Transaction() { NumberOfDays = p.NumberOfDays, UsedAt = p.UsedAt!.Value })
+            .Union(_dbCtx.InfluencerCodeUserLinks
+            .Where(l => l.UserId == userId)
+            .Select(p => new Transaction() { NumberOfDays = p.NumberOfDays, UsedAt = p.UsedAt }))
+            .Union(_dbCtx.Purchases
+            .Where(p => p.UserId == userId)
+            .Select(p => new Transaction() { NumberOfDays = p.NumberOfDays, UsedAt = p.PurchaseDate }))
+            .OrderBy(t => t.UsedAt)
+            .ToListAsync();
 
+        DateTimeOffset? expireAt = null;
+        allTransactions.ForEach((transaction) =>
+        {
+            if (expireAt is not null && transaction.UsedAt <= expireAt)
+                expireAt = expireAt.Value.AddDays(transaction.NumberOfDays);
+            else
+                expireAt = transaction.UsedAt.AddDays(transaction.NumberOfDays);
+        });
+
+        var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(user => user.ExpireDate, expireAt)
+        );
+        if (affected != 1)
+            Result.Fail(NotFoundError);
+        return await GetUserWithSettingsByIdAsync(userId);
+    }
     #endregion
 
     public async Task<Result<User>> CheckUserCredentials(Guid userId, string password)
@@ -232,4 +262,9 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
                 Message = "User Not Found :: Entity Not Found"
             });
     }
+}
+internal class Transaction
+{
+    public DateTimeOffset UsedAt { get; set; }
+    public int NumberOfDays { get; set; }
 }

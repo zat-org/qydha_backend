@@ -17,10 +17,7 @@ public class UserPromoCode
 
     public virtual User User { get; set; } = null!;
 
-    public UserPromoCode()
-    {
-
-    }
+    public UserPromoCode() { }
     public UserPromoCode(Guid userId, string code, int numberOfDays, DateTimeOffset expireAt)
     {
         UserId = userId;

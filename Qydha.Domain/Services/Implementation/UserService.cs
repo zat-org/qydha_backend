@@ -191,17 +191,16 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                     user.AvatarPath = null;
                     user.AvatarUrl = null;
                 })
-                .OnFailure((result) =>
+                .OnFailure((err) =>
                 {
-                    //! TODO :: Handle Delete File Error
-                    _logger.LogError(result.Error.ToString());
+                    _logger.LogError("Can't Delete user Avatar with user Id = {userId} and Avatar Path = {avatarPath} with Error code =  {errorCode},  Message = {errorMsg} ", user.Id, user.AvatarPath, err.Code, err.Message);
+                    return err;
                 });
             }
             return (await _fileService.UploadFile(_avatarSettings.FolderPath, file))
                     .OnFailure((err) =>
                     {
-                        //! TODO :: Handle upload File Error
-                        _logger.LogError(err.ToString());
+                        _logger.LogError("Can't Upload user Avatar with user Id = {userId} with file Data = {fileData} with Error code = {errorCode},  Message = {errorMsg} ", user.Id, new { file.Length, name = file.FileName, file.ContentType }, err.Code, err.Message);
                         return new()
                         {
                             Code = ErrorType.FileUploadError,
@@ -238,11 +237,10 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
         {
             if (user.AvatarPath is not null)
                 (await _fileService.DeleteFile(user.AvatarPath))
-                .OnFailure((result) =>
+                .OnFailure((err) =>
                 {
-                    //! TODO :: Handle Delete File Error 
-                    _logger.LogError(result.Error.ToString());
-
+                    _logger.LogError("Can't Delete user Avatar with user Id = {userId} and Avatar Path = {avatarPath} with Error code =  {errorCode},  Message = {errorMsg} ", user.Id, user.AvatarPath, err.Code, err.Message);
+                    return err;
                 });
             return Result.Ok(user);
         });

@@ -21,10 +21,11 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         {
             if (!string.IsNullOrEmpty(user.FCMToken))
                 (await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description))
-                .OnFailure((result) =>
+                .OnFailure((err) =>
                 {
                     //! Handle Error in send push notification to User with fcm;
-                    _logger.LogError(result.Error.ToString());
+                    _logger.LogError("Error In Send push Notification To user with ID :{userId} with code : {errorCode} and Message : {errorMsg}", user.Id, err.Code, err.Message);
+                    return err;
                 });
             return Result.Ok(user);
         });
@@ -42,10 +43,11 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
             if (!string.IsNullOrEmpty(user.FCMToken))
             {
                 (await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description))
-                .OnFailure((result) =>
+                .OnFailure((err) =>
                 {
                     //! Handle Error in send push notification to User with fcm;
-                    _logger.LogError(result.Error.ToString());
+                    _logger.LogError("Error In Send push Notification To user with ID :{userId} with code : {errorCode} and Message : {errorMsg}", user.Id, err.Code, err.Message);
+                    return err;
                 });
             }
             return Result.Ok(user);
@@ -59,10 +61,11 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
             var effected = tuple.Item1;
             var notification = tuple.Item2;
             (await _pushNotificationService.SendToAllUsers(notification))
-            .OnFailure((result) =>
+            .OnFailure((err) =>
             {
                 //! Handle Error in send push notification to User with fcm; 
-                _logger.LogError(result.Error.ToString());
+                _logger.LogError("Error In Send push Notification To All users with code : {errorCode} and Message : {errorMsg}", err.Code, err.Message);
+                return err;
             });
             return Result.Ok(effected);
         });
@@ -73,10 +76,11 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         .OnSuccessAsync<Notification>(async (notification) =>
         {
             (await _pushNotificationService.SendToAnonymousUsers(notification))
-            .OnFailure((result) =>
+            .OnFailure((err) =>
             {
-                //! Handle Error in send push notification to User with fcm; 
-                _logger.LogError(result.Error.ToString());
+                //! Handle Error in send push notification to User with fcm;
+                _logger.LogError("Error In Send push Notification To Anonymous users with code : {errorCode} and Message : {errorMsg}", err.Code, err.Message);
+                return err;
             });
             return Result.Ok(notification);
         });
@@ -98,8 +102,7 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         return (await _fileService.UploadFile(_imageSettings.FolderPath, file))
                     .OnFailure((err) =>
                     {
-                        //! TODO :: Handle upload File Error
-                        _logger.LogError(err.ToString());
+                        _logger.LogError("Can't Upload Notification Image with file Data = {fileData} with Error code = {errorCode},  Message = {errorMsg} ", new { file.Length, name = file.FileName, file.ContentType }, err.Code, err.Message);
                         return new()
                         {
                             Code = ErrorType.FileUploadError,

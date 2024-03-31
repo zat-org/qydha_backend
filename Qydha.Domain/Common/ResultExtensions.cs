@@ -96,13 +96,6 @@ public static class ResultExtensions
             action(result);
         return result;
     }
-
-    public static Result<T> OnFailure<T>(this Result<T> result, Func<Error, Error> action)
-    {
-        if (result.IsFailure)
-            return Result.Fail<T>(action(result.Error));
-        return result;
-    }
     public static Result OnFailure(this Result result, Func<Error, Error> action)
     {
         if (result.IsFailure)
@@ -111,26 +104,12 @@ public static class ResultExtensions
     }
 
 
-    // public static Result OnBoth(this Result result, Action<Result> action)
-    // {
-    //     action(result);
-    //     return result;
-    // }
-    // public static T OnBoth<T>(this Result result, Func<Result, T> func)
-    // {
-    //     return func(result);
-    // }
-
-    // public static Result<OutT> OnSuccessAsync<InT, OutT>(this Result<InT> result, Func<InT, Task<Result<OutT>>> func)
-    //     {
-    //         if (result.IsSuccess)
-    //         {
-    //             Task<Result<OutT>> awaitableTask = func(result.Value);
-    //             Result<OutT> res = awaitableTask.GetAwaiter().GetResult();
-    //             return res;
-    //         }
-    //         return Result.Fail<OutT>(result.Error);
-    //     }
+    public static Result<T> OnFailure<T>(this Result<T> result, Func<Error, Error> action)
+    {
+        if (result.IsFailure)
+            return Result.Fail<T>(action(result.Error));
+        return result;
+    }
 
     public static T HandleAsync<T>(this Result result, Func<T> OnSuccessFunc, Func<Error, Task<T>> OnFailureFunc)
     {
@@ -169,7 +148,6 @@ public static class ResultExtensions
             OnFailureFunc(result.Error);
         }
     }
-
 
     public static OutT Handle<InT, OutT>(this Result<InT> result, Func<InT, OutT> OnSuccessFunc, Func<Error, OutT> OnFailureFunc)
     {

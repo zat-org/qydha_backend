@@ -58,14 +58,14 @@ public static class InputValidators
         .WithName(propName)
         .WithMessage("Invalid FCM Token");
     }
-    public static IRuleBuilderOptions<T, DateTimeOffset?> BirthDate<T>(this IRuleBuilder<T, DateTimeOffset?> ruleBuilder, string propName)
+    public static IRuleBuilderOptions<T, DateTime?> BirthDate<T>(this IRuleBuilder<T, DateTime?> ruleBuilder, string propName)
     {
         return ruleBuilder
         .NotEmpty()
         .WithName(propName)
-        .LessThanOrEqualTo(DateTimeOffset.UtcNow.AddYears(-7))
+        .LessThanOrEqualTo(DateTime.UtcNow.AddYears(-7))
         .WithMessage("برجاء ادخال {PropertyName} صحيح")
-        .GreaterThanOrEqualTo(DateTimeOffset.UtcNow.AddYears(-150))
+        .GreaterThanOrEqualTo(DateTime.UtcNow.AddYears(-150))
         .WithMessage("برجاء ادخال {PropertyName} صحيح");
     }
     public static IRuleBuilderOptions<T, string?> Phone<T>(this IRuleBuilder<T, string?> ruleBuilder, string propName)

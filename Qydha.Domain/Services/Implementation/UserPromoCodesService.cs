@@ -1,11 +1,10 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMediator mediator, IPurchaseService purchaseService, IUserRepo userRepo) : IUserPromoCodesService
+public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMediator mediator, IUserRepo userRepo) : IUserPromoCodesService
 {
     private readonly IUserRepo _userRepo = userRepo;
     private readonly IMediator _mediator = mediator;
-    private readonly IPurchaseService _purchaseService = purchaseService;
     private readonly IUserPromoCodesRepo _userPromoCodesRepo = userPromoCodesRepo;
 
     public async Task<Result<UserPromoCode>> AddPromoCode(Guid userId, string code, int numberOfDays, DateTimeOffset expireAt)
@@ -50,11 +49,18 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMedi
                });
            return Result.Ok(tuple);
        })
-       .OnSuccessAsync<Tuple<User, UserPromoCode>>(async (tuple) => (await _purchaseService.AddPromoCodePurchase(tuple.Item2))
-            .MapTo((user) => new Tuple<User, UserPromoCode>(user, tuple.Item2)))
-       .OnSuccessAsync(async tuple => (await _userPromoCodesRepo.MarkAsUsedByIdAsync(tuple.Item2.Id)).MapTo(tuple.Item1));
+       .OnSuccessAsync(async tuple =>
+        {
+            User user = tuple.Item1;
+            UserPromoCode promo = tuple.Item2;
+            return (await _userPromoCodesRepo.MarkAsUsedByIdAsync(promo.Id)).MapTo(user);
+        }).OnSuccessAsync<User>(async (user) =>
+        {
+            await _mediator.Publish(new AddTransactionNotification(user.Id, TransactionType.PromoCode));
+            return await _userRepo.UpdateUserExpireDate(userId);
+        });
     }
 
-    public async Task<Result<IEnumerable<UserPromoCode>>> GetUserPromoCodes(Guid userId)
-        => await _userPromoCodesRepo.GetAllUserValidPromoCodeAsync(userId);
+    public async Task<Result<IEnumerable<UserPromoCode>>> GetUserValidPromoCodeAsync(Guid userId)
+        => await _userPromoCodesRepo.GetUserValidPromoCodeAsync(userId);
 }

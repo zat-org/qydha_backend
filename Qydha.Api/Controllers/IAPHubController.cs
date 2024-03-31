@@ -27,29 +27,14 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
                     },
                     (err) =>
                     {
-                        _logger.LogError(err.ToString());
+                        _logger.LogError("Error in IAPHUB WebHook type = \"purchase\" and  userId = {userId} with Data : {webhookData}", webHookDto.Data!.UserId, webHookDto);
                         return BadRequest(err);
                     }
                 );
             default:
-                _logger.LogWarning("Unhandled IAPHUB Action Type : {type} , Data => {data}", webHookDto.Type, webHookDto.ToString());
+                _logger.LogWarning("Unhandled IAPHUB Action Type : {type} , Data => {data}", webHookDto.Type, webHookDto);
                 return Ok();
         }
-    }
-
-    [Auth(SystemUserRoles.RegularUser)]
-    [HttpPost("free_30/")]
-    public async Task<IActionResult> SubscribeInFree()
-    {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _purchaseService.SubscribeInFree(user.Id))
-        .Handle<User, IActionResult>(
-            (user) =>
-            {
-                var mapper = new UserMapper();
-                return Ok(new { Data = new { user = mapper.UserToUserDto(user) }, message = "Enjoy your free subscription." });
-            },
-            BadRequest);
     }
 
 }

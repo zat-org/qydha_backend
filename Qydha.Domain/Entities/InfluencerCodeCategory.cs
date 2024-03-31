@@ -15,7 +15,7 @@ public class InfluencerCodeCategory
             _categoryName = value.Trim().ToUpper();
         }
     }
-    public int MaxCodesPerUserInGroup { get; set; }
+    public int MaxCodesPerUserInGroup { get; set; } // how many user can use from the same category. 
     public ICollection<InfluencerCode> InfluencerCodes { get; set; } = [];
 
 }

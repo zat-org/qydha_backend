@@ -1,11 +1,12 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IPurchaseService purchaseService, IInfluencerCodesCategoriesRepo influencerCodesCategoriesRepo) : IInfluencerCodesService
+public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IMediator mediator, IInfluencerCodesCategoriesRepo influencerCodesCategoriesRepo, IUserRepo userRepo) : IInfluencerCodesService
 {
+    private readonly IMediator _mediator = mediator;
     private readonly IInfluencerCodesRepo _influencerCodesRepo = influencerCodesRepo;
+    private readonly IUserRepo _userRepo = userRepo;
     private readonly IInfluencerCodesCategoriesRepo _influencerCodesCategoriesRepo = influencerCodesCategoriesRepo;
-    private readonly IPurchaseService _purchaseService = purchaseService;
 
     public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTimeOffset? expireDate, int MaxInfluencedUsersCount, int? categoryId)
     {
@@ -22,21 +23,11 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
 
     public async Task<Result<User>> UseInfluencerCode(Guid userId, string code)
     {
-        var getCodeRes = await _influencerCodesRepo.GetByCodeAsync(code);
+        var getCodeRes = await _influencerCodesRepo.GetByCodeIfValidAsync(code);
         return getCodeRes
-        .OnSuccess<InfluencerCode>((influencerCode) =>
-        {
-            if (influencerCode.ExpireAt is not null && influencerCode.ExpireAt.Value < DateTimeOffset.UtcNow)
-                return Result.Fail<InfluencerCode>(new()
-                {
-                    Code = ErrorType.InfluencerCodeExpired,
-                    Message = "Influencer Code Expired"
-                });
-            return Result.Ok(influencerCode);
-        })
         .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
         {
-            Result<int> getUsageNumRes = await _purchaseService.GetInfluencerCodeUsageByUserIdCountAsync(userId, influencerCode.Code);
+            Result<int> getUsageNumRes = await _influencerCodesRepo.GetUserUsageCountByIdAsync(userId, influencerCode.Id);
             return getUsageNumRes.OnSuccess(num =>
             {
                 if (num > 0)
@@ -51,7 +42,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
         .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
         {
             if (influencerCode.MaxInfluencedUsersCount == 0) return Result.Ok(influencerCode);
-            Result<int> getUsageNumRes = await _purchaseService.GetInfluencerCodeUsageByAllUsersCountAsync(influencerCode.Code);
+            Result<int> getUsageNumRes = await _influencerCodesRepo.GetUsersUsageCountByIdAsync(influencerCode.Id);
             return getUsageNumRes.OnSuccess(num =>
             {
                 if (num >= influencerCode.MaxInfluencedUsersCount)
@@ -66,18 +57,12 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
         .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
         {
             if (influencerCode.CategoryId is null) return Result.Ok(influencerCode);
-            return (await _purchaseService.GetInfluencerCodeUsageCountByCategoryForUserAsync(userId, influencerCode.CategoryId.Value))
-            .OnSuccessAsync(async (UsageNum) =>
+            return (await _influencerCodesCategoriesRepo.GetUserUsageCountFromCategoryByIdAsync(userId, influencerCode.CategoryId.Value)).MapTo((usage) => new Tuple<int, InfluencerCode>(usage, influencerCode))
+            .OnSuccess((tuple) =>
             {
-                return (await _influencerCodesCategoriesRepo.GetByIdAsync(influencerCode.CategoryId.Value))
-                .MapTo((category) => new Tuple<int, InfluencerCodeCategory>(UsageNum, category));
-            })
-            .OnSuccess(tuple =>
-            {
-                int usageNum = tuple.Item1;
-                int MaxUsageNum = tuple.Item2.MaxCodesPerUserInGroup;
-                // TODO Send this Error Code ErrorType.InfluencerCodeCategoryAlreadyUsed
-                if (usageNum >= MaxUsageNum)
+                int usage = tuple.Item1;
+                int MaxUsageNum = tuple.Item2.Category!.MaxCodesPerUserInGroup;
+                if (usage >= MaxUsageNum)
                     return Result.Fail<InfluencerCode>(new()
                     {
                         Code = ErrorType.InvalidBodyInput,
@@ -86,6 +71,11 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IP
                 return Result.Ok(influencerCode);
             });
         })
-        .OnSuccessAsync(async (influencerCode) => await _purchaseService.AddInfluencerCodePurchase(influencerCode, userId));
+        .OnSuccessAsync<InfluencerCode>(async (influencerCode) => await _influencerCodesRepo.UseInfluencerCode(userId, influencerCode))
+        .OnSuccessAsync(async (influencerCode) =>
+        {
+            await _mediator.Publish(new AddTransactionNotification(userId, TransactionType.InfluencerCode));
+            return await _userRepo.UpdateUserExpireDate(userId);
+        });
     }
 }
