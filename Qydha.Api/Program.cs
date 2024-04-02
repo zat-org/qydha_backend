@@ -103,7 +103,8 @@ builder.Services.AddSwaggerGen(opt =>
 var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration)
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command",
+         builder.Environment.IsProduction() ? LogEventLevel.Warning : LogEventLevel.Information)
     .Enrich.WithExceptionDetails()
     .WriteTo.Console()
     .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning);
@@ -134,8 +135,8 @@ builder.Services.AddDbContext<QydhaContext>(
     (opt) =>
     {
         opt.UseNpgsql(connectionString, b => b.MigrationsAssembly("Qydha.Api"))
-        .EnableSensitiveDataLogging()
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        // .EnableSensitiveDataLogging();
     }
 );
 
@@ -156,8 +157,6 @@ builder.Services.Configure<AvatarSettings>(builder.Configuration.GetSection("Ava
 builder.Services.Configure<IAPHubSettings>(builder.Configuration.GetSection("IAPHubSettings"));
 // Products Settings
 builder.Services.Configure<ProductsSettings>(builder.Configuration.GetSection("ProductsSettings"));
-// Subscription Settings
-builder.Services.Configure<SubscriptionSetting>(builder.Configuration.GetSection("SubscriptionSetting"));
 // Notifications Settings
 builder.Services.Configure<PushNotificationsSettings>(builder.Configuration.GetSection("PushNotificationsSettings"));
 // Notification Image Settings

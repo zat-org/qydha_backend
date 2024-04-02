@@ -15,6 +15,7 @@ public class UserRegistrationPromoCodeGiftHandler(IUserPromoCodesService userPro
     private readonly RegisterGiftSetting _newUserGiftSettings = newUserGiftOptions.Value;
     public async Task Handle(UserRegistrationNotification notification, CancellationToken cancellationToken)
     {
-        await _userPromoCodesService.AddPromoCode(notification.User.Id, _newUserGiftSettings.CodeName, _newUserGiftSettings.NumberOfGiftedDays, DateTimeOffset.UtcNow.AddDays(_newUserGiftSettings.ExpireAfterInDays));
+        if (_newUserGiftSettings.IsWorking)
+            await _userPromoCodesService.AddPromoCode(notification.User.Id, _newUserGiftSettings.CodeName, _newUserGiftSettings.NumberOfGiftedDays, DateTimeOffset.UtcNow.AddDays(_newUserGiftSettings.ExpireAfterInDays));
     }
 }
