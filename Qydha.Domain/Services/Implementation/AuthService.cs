@@ -72,12 +72,14 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         .OnSuccessAsync(async () =>
         {
             var otp = _otpManager.GenerateOTP();
-            return (await _messageService.SendOtpAsync(phone, username, otp)).MapTo(otp);
+            return (await _messageService.SendOtpAsync(phone, username, otp)).MapTo((sender) => new Tuple<string, string>(sender, otp));
         })
-        .OnSuccessAsync(async (otp) =>
+        .OnSuccessAsync(async (tuple) =>
         {
+            string sender = tuple.Item1;
+            string otp = tuple.Item2;
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-            RegistrationOTPRequest registrationOTP = new(username, phone, passwordHash, otp, fcmToken);
+            RegistrationOTPRequest registrationOTP = new(username, phone, passwordHash, otp, fcmToken, sender);
             return await _registrationOTPRequestRepo.AddAsync(registrationOTP);
         });
     }
@@ -102,10 +104,11 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
        .OnSuccessAsync(async (user) =>
        {
            string otp = _otpManager.GenerateOTP();
-           return (await _messageService.SendOtpAsync(user.Phone!, user.Username!, otp)).MapTo(new Tuple<User, string>(user, otp));
+           return (await _messageService.SendOtpAsync(user.Phone!, user.Username!, otp))
+                .MapTo((sender) => new Tuple<User, string, string>(user, otp, sender));
        })
        .OnSuccessAsync(async (tuple) =>
-           await _phoneAuthenticationRequestRepo.AddAsync(new PhoneAuthenticationRequest(tuple.Item1.Id, tuple.Item2))
+           await _phoneAuthenticationRequestRepo.AddAsync(new PhoneAuthenticationRequest(tuple.Item1.Id, tuple.Item2, tuple.Item3))
        );
     }
 

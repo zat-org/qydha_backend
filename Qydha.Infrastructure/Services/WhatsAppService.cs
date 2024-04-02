@@ -7,7 +7,7 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
     private readonly IHttpClientFactory _clientFactory = clientFactory;
     private readonly ILogger<WaApiService> _logger = logger;
 
-    public async Task<Result> SendOtpAsync(string phoneNum, string username, string otp)
+    public async Task<Result<string>> SendOtpAsync(string phoneNum, string username, string otp)
     {
         var httpClient = _clientFactory.CreateClient();
 
@@ -59,13 +59,13 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
         };
         try
         {
-            HttpResponseMessage response = await httpClient.PostAsJsonAsync(new Uri(_whatsSettings.ApiUrl), body);
+            HttpResponseMessage response = await httpClient.PostAsJsonAsync(new Uri($"{_whatsSettings.ApiUrl}/{_whatsSettings.InstanceId}/messages"), body);
             if (!response.IsSuccessStatusCode)
             {
                 string jsonResponse = await response.Content.ReadAsStringAsync();
                 object responseObject = JsonConvert.DeserializeObject<object>(jsonResponse) ?? throw new Exception($"can't serialize the response from WhatsApp Service with body : {jsonResponse} ");
                 _logger.LogCritical("WhatsApp has Failure Status Code {statusCode} and response body : {response}", response.StatusCode, jsonResponse);
-                return Result.Fail(
+                return Result.Fail<string>(
                     new()
                     {
                         Code = ErrorType.OTPPhoneSendingError,
@@ -73,12 +73,12 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
                     }
                 );
             }
-            return Result.Ok();
+            return Result.Ok($"WhatsApp:Official:{_whatsSettings.InstanceId}");
         }
         catch (Exception ex)
         {
             _logger.LogCritical("WhatsApp Service has Exception {exp}", ex);
-            return Result.Fail(new()
+            return Result.Fail<string>(new()
             {
                 Code = ErrorType.OTPPhoneSendingError,
                 Message = $"UnExpected ERROR occurred on WhatsApp Service"

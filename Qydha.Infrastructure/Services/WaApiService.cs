@@ -7,7 +7,7 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
     private readonly WaApiSettings _waApiSettings = settings.Value;
     private readonly IHttpClientFactory _clientFactory = clientFactory;
     private readonly ILogger<WaApiService> _logger = logger;
-    public async Task<Result> SendOtpAsync(string phoneNum, string username, string otp, int instanceId)
+    public async Task<Result<string>> SendOtpAsync(string phoneNum, string username, string otp, int instanceId)
     {
         if (phoneNum.StartsWith("+")) //"966533331913@c.us"
             phoneNum = phoneNum[1..];
@@ -31,7 +31,7 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogCritical("WaApi has Failure Status Code {statusCode} and response body : {response}", response.StatusCode, jsonResponse);
-                return Result.Fail(new()
+                return Result.Fail<string>(new()
                 {
                     Code = ErrorType.WaApiUnknownError,
                     Message = $"UnExpected error occurred "
@@ -42,7 +42,7 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
                 _logger.LogCritical("WaApi has Success Status Code But with Error Status In Body :=> response body : {response}", responseObject);
                 if (responseObject.Data.Message == "instance not ready")
                 {
-                    return Result.Fail(new()
+                    return Result.Fail<string>(new()
                     {
                         Code = ErrorType.WaApiInstanceNotReady,
                         Message = $"WaApi Instance NotReady"
@@ -50,20 +50,20 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
                 }
                 else
                 {
-                    return Result.Fail(new()
+                    return Result.Fail<string>(new()
                     {
                         Code = ErrorType.WaApiUnknownError,
                         Message = $"UnExpected error occurred "
                     });
                 }
             }
-            return Result.Ok();
+            return Result.Ok($"WhatsApp:WaApi:{instanceId}");
         }
 
         catch (Exception ex)
         {
             _logger.LogCritical("WaApi has Exception {exp}", ex);
-            return Result.Fail(new()
+            return Result.Fail<string>(new()
             {
                 Code = ErrorType.WaApiUnknownError,
                 Message = $"UnExpected ERROR occurred : {ex.Message}"

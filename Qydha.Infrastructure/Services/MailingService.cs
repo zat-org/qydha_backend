@@ -4,14 +4,11 @@ using MimeKit;
 
 namespace Qydha.Infrastructure.Services;
 
-public class MailingService : IMailingService
+public class MailingService(IOptions<EmailSettings> mailSettings) : IMailingService
 {
-    private readonly EmailSettings _mailSettings;
-    public MailingService(IOptions<EmailSettings> mailSettings)
-    {
-        _mailSettings = mailSettings.Value;
-    }
-    public async Task<Result> SendEmailAsync(string mailTo, string subject, string body, IList<IFormFile>? attachments = null)
+    private readonly EmailSettings _mailSettings = mailSettings.Value;
+
+    public async Task<Result<string>> SendEmailAsync(string mailTo, string subject, string body, IList<IFormFile>? attachments = null)
     {
         var email = new MimeMessage
         {
@@ -47,11 +44,11 @@ public class MailingService : IMailingService
             await smtp.ConnectAsync(_mailSettings.Host, _mailSettings.Port, SecureSocketOptions.StartTls);
             await smtp.AuthenticateAsync(_mailSettings.Email, _mailSettings.Password);
             var resStr = await smtp.SendAsync(email);
-            return Result.Ok();
+            return Result.Ok($"Email:MailKit:{_mailSettings.Email}");
         }
         catch (Exception e)
         {
-            return Result.Fail(new()
+            return Result.Fail<string>(new()
             {
                 Code = ErrorType.OTPEmailSendingError,
                 Message = $"can't send the email using mailKit with message : {e.Message}"

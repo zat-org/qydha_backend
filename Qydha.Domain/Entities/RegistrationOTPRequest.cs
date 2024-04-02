@@ -9,14 +9,16 @@ public class RegistrationOTPRequest
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public string? FCMToken { get; set; }
     public DateTimeOffset? UsedAt { get; set; } = null;
+    public string SentBy { get; set; } = null!;
 
     public RegistrationOTPRequest() { }
-    public RegistrationOTPRequest(string username, string phone, string passwordHash, string otp, string? fcmToken)
+    public RegistrationOTPRequest(string username, string phone, string passwordHash, string otp, string? fcmToken, string sender)
     {
         Username = username;
         Phone = phone;
         PasswordHash = passwordHash;
         OTP = otp;
         FCMToken = fcmToken;
+        SentBy = sender;
     }
 }

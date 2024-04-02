@@ -7,7 +7,7 @@ public class OtpSenderByWhatsAppService(WaApiService waApiService, WhatsAppServi
     private readonly WaApiInstancesTracker _instancesTracker = instancesTracker;
     private readonly ILogger<OtpSenderByWhatsAppService> _logger = logger;
 
-    public async Task<Result> SendOtpAsync(string phoneNum, string username, string otp)
+    public async Task<Result<string>> SendOtpAsync(string phoneNum, string username, string otp)
     {
         var instance = _instancesTracker.DequeueInstance();
         if (instance is null)
@@ -18,10 +18,10 @@ public class OtpSenderByWhatsAppService(WaApiService waApiService, WhatsAppServi
         {
             return (await _waApiService.SendOtpAsync(phoneNum, username, otp, instance.InstanceId))
             .HandleAsync(
-            () =>
+            (sender) =>
             {
                 _instancesTracker.EnqueueInstance(instance);
-                return Result.Ok();
+                return Result.Ok(sender);
             },
             async (error) =>
             {

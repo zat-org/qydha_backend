@@ -5,7 +5,7 @@ public class UltraMsgService(IOptions<UltraMsgSettings> settings) : IMessageServ
 {
     private readonly UltraMsgSettings _ultraMsgSettings = settings.Value;
 
-    public async Task<Result> SendOtpAsync(string phoneNum, string username, string otp)
+    public async Task<Result<string>> SendOtpAsync(string phoneNum, string username, string otp)
     {
         using HttpClient httpClient = new();
         var data = new[]
@@ -21,7 +21,7 @@ public class UltraMsgService(IOptions<UltraMsgSettings> settings) : IMessageServ
 
         if (!response.IsSuccessStatusCode)
         {
-            return Result.Fail(
+            return Result.Fail<string>(
                 new()
                 {
                     Code = ErrorType.OTPPhoneSendingError,
@@ -29,6 +29,6 @@ public class UltraMsgService(IOptions<UltraMsgSettings> settings) : IMessageServ
                 }
             );
         }
-        return Result.Ok();
+        return Result.Ok($"WhatsApp:UltraMsg:{_ultraMsgSettings.Instance}");
     }
 }

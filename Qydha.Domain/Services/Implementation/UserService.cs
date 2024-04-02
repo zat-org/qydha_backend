@@ -104,9 +104,10 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
             .OnSuccessAsync(async (user) =>
             {
                 var otp = _otpManager.GenerateOTP();
-                return (await _messageService.SendOtpAsync(newPhone, user.Username!, otp)).MapTo(otp);
+                return (await _messageService.SendOtpAsync(newPhone, user.Username!, otp))
+                    .MapTo((sender) => new Tuple<string, string>(otp, sender));
             })
-            .OnSuccessAsync(async (otp) => await _updatePhoneOTPRequestRepo.AddAsync(new(newPhone, otp, userId)));
+            .OnSuccessAsync(async (tuple) => await _updatePhoneOTPRequestRepo.AddAsync(new(newPhone, tuple.Item1, userId, tuple.Item2)));
     }
     public async Task<Result<User>> ConfirmPhoneUpdate(Guid userId, string code, Guid requestId)
     {
@@ -145,9 +146,9 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                 var emailSubject = "تأكيد البريد الالكتروني لحساب تطبيق قيدها";
                 var emailBody = await _mailingService.GenerateConfirmEmailBody(otp, requestId.ToString(), user);
                 return (await _mailingService.SendEmailAsync(newEmail, emailSubject, emailBody))
-                        .MapTo(new Tuple<string, Guid>(otp, requestId));
+                        .MapTo((sender) => new Tuple<string, Guid, string>(otp, requestId, sender));
             })
-            .OnSuccessAsync(async (tuple) => await _updateEmailRequestRepo.AddAsync(new(tuple.Item2, newEmail, tuple.Item1, userId)));
+            .OnSuccessAsync(async (tuple) => await _updateEmailRequestRepo.AddAsync(new(tuple.Item2, newEmail, tuple.Item1, userId, tuple.Item3)));
     }
     public async Task<Result<User>> ConfirmEmailUpdate(Guid userId, string code, Guid requestId)
     {

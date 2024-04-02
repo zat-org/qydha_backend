@@ -111,16 +111,17 @@ public static class ResultExtensions
         return result;
     }
 
-    public static T HandleAsync<T>(this Result result, Func<T> OnSuccessFunc, Func<Error, Task<T>> OnFailureFunc)
+
+    public static OutT HandleAsync<InT, OutT>(this Result<InT> result, Func<InT, OutT> OnSuccessFunc, Func<Error, Task<OutT>> OnFailureFunc)
     {
         if (result.IsSuccess)
         {
-            return OnSuccessFunc();
+            return OnSuccessFunc(result.Value);
         }
         else
         {
-            Task<T> awaitableTask = OnFailureFunc(result.Error);
-            T res = awaitableTask.GetAwaiter().GetResult();
+            Task<OutT> awaitableTask = OnFailureFunc(result.Error);
+            OutT res = awaitableTask.GetAwaiter().GetResult();
             return res;
         }
     }

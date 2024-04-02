@@ -8,18 +8,21 @@ public class UpdateEmailRequest
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public Guid UserId { get; set; }
     public DateTimeOffset? UsedAt { get; set; } = null;
+    public string SentBy { get; set; } = null!;
+
 
 
     public UpdateEmailRequest()
     {
 
     }
-    public UpdateEmailRequest(Guid id, string email, string otp, Guid userId)
+    public UpdateEmailRequest(Guid id, string email, string otp, Guid userId, string sender)
     {
         Id = id;
         Email = email;
         OTP = otp;
         UserId = userId;
         CreatedAt = DateTimeOffset.UtcNow;
+        SentBy = sender;
     }
 }

@@ -134,11 +134,11 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
         modelBuilder.Entity<AdminUser>().HasData(superAdmin);
 
         modelBuilder.Entity<NotificationData>().HasData(automaticNotifications);
-        
+
         modelBuilder.Entity<AppAsset>().HasData(AppAssets);
-        
+
         #region Entities_Configuration
-     
+
         modelBuilder.Entity<AdminUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("admins_pkey");
@@ -564,7 +564,7 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
             entity.HasOne(d => d.User).WithMany(p => p.Purchases)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("fk_user")
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<LoginWithQydhaRequest>(entity =>
@@ -679,7 +679,7 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("fk_user_at_notification_link_table");
         });
-       
+
         modelBuilder.Entity<InfluencerCodeUserLink>(entity =>
         {
             entity.HasKey(e => new { e.InfluencerCodeId, e.UserId }).HasName("influencer_code_users_link_pkey");

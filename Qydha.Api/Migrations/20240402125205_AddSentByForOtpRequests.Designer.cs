@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Qydha.Infrastructure;
@@ -11,9 +12,11 @@ using Qydha.Infrastructure;
 namespace Qydha.Api.Migrations
 {
     [DbContext(typeof(QydhaContext))]
-    partial class QydhaContextModelSnapshot : ModelSnapshot
+    [Migration("20240402125205_AddSentByForOtpRequests")]
+    partial class AddSentByForOtpRequests
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1040,7 +1043,7 @@ namespace Qydha.Api.Migrations
                     b.HasOne("Qydha.Domain.Entities.User", "User")
                         .WithMany("Purchases")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.SetNull)
                         .IsRequired()
                         .HasConstraintName("fk_user");
 

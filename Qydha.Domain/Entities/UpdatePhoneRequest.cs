@@ -8,16 +8,19 @@ public class UpdatePhoneRequest
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public Guid UserId { get; set; }
     public DateTimeOffset? UsedAt { get; set; } = null;
+    public string SentBy { get; set; } = null!;
+
 
     public UpdatePhoneRequest()
     {
 
     }
-    public UpdatePhoneRequest(string phone, string otp, Guid user_id)
+    public UpdatePhoneRequest(string phone, string otp, Guid user_id, string sender)
     {
         Phone = phone;
         OTP = otp;
         UserId = user_id;
         CreatedAt = DateTimeOffset.UtcNow;
+        SentBy = sender;
     }
 }

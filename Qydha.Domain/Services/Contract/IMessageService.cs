@@ -3,5 +3,5 @@ namespace Qydha.Domain.Services.Contracts;
 
 public interface IMessageService
 {
-    Task<Result> SendOtpAsync(string phoneNum, string username, string otp);
+    Task<Result<string>> SendOtpAsync(string phoneNum, string username, string otp);
 }
