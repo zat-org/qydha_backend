@@ -9,5 +9,5 @@ public class GetNotificationDto
     public DateTimeOffset SentAt { get; set; }
     public string ActionPath { get; set; } = null!;
     public string ActionType { get; set; } = null!;
-    public Dictionary<string, object> Payload { get; set; } = null!;
+    public NotificationDataPayload Payload { get; set; } = null!;
 }
