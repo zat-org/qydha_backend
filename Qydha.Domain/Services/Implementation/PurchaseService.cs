@@ -31,7 +31,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
         .OnSuccessAsync(async (tuple) =>
         {
             Purchase purchase = new()
-            { 
+            {
                 IAPHubPurchaseId = purchaseId,
                 UserId = tuple.Item1.Id,
                 Type = "purchase",
@@ -47,8 +47,4 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
             return await _userRepo.UpdateUserExpireDate(userId);
         });
     }
-
-
-
-
 }
