@@ -9,11 +9,6 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
 
     public async Task<Result<string>> SendOtpAsync(string phoneNum, string username, string otp)
     {
-        var httpClient = _clientFactory.CreateClient();
-
-        httpClient.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _whatsSettings.Token);
-
         var body = new
         {
             messaging_product = "whatsapp",
@@ -59,6 +54,9 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
         };
         try
         {
+            using var httpClient = _clientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _whatsSettings.Token);
             HttpResponseMessage response = await httpClient.PostAsJsonAsync(new Uri($"{_whatsSettings.ApiUrl}/{_whatsSettings.InstanceId}/messages"), body);
             if (!response.IsSuccessStatusCode)
             {

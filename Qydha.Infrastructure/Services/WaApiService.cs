@@ -13,11 +13,10 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
             phoneNum = phoneNum[1..];
         if (!phoneNum.EndsWith("@c.us"))
             phoneNum += "@c.us";
-
-        var httpClient = _clientFactory.CreateClient();
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _waApiSettings.Token);
         try
         {
+            using var httpClient = _clientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _waApiSettings.Token);
             HttpResponseMessage response = await httpClient.PostAsJsonAsync(
                     new Uri($"{_waApiSettings.ApiUrl}/{instanceId}/client/action/send-message"),
                     new
@@ -69,7 +68,6 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
                 Message = $"UnExpected ERROR occurred : {ex.Message}"
             });
         }
-
     }
 
     internal class WaApiData
