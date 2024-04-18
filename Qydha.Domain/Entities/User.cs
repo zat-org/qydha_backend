@@ -50,6 +50,8 @@ public class User
     public virtual ICollection<UpdatePhoneRequest> UpdatePhoneRequests { get; set; } = [];
     public virtual ICollection<PhoneAuthenticationRequest> PhoneAuthenticationRequests { get; set; } = [];
     public virtual ICollection<InfluencerCodeUserLink> InfluencerCodes { get; set; } = [];
+    public virtual ICollection<BalootGame> ModeratedBalootGames { get; set; } = [];
+    public virtual ICollection<BalootGame> CreatedBalootGames { get; set; } = [];
 
 
     public IEnumerable<Claim> GetClaims()

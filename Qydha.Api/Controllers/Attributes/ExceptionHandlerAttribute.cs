@@ -14,7 +14,18 @@ public class ExceptionHandlerAttribute : ExceptionFilterAttribute
 
         var exception = context.Exception;
         ObjectResult res;
-        if (exception is DbException dbException)
+        if (exception is InvalidBalootGameEventException balootEventException)
+        {
+            res = new ObjectResult(new Error()
+            {
+                Message = balootEventException.Message,
+                Code = ErrorType.InvalidBodyInput
+            })
+            {
+                StatusCode = 400
+            };
+        }
+        else if (exception is DbException dbException)
         {
             _logger.LogError(dbException, "Error caught by Exception Filter DbException Message :: {msg} ", dbException.Message); //logger 
             res = new ObjectResult(new Error()

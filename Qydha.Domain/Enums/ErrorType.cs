@@ -49,6 +49,7 @@ public enum ErrorType
     UserGeneralSettingsNotFound = 4054,
     UserBalootSettingsNotFound = 4055,
     UserHandSettingsNotFound = 4056,
+    BalootGameNotFound = 4057,
 
     #endregion
 

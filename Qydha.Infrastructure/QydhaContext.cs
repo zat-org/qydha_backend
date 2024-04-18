@@ -1,6 +1,6 @@
-﻿
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 namespace Qydha.Infrastructure;
 
 public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbContext(options)
@@ -21,11 +21,10 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
     public virtual DbSet<UserPromoCode> UserPromoCodes { get; set; }
     public virtual DbSet<Purchase> Purchases { get; set; }
     public virtual DbSet<LoginWithQydhaRequest> LoginWithQydhaRequests { get; set; }
-
     public virtual DbSet<NotificationData> NotificationsData { get; set; }
-
     public virtual DbSet<NotificationUserLink> NotificationUserLinks { get; set; }
     public virtual DbSet<InfluencerCodeUserLink> InfluencerCodeUserLinks { get; set; }
+    public virtual DbSet<BalootGame> BalootGames { get; set; }
 
     #endregion
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -703,8 +702,58 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
                 .HasForeignKey(d => d.InfluencerCodeId)
                 .HasConstraintName("fk_influencer_code_at_influencer_code_link_table");
         });
-        #endregion
 
+
+        modelBuilder.Entity<BalootGame>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("baloot_games");
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("created_at");
+
+            entity.Property(e => e.GameMode)
+                .HasColumnName("game_mode")
+                .HasConversion<string>();
+
+            entity.Property(e => e.ModeratorId).HasColumnName("moderator_id");
+
+            entity.HasOne(d => d.Moderator).WithMany(p => p.ModeratedBalootGames)
+                .HasForeignKey(d => d.ModeratorId)
+                .HasConstraintName("fk_moderator_baloot_games_link");
+
+            entity.Property(e => e.OwnerId).HasColumnName("owner_id");
+
+            entity.HasOne(d => d.Owner).WithMany(p => p.CreatedBalootGames)
+                .HasForeignKey(d => d.OwnerId)
+                .HasConstraintName("fk_owner_baloot_games_link");
+
+            var balootSerializationSettings = new JsonSerializerSettings()
+            {
+                Formatting = Formatting.Indented,
+                ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() },
+                TypeNameHandling = TypeNameHandling.Auto,
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                Converters = [new StringEnumConverter()],
+                MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
+            };
+            entity.Property(e => e.Events)
+                .HasDefaultValueSql("'[]'::jsonb")
+                .HasColumnType("jsonb")
+                .HasColumnName("game_events")
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v, balootSerializationSettings),
+                    v => JsonConvert.DeserializeObject<List<BalootGameEvent>>(v, balootSerializationSettings)
+                        ?? new List<BalootGameEvent>(),
+                    new ValueComparer<List<BalootGameEvent>>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToList())
+                    );
+        });
+        #endregion
         OnModelCreatingPartial(modelBuilder);
     }
 

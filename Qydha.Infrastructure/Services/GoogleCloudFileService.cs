@@ -32,6 +32,9 @@ public class GoogleCloudFileService(GoogleStorageService googleStorageService) :
         {
             using var ms = new MemoryStream();
 
+            //!  Use Path.GetRandomFileName
+            // var trustedFileName = Path.GetRandomFileName();
+            // var filePath = Path.Combine(_targetFilePath, trustedFileName);
             string fileName = $"({Guid.NewGuid()})-{file.FileName}";
             string pathToFileInTheBucket = $"{pathInBucket}{fileName}";
 

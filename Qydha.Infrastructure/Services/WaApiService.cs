@@ -26,7 +26,8 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
                     });
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
-            RootObject responseObject = JsonConvert.DeserializeObject<RootObject>(jsonResponse) ?? throw new Exception($"can't serialize the response from WaApi Service with body : {jsonResponse} ");
+            RootObject responseObject = JsonConvert.DeserializeObject<RootObject>(jsonResponse) 
+                ?? throw new Exception($"can't serialize the response from WaApi Service with body : {jsonResponse} ");
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogCritical("WaApi has Failure Status Code {statusCode} and response body : {response}", response.StatusCode, jsonResponse);

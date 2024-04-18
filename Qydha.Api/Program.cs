@@ -26,6 +26,7 @@ builder.Services.AddControllers((options) =>
 {
     options.Filters.Add<ExceptionHandlerAttribute>();
     options.Filters.Add<AuthorizationFilter>();
+    options.ModelBinderProviders.Insert(0, new BalootGameEventsDtoModelBinderProvider());
 }).AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.Converters.Add(new StringEnumConverter());
@@ -135,8 +136,8 @@ builder.Services.AddDbContext<QydhaContext>(
     (opt) =>
     {
         opt.UseNpgsql(connectionString, b => b.MigrationsAssembly("Qydha.Api"))
-        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-        // .EnableSensitiveDataLogging();
+        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+        .EnableSensitiveDataLogging();
     }
 );
 
@@ -191,6 +192,8 @@ builder.Services.AddScoped<IUserBalootSettingsRepo, UserBalootSettingsRepo>();
 builder.Services.AddScoped<IAppAssetsRepo, AppAssetsRepo>();
 builder.Services.AddScoped<IInfluencerCodesCategoriesRepo, InfluencerCodesCategoriesRepo>();
 builder.Services.AddScoped<ILoginWithQydhaRequestRepo, LoginWithQydhaRequestRepo>();
+builder.Services.AddScoped<IBalootGamesRepo, BalootGamesRepo>();
+
 #endregion
 
 #region DI Services
@@ -201,6 +204,9 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<WaApiService>();
 builder.Services.AddScoped<WhatsAppService>();
 builder.Services.AddSingleton<WaApiInstancesTracker>();
+
+builder.Services.AddSingleton<BalootEventsTypesProvider>();
+
 builder.Services.AddScoped<IMessageService, OtpSenderByWhatsAppService>();
 
 builder.Services.AddScoped<IMailingService, MailingService>();
@@ -216,6 +222,7 @@ builder.Services.AddScoped<IInfluencerCodesService, InfluencerCodesService>();
 builder.Services.AddScoped<IAppAssetsService, AppAssetsService>();
 builder.Services.AddScoped<IInfluencerCodeCategoryService, InfluencerCodeCategoryService>();
 builder.Services.AddScoped<ILoginWithQydhaOtpSenderService, LoginWithQydhaOtpSenderAsNotification>();
+builder.Services.AddScoped<IBalootGamesService, BalootGamesService>();
 builder.Services.AddSingleton(new GoogleStorageService("googleCloud_private_key.json"));
 #endregion
 
