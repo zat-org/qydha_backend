@@ -1,4 +1,6 @@
 ﻿
+using Qydha.Domain.Constants;
+
 namespace Qydha.Infrastructure.Repositories;
 
 public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
@@ -11,8 +13,7 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
             OwnerId = ownerId,
             ModeratorId = ownerId,
             GameMode = BalootGameMode.SinglePlayer,
-            CreatedAt = DateTimeOffset.UtcNow,
-            Events = []
+            CreatedAt = DateTimeOffset.UtcNow
         };
         _dbCtx.BalootGames.Add(balootGame);
         await _dbCtx.SaveChangesAsync();
@@ -20,7 +21,7 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     }
     public async Task<Result<BalootGame>> GetById(Guid gameId)
     {
-        var game = await _dbCtx.BalootGames.AsTracking().FirstOrDefaultAsync((g) => g.Id == gameId);
+        var game = await _dbCtx.BalootGames.FirstOrDefaultAsync((g) => g.Id == gameId);
         if (game == null) return Result.Fail<BalootGame>(new()
         {
             Code = ErrorType.BalootGameNotFound,
@@ -29,11 +30,21 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
         return Result.Ok(game);
     }
 
-    public async Task<Result<BalootGame>> AddEvents(BalootGame game, ICollection<BalootGameEvent> events)
+    public async Task<Result> AddEvents(BalootGame game, ICollection<BalootGameEvent> events)
     {
-        game.Events.AddRange(events);
-        await _dbCtx.SaveChangesAsync();
-        return Result.Ok(game);
+        string eventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
+        string gameId = game.Id.ToString();
+        int affectedRows = await _dbCtx.Database.ExecuteSqlAsync(@$"
+            UPDATE baloot_games
+            SET game_events = COALESCE(game_events, '[]')::jsonb || {eventsJsonString}::jsonb
+            WHERE id = {gameId}::uuid");
+        if (affectedRows != 1)
+            return Result.Fail(new Error()
+            {
+                Code = ErrorType.BalootGameNotFound,
+                Message = "Baloot Game Not Found"
+            });
+        return Result.Ok();
     }
 
 }

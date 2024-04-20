@@ -15,16 +15,16 @@ namespace Qydha.Api.Migrations
                 name: "baloot_games",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    game_events = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'[]'::jsonb"),
                     game_mode = table.Column<string>(type: "text", nullable: false),
                     moderator_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    owner_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    game_events = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'[]'::jsonb")
+                    owner_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_baloot_games", x => x.Id);
+                    table.PrimaryKey("PK_baloot_games", x => x.id);
                     table.ForeignKey(
                         name: "fk_moderator_baloot_games_link",
                         column: x => x.moderator_id,

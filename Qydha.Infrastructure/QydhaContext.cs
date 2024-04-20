@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 namespace Qydha.Infrastructure;
 
 public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbContext(options)
@@ -714,6 +712,9 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_at");
 
+            entity.Property(e => e.Id)
+                .HasColumnName("id");
+
             entity.Property(e => e.GameMode)
                 .HasColumnName("game_mode")
                 .HasConversion<string>();
@@ -730,28 +731,11 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
                 .HasForeignKey(d => d.OwnerId)
                 .HasConstraintName("fk_owner_baloot_games_link");
 
-            var balootSerializationSettings = new JsonSerializerSettings()
-            {
-                Formatting = Formatting.Indented,
-                ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() },
-                TypeNameHandling = TypeNameHandling.Auto,
-                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-                Converters = [new StringEnumConverter()],
-                MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
-            };
-            entity.Property(e => e.Events)
+
+            entity.Property(e => e.EventsJsonString)
                 .HasDefaultValueSql("'[]'::jsonb")
                 .HasColumnType("jsonb")
-                .HasColumnName("game_events")
-                .HasConversion(
-                    v => JsonConvert.SerializeObject(v, balootSerializationSettings),
-                    v => JsonConvert.DeserializeObject<List<BalootGameEvent>>(v, balootSerializationSettings)
-                        ?? new List<BalootGameEvent>(),
-                    new ValueComparer<List<BalootGameEvent>>(
-                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
-                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToList())
-                    );
+                .HasColumnName("game_events");
         });
         #endregion
         OnModelCreatingPartial(modelBuilder);

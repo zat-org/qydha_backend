@@ -205,7 +205,6 @@ builder.Services.AddScoped<WaApiService>();
 builder.Services.AddScoped<WhatsAppService>();
 builder.Services.AddSingleton<WaApiInstancesTracker>();
 
-builder.Services.AddSingleton<BalootEventsTypesProvider>();
 
 builder.Services.AddScoped<IMessageService, OtpSenderByWhatsAppService>();
 

@@ -12,7 +12,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService.CreateSingleBalootGame(user))
             .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.CreatedAt, game.Id, game.Events }),
+                (game) => Ok(new { game.CreatedAt, game.Id, Events = game.GetEvents() }),
                 BadRequest
             );
     }
@@ -27,7 +27,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         return (await _balootGamesService
             .AddEvents(user, gameId, events))
             .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.CreatedAt, game.Id, game.Events }),
+                (game) => Ok(new { game.CreatedAt, game.Id, Message = "Events Added!" }),
                 BadRequest
             );
     }

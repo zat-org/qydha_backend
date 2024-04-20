@@ -1,4 +1,7 @@
-﻿namespace Qydha.Domain.Constants;
+﻿using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+namespace Qydha.Domain.Constants;
 public static class BalootConstants
 {
     public static readonly Dictionary<SunMoshtaraScoresId, MoshtaraScore> SunRoundScores = new(){
@@ -62,4 +65,15 @@ public static class BalootConstants
     };
 
     public static readonly int[] SakkaCountPerGameValues = [1, 3, 5, 7, 9, 11];
+
+    public static readonly JsonSerializerSettings balootEventsSerializationSettings = new()
+    {
+        Formatting = Formatting.Indented,
+        ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() },
+        TypeNameHandling = TypeNameHandling.Auto,
+        ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+        Converters = [new StringEnumConverter()],
+        MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
+    };
+
 }

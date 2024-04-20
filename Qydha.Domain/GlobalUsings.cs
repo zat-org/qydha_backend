@@ -15,3 +15,5 @@ global using Qydha.Domain.Constants;
 global using Microsoft.Extensions.Logging;
 
 global using MediatR;
+global using Newtonsoft.Json;
+

@@ -116,13 +116,14 @@ namespace Qydha.Api.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("Events")
+                    b.Property<string>("EventsJsonString")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")

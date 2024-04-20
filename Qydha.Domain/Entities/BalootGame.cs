@@ -4,7 +4,8 @@ public class BalootGame
 {
     public Guid Id { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
-    public List<BalootGameEvent> Events = []; //json
+    public string EventsJsonString { get; set; } = "[]";
+
     public BalootGameMode GameMode { get; set; }
 
     #region relations
@@ -12,8 +13,10 @@ public class BalootGame
     public virtual User Moderator { get; set; } = null!;
     public Guid OwnerId { get; set; }
     public virtual User Owner { get; set; } = null!;
-    
+
     #endregion
+    public List<BalootGameEvent> GetEvents() =>
+            JsonConvert.DeserializeObject<List<BalootGameEvent>>(EventsJsonString, BalootConstants.balootEventsSerializationSettings) ?? [];
 
 }
 
