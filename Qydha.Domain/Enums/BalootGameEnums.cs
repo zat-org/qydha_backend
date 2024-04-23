@@ -1,4 +1,11 @@
 ﻿namespace Qydha.Domain.Enums;
+public enum BalootGameMode
+{
+    SinglePlayer,
+    MultiPlayer,
+    Championship,
+}
+
 public enum BalootRecordingMode
 {
     Advanced,

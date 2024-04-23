@@ -27,7 +27,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         return (await _balootGamesService
             .AddEvents(user, gameId, events))
             .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.CreatedAt, game.Id, Message = "Events Added!" }),
+                (game) => Ok(new { game.CreatedAt, game.Id, Message = "Events Added!", game.State }),
                 BadRequest
             );
     }

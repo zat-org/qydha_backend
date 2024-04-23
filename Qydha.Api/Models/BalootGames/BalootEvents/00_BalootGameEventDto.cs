@@ -3,7 +3,7 @@
 public abstract class BalootGameEventDto
 {
     public string EventName { get; set; } = null!;
-    public DateTimeOffset TriggeredAt { get; set; }
+    public DateTimeOffset TriggeredAt { get; set; } = DateTimeOffset.UtcNow;
     public abstract BalootGameEvent MapToCorrespondingEvent();
 }
 public class BalootGameAddEventsValidator : AbstractValidator<List<BalootGameEventDto>>

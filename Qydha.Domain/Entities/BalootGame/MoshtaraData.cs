@@ -205,7 +205,7 @@ public class Mashare3Hokm : Mashare3
         Baloot * Mashare3Values["Baloot"];
 }
 
-public class MoshtaraScore
+public abstract class MoshtaraScore
 {
     public string DisplayValue { get; set; } = null!;
     public string Name { get; set; } = null!;
@@ -218,4 +218,13 @@ public class MoshtaraScore
     }
     public override int GetHashCode() =>
         Name.GetHashCode() ^ Value.GetHashCode();
+}
+public class SunMoshtaraScore : MoshtaraScore
+{
+    public SunMoshtaraScoresId[] GoesToIds { get; set; } = null!;
+}
+
+public class HokmMoshtaraScore : MoshtaraScore
+{
+    public HokmMoshtaraScoresId[] GoesToIds { get; set; } = null!;
 }

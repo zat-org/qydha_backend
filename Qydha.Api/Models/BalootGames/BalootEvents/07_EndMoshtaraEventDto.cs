@@ -68,8 +68,17 @@ public class EndMoshtaraEventDtoValidator : AbstractValidator<EndMoshtaraEventDt
 
             When(e => e.AdvancedDetails!.Moshtara == MoshtaraType.Sun, () =>
             {
-                RuleFor(e => e.AdvancedDetails!.UsData.SunScoreId).NotNull();
-                RuleFor(e => e.AdvancedDetails!.ThemData.SunScoreId).NotNull();
+                RuleFor(e => e.AdvancedDetails!.UsData.SunScoreId).NotNull().IsInEnum();
+                RuleFor(e => e.AdvancedDetails!.ThemData.SunScoreId).NotNull().IsInEnum();
+
+                RuleFor(x => x).Custom((model, context) =>
+                {
+                    var usScoreId = model.AdvancedDetails!.UsData.SunScoreId!.Value;
+                    var themScoreId = model.AdvancedDetails!.ThemData.SunScoreId!.Value;
+                    if (!BalootConstants.SunRoundScores[usScoreId].GoesToIds.Any(id => id == themScoreId))
+                        context.AddFailure("قيم ال score الرئيسية غير صحيحة");
+                }).When(x => x.AdvancedDetails!.UsData.SunScoreId != null && x.AdvancedDetails!.ThemData.SunScoreId != null);
+
                 RuleFor(e => e.AdvancedDetails!.UsData.HokmScoreId).Null();
                 RuleFor(e => e.AdvancedDetails!.ThemData.HokmScoreId).Null();
 
@@ -83,8 +92,16 @@ public class EndMoshtaraEventDtoValidator : AbstractValidator<EndMoshtaraEventDt
             {
                 RuleFor(e => e.AdvancedDetails!.UsData.SunScoreId).Null();
                 RuleFor(e => e.AdvancedDetails!.ThemData.SunScoreId).Null();
-                RuleFor(e => e.AdvancedDetails!.UsData.HokmScoreId).NotNull();
-                RuleFor(e => e.AdvancedDetails!.ThemData.HokmScoreId).NotNull();
+                RuleFor(e => e.AdvancedDetails!.UsData.HokmScoreId).NotNull().IsInEnum();
+                RuleFor(e => e.AdvancedDetails!.ThemData.HokmScoreId).NotNull().IsInEnum();
+
+                RuleFor(x => x).Custom((model, context) =>
+                {
+                    var usScoreId = model.AdvancedDetails!.UsData.HokmScoreId!.Value;
+                    var themScoreId = model.AdvancedDetails!.ThemData.HokmScoreId!.Value;
+                    if (!BalootConstants.HokmRoundScores[usScoreId].GoesToIds.Any(id => id == themScoreId))
+                        context.AddFailure("قيم ال score الرئيسية غير صحيحة");
+                }).When(x => x.AdvancedDetails!.UsData.HokmScoreId != null && x.AdvancedDetails!.ThemData.HokmScoreId != null);
 
                 RuleFor(e => e.AdvancedDetails!.UsData.Rob3ome2a).Null();
                 RuleFor(e => e.AdvancedDetails!.ThemData.Rob3ome2a).Null();

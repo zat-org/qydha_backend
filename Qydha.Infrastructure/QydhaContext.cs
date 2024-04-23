@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Qydha.Domain.Constants;
 namespace Qydha.Infrastructure;
 
 public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbContext(options)
@@ -736,6 +737,15 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
                 .HasDefaultValueSql("'[]'::jsonb")
                 .HasColumnType("jsonb")
                 .HasColumnName("game_events");
+
+            entity.Property(e => e.State)
+                .HasDefaultValueSql("'{}'::jsonb")
+                .HasColumnType("jsonb")
+                .HasColumnName("game_state")
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v, BalootConstants.balootEventsSerializationSettings),
+                    v => JsonConvert.DeserializeObject<BalootGameState>(v, BalootConstants.balootEventsSerializationSettings) ?? new()
+                );
         });
         #endregion
         OnModelCreatingPartial(modelBuilder);

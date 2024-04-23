@@ -23,7 +23,12 @@ public static class ResultExtensions
         action();
         return Result.Ok();
     }
-
+    public static Result OnSuccess(this Result result, Func<Result> func)
+    {
+        if (result.IsFailure) return result;
+        return func();
+    }
+    
     // public static Result OnSuccess(this Result result, Func<Result> func)
     // {
     //     if (result.IsFailure) return result;

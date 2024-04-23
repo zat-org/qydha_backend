@@ -19,6 +19,17 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
                         Code = ErrorType.InvalidActionOrForbidden,
                         Message = "this user is not the moderator for this Game"
                     });
+
+
+                // Apply Events To Game State ...
+                foreach (var e in events)
+                {
+                    Result res = e.ApplyToState(game.State);
+                    if (res.IsFailure)
+                    {
+                        return Result.Fail<BalootGame>(res.Error);
+                    }
+                }
                 return (await _balootGamesRepo.AddEvents(game, events)).MapTo(game);
             });
     }

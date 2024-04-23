@@ -95,6 +95,10 @@ public enum ErrorType
     FileDeleteError = 4121,
     #endregion
 
+    #region BalootGame Errors 
+    InvalidBalootGameAction = 4200,
+    #endregion
+    
     #region server errors
     UnknownServerError = 5000,
     ServerErrorOnDB = 5001,

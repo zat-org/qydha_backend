@@ -4,13 +4,9 @@ public abstract class BalootGameEvent(string eventName)
 {
     public readonly string EventName = eventName;
     public DateTimeOffset TriggeredAt { get; set; } = DateTimeOffset.UtcNow;
-
-    // public abstract void ApplyToState(BalootGameState state);
+    public abstract Result ApplyToState(BalootGameState state);
 }
 
-// public class BalootGameState
-// {
-// }
 
 #region change data event
 public sealed class ChangeTeamsNamesEvent : BalootGameEvent
@@ -23,8 +19,9 @@ public sealed class ChangeTeamsNamesEvent : BalootGameEvent
     }
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
-}
+    public override Result ApplyToState(BalootGameState state) => state.ChangeTeamsNames(UsName, ThemName);
 
+}
 public sealed class ChangeSakkaCountPerGameEvent : BalootGameEvent
 {
     private ChangeSakkaCountPerGameEvent() : base(nameof(ChangeSakkaCountPerGameEvent)) { }
@@ -33,8 +30,10 @@ public sealed class ChangeSakkaCountPerGameEvent : BalootGameEvent
         SakkaPerGameCount = count;
     }
     public int SakkaPerGameCount { get; set; } = 3;
-}
 
+    public override Result ApplyToState(BalootGameState state) => state.ChangeSakkaCount(SakkaPerGameCount);
+
+}
 public sealed class ChangeIsSakkaMashdodaEvent : BalootGameEvent
 {
     private ChangeIsSakkaMashdodaEvent() : base(nameof(ChangeIsSakkaMashdodaEvent)) { }
@@ -43,16 +42,22 @@ public sealed class ChangeIsSakkaMashdodaEvent : BalootGameEvent
         IsSakkaMashdoda = isSakkaMashdoda;
     }
     public bool IsSakkaMashdoda { get; set; }
+    public override Result ApplyToState(BalootGameState state) => state.ChangeIsSakkaMashdoda(IsSakkaMashdoda);
 }
-
 public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
 {
+    // !  TODO Identify data  
     private AddMashare3ToLastMoshtaraEvent() : base(nameof(AddMashare3ToLastMoshtaraEvent)) { }
     public AddMashare3ToLastMoshtaraEvent(bool f) : base(nameof(AddMashare3ToLastMoshtaraEvent))
     {
         // IsSakkaMashdoda = isSakkaMashdoda;
     }
+
     // public bool IsSakkaMashdoda { get; set; }
+    public override Result ApplyToState(BalootGameState state)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 #endregion
@@ -70,6 +75,8 @@ public sealed class StartBalootGameEvent : BalootGameEvent
     public int SakkaCountPerGame { get; set; }
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
+
+    public override Result ApplyToState(BalootGameState state) => state.StartGame(UsName, ThemName, SakkaCountPerGame);
 }
 public sealed class StartSakkaEvent : BalootGameEvent
 {
@@ -80,8 +87,12 @@ public sealed class StartSakkaEvent : BalootGameEvent
     }
     public bool IsSakkaMashdoda { get; set; }
 
+    public override Result ApplyToState(BalootGameState state) => state.StartSakka(IsSakkaMashdoda);
 }
-public sealed class StartMoshtaraEvent() : BalootGameEvent(nameof(StartMoshtaraEvent)) { }
+public sealed class StartMoshtaraEvent() : BalootGameEvent(nameof(StartMoshtaraEvent))
+{
+    public override Result ApplyToState(BalootGameState state) => state.StartMoshtara();
+}
 public sealed class EndMoshtaraEvent : BalootGameEvent
 {
     private EndMoshtaraEvent() : base(nameof(EndMoshtaraEvent)) { }
@@ -90,8 +101,13 @@ public sealed class EndMoshtaraEvent : BalootGameEvent
         MoshtaraData = data;
     }
     public MoshtaraData MoshtaraData { get; set; } = null!;
+
+    public override Result ApplyToState(BalootGameState state) => state.EndMoshtara(MoshtaraData.UsAbnat, MoshtaraData.ThemAbnat);
 }
-public sealed class RemoveMoshtaraEvent() : BalootGameEvent(nameof(RemoveMoshtaraEvent)) { }
+public sealed class RemoveMoshtaraEvent() : BalootGameEvent(nameof(RemoveMoshtaraEvent))
+{
+    public override Result ApplyToState(BalootGameState state) => state.Back();
+}
 public sealed class EndSakkaEvent : BalootGameEvent
 {
     private EndSakkaEvent() : base(nameof(EndSakkaEvent)) { }
@@ -102,6 +118,7 @@ public sealed class EndSakkaEvent : BalootGameEvent
     }
     public BalootGameTeam Winner { get; set; }
     public BalootDrawHandler DrawHandler { get; set; }
+    public override Result ApplyToState(BalootGameState state) => state.EndSakka(Winner, DrawHandler);
 }
 public sealed class EndGameEvent : BalootGameEvent
 {
@@ -111,16 +128,50 @@ public sealed class EndGameEvent : BalootGameEvent
         Winner = winnerTeam;
     }
     public BalootGameTeam Winner { get; set; }
+    public override Result ApplyToState(BalootGameState state) => state.EndGame(Winner);
 }
-public sealed class PauseGameEvent() : BalootGameEvent(nameof(PauseGameEvent)) { }
-public sealed class ResumeGameEvent() : BalootGameEvent(nameof(ResumeGameEvent)) { }
-
+public sealed class PauseGameEvent() : BalootGameEvent(nameof(PauseGameEvent))
+{
+    public override Result ApplyToState(BalootGameState state) => state.PauseGame();
+}
+public sealed class ResumeGameEvent() : BalootGameEvent(nameof(ResumeGameEvent))
+{
+    public override Result ApplyToState(BalootGameState state) => state.ResumeGame();
+}
 #endregion
 
 #region  book & chat events
-public sealed class OpenBalootBookEvent() : BalootGameEvent(nameof(OpenBalootBookEvent)) { }
-public sealed class CloseBalootBookEvent() : BalootGameEvent(nameof(CloseBalootBookEvent)) { }
-public sealed class OpenRefereeChatEvent() : BalootGameEvent(nameof(OpenRefereeChatEvent)) { }
-public sealed class CloseRefereeChatEvent() : BalootGameEvent(nameof(CloseRefereeChatEvent)) { }
+public sealed class OpenBalootBookEvent() : BalootGameEvent(nameof(OpenBalootBookEvent))
+{
+    public override Result ApplyToState(BalootGameState state)
+    {
+        // ! TODO count book opens 
+        return Result.Ok();
+    }
+}
+public sealed class CloseBalootBookEvent() : BalootGameEvent(nameof(CloseBalootBookEvent))
+{
+    public override Result ApplyToState(BalootGameState state)
+    {
+        // ! TODO count book opens 
+        return Result.Ok();
+    }
+}
+public sealed class OpenRefereeChatEvent() : BalootGameEvent(nameof(OpenRefereeChatEvent))
+{
+    public override Result ApplyToState(BalootGameState state)
+    {
+        // ! TODO count chat opens 
+        return Result.Ok();
+    }
+}
+public sealed class CloseRefereeChatEvent() : BalootGameEvent(nameof(CloseRefereeChatEvent))
+{
+    public override Result ApplyToState(BalootGameState state)
+    {
+        // ! TODO count chat opens 
+        return Result.Ok();
+    }
+}
 #endregion
 

@@ -33,10 +33,12 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     public async Task<Result> AddEvents(BalootGame game, ICollection<BalootGameEvent> events)
     {
         string eventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
+        string stateJsonString = JsonConvert.SerializeObject(game.State, BalootConstants.balootEventsSerializationSettings);
         string gameId = game.Id.ToString();
         int affectedRows = await _dbCtx.Database.ExecuteSqlAsync(@$"
             UPDATE baloot_games
-            SET game_events = COALESCE(game_events, '[]')::jsonb || {eventsJsonString}::jsonb
+            SET game_events = COALESCE(game_events, '[]')::jsonb || {eventsJsonString}::jsonb,
+                game_state = {stateJsonString}::jsonb
             WHERE id = {gameId}::uuid");
         if (affectedRows != 1)
             return Result.Fail(new Error()
