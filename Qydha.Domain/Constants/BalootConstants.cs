@@ -76,4 +76,16 @@ public static class BalootConstants
         MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
     };
 
+    public static readonly IDictionary<string, int> Mashare3SunValues = new Dictionary<string, int>() {
+        { "Sra", 4 },
+        { "Khamsen", 10 },
+        { "Me2a", 20 },
+        { "Rob3ome2a", 40 },
+    };
+    public static readonly IDictionary<string, int> Mashare3HokmValues = new Dictionary<string, int>() {
+            { "Sra", 2 },
+            { "Khamsen", 5 },
+            { "Me2a", 10 },
+            { "Baloot", 2 },
+        };
 }

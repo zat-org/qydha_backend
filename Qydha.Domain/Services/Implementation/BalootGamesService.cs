@@ -33,4 +33,19 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
                 return (await _balootGamesRepo.AddEvents(game, events)).MapTo(game);
             });
     }
+
+    public async Task<Result<BalootGame>> GetGameById(User Requester, Guid gameId)
+    {
+        return (await _balootGamesRepo.GetById(gameId))
+            .OnSuccess<BalootGame>((game) =>
+            {
+                if (Requester.Id != game.ModeratorId && Requester.Id != game.OwnerId)
+                    return Result.Fail<BalootGame>(new()
+                    {
+                        Code = ErrorType.InvalidActionOrForbidden,
+                        Message = "this user is not the moderator for this Game"
+                    });
+                return Result.Ok(game);
+            });
+    }
 }

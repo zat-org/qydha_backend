@@ -112,12 +112,12 @@ public class BalootSakkaState
             .SubstateOf(SakkaState.Running)
             .PermitReentry(SakkaTrigger.StartMoshtara)
             .PermitReentryIf(SakkaTrigger.EndMoshtara, () => CheckWinner(BalootDrawHandler.None, BalootGameTeam.Us) == null)
-            .PermitReentry(SakkaTrigger.AddMashare3)
             .PermitReentryIf(SakkaTrigger.Back, () => Moshtaras.Count > 0)
             .PermitIf(SakkaTrigger.Back, SakkaState.RunningWithoutMoshtaras, () => Moshtaras.Count == 0)
             .Permit(SakkaTrigger.EndSakka, SakkaState.Ended)
             .Permit(SakkaTrigger.PauseSakka, SakkaState.Paused)
-            .PermitReentry(SakkaTrigger.ChangeIsSakkaMashdoda);
+            .PermitReentry(SakkaTrigger.ChangeIsSakkaMashdoda)
+            .PermitReentry(SakkaTrigger.AddMashare3);
 
         _stateMachine.Configure(SakkaState.Paused)
             .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithoutMoshtaras, () => this.Moshtaras.Count == 0)
@@ -201,10 +201,10 @@ public class BalootSakkaState
             return CurrentMoshtara.StartMoshtara();
         });
     }
-    public Result EndMoshtara(int usScore, int themScore)
+    public Result EndMoshtara(MoshtaraData moshtaraData)
     {
         return CanFire(SakkaTrigger.EndMoshtara)
-        .OnSuccess(() => CurrentMoshtara.EndMoshtara(usScore, themScore))
+        .OnSuccess(() => CurrentMoshtara.EndMoshtara(moshtaraData))
         .OnSuccess(() =>
         {
             _stateMachine.Fire(SakkaTrigger.EndMoshtara);
@@ -212,10 +212,16 @@ public class BalootSakkaState
             CurrentMoshtara = new();
         });
     }
-    public Result AddMashare3(int usScore, int themScore)
+    public Result AddMashare3ToLastMoshtara(int usScore, int themScore)
     {
         return CanFire(SakkaTrigger.AddMashare3)
         .OnSuccess(() => Moshtaras.Last().AddMashare3(usScore, themScore))
+        .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
+    }
+    public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3)
+    {
+        return CanFire(SakkaTrigger.AddMashare3)
+        .OnSuccess(() => Moshtaras.Last().AddMashare3(usMashare3, themMashare3))
         .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
     }
     public Result Back()

@@ -12,7 +12,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService.CreateSingleBalootGame(user))
             .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.CreatedAt, game.Id, Events = game.GetEvents() }),
+                (game) => Ok(new { game.CreatedAt, game.Id, game.State }),
                 BadRequest
             );
     }
@@ -27,7 +27,20 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         return (await _balootGamesService
             .AddEvents(user, gameId, events))
             .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.CreatedAt, game.Id, Message = "Events Added!", game.State }),
+                (game) => Ok(new { game.Id, game.State, Message = "Events Added!" }),
+                BadRequest
+            );
+    }
+
+    [Auth(SystemUserRoles.RegularUser)]
+    [HttpGet("{gameId}")]
+    public async Task<IActionResult> GetGameState([FromRoute] Guid gameId)
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _balootGamesService
+            .GetGameById(user, gameId))
+            .Handle<BalootGame, IActionResult>(
+                (game) => Ok(new { game.Id, game.State }),
                 BadRequest
             );
     }

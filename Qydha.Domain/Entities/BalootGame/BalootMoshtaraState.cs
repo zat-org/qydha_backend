@@ -24,8 +24,9 @@ public class BalootMoshtaraState
     #endregion
 
     #region data
-    public int UsScore { get; set; }
-    public int ThemScore { get; set; }
+    public int UsScore { get => MoshtaraData?.UsAbnat ?? 0; }
+    public int ThemScore { get => MoshtaraData?.ThemAbnat ?? 0; }
+    public MoshtaraData? MoshtaraData { get; set; }
     public MoshtaraState State => _stateMachine.State;
     private readonly StateMachine<MoshtaraState, MoshtaraTrigger> _stateMachine;
     #endregion
@@ -83,14 +84,13 @@ public class BalootMoshtaraState
         });
     }
 
-    public Result EndMoshtara(int usScore, int themScore)
+    public Result EndMoshtara(MoshtaraData moshtaraData)
     {
         return CanFire(MoshtaraTrigger.EndMoshtara)
         .OnSuccess(() =>
         {
             _stateMachine.Fire(MoshtaraTrigger.EndMoshtara);
-            UsScore = usScore;
-            ThemScore = themScore;
+            MoshtaraData = moshtaraData;
         });
     }
     public Result PauseMoshtara()
@@ -115,8 +115,7 @@ public class BalootMoshtaraState
         .OnSuccess(() =>
         {
             _stateMachine.Fire(MoshtaraTrigger.Back);
-            UsScore = 0;
-            ThemScore = 0;
+            MoshtaraData = null;
         });
     }
     public Result AddMashare3(int usScore, int themScore)
@@ -124,10 +123,42 @@ public class BalootMoshtaraState
         return CanFire(MoshtaraTrigger.AddMashare3)
         .OnSuccess(() =>
         {
-            UsScore += usScore;
-            ThemScore += themScore;
-            _stateMachine.Fire(MoshtaraTrigger.AddMashare3);
-        });
+            try
+            {
+                MoshtaraData!.AddMashare3(usScore, themScore);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(new()
+                {
+                    Code = ErrorType.InvalidBalootGameAction,
+                    Message = ex.Message
+                });
+            }
+
+        }).OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
+    }
+    public Result AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3)
+    {
+        return CanFire(MoshtaraTrigger.AddMashare3)
+         .OnSuccess(() =>
+        {
+            try
+            {
+                MoshtaraData!.AddMashare3(usMashare3, themMashare3);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(new()
+                {
+                    Code = ErrorType.InvalidBalootGameAction,
+                    Message = ex.Message
+                });
+            }
+        })
+        .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
     }
     #endregion
 

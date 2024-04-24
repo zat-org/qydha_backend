@@ -11,7 +11,6 @@ public class BalootGameState
         Running,
         RunningWithSakkas,
         RunningWithoutSakkas,
-
         Paused,
         Ended,
     }
@@ -97,7 +96,9 @@ public class BalootGameState
             .PermitReentry(GameTriggers.EndMoshtara)
             .Permit(GameTriggers.PauseGame, GameStates.Paused)
             .Permit(GameTriggers.EndSakka, GameStates.RunningWithSakkas)
-            .PermitReentryIf(GameTriggers.Back, () => CurrentSakka.IsRunningWithMoshtaras);
+            .PermitReentryIf(GameTriggers.Back, () => CurrentSakka.IsRunningWithMoshtaras)
+            .PermitReentryIf(GameTriggers.AddMashare3, () => CurrentSakka.IsRunningWithMoshtaras);
+
 
 
         _stateMachine.Configure(GameStates.RunningWithSakkas)
@@ -112,7 +113,9 @@ public class BalootGameState
             .PermitReentry(GameTriggers.EndSakka)
             .Permit(GameTriggers.EndGame, GameStates.Ended)
             .PermitIf(GameTriggers.Back, GameStates.RunningWithoutSakkas, () => Sakkas.Count == 0)
-            .PermitReentryIf(GameTriggers.Back, () => Sakkas.Count > 0);
+            .PermitReentryIf(GameTriggers.Back, () => Sakkas.Count > 0)
+            .PermitReentryIf(GameTriggers.AddMashare3, () => CurrentSakka.IsRunningWithMoshtaras);
+
 
 
         _stateMachine.Configure(GameStates.Ended)
@@ -212,10 +215,10 @@ public class BalootGameState
         .OnSuccess(CurrentSakka.StartMoshtara)
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.StartMoshtara));
     }
-    public Result EndMoshtara(int usScore, int themScore)
+    public Result EndMoshtara(MoshtaraData moshtaraData)
     {
         return CanFire(GameTriggers.EndMoshtara)
-        .OnSuccess(() => CurrentSakka.EndMoshtara(usScore, themScore))
+        .OnSuccess(() => CurrentSakka.EndMoshtara(moshtaraData))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.EndMoshtara));
     }
     public Result EndSakka(BalootGameTeam winner, BalootDrawHandler handler)
@@ -228,6 +231,19 @@ public class BalootGameState
             CurrentSakka = new();
             _stateMachine.Fire(GameTriggers.EndSakka);
         });
+    }
+
+    public Result AddMashare3ToLastMoshtara(int usScore, int themScore)
+    {
+        return CanFire(GameTriggers.AddMashare3)
+        .OnSuccess(() => CurrentSakka.AddMashare3ToLastMoshtara(usScore, themScore))
+        .OnSuccess(() => _stateMachine.Fire(GameTriggers.AddMashare3));
+    }
+    public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3)
+    {
+        return CanFire(GameTriggers.AddMashare3)
+        .OnSuccess(() => CurrentSakka.AddMashare3ToLastMoshtara(usMashare3, themMashare3))
+        .OnSuccess(() => _stateMachine.Fire(GameTriggers.AddMashare3));
     }
     public Result Back()
     {
@@ -289,7 +305,6 @@ public class BalootGameState
         _stateMachine.Fire(GameTriggers.EndGame);
         return Result.Ok();
     }
-
     public Result PauseGame()
     {
         return CanFire(GameTriggers.StartGame)

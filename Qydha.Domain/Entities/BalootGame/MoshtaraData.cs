@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-namespace Qydha.Domain.Entities;
+﻿namespace Qydha.Domain.Entities;
 
 public class MoshtaraData
 {
@@ -26,6 +25,22 @@ public class MoshtaraData
         if (RecordingMode == BalootRecordingMode.Advanced && AdvancedDetails is not null)
             (UsAbnat, ThemAbnat) = AdvancedDetails.CalculateAbnat();
     }
+
+    public void AddMashare3(int usScore, int themScore)
+    {
+        if (RecordingMode != BalootRecordingMode.Regular)
+            throw new ArgumentException("To add just Scores you must use regular recording mode in the moshtara");
+        UsAbnat += usScore;
+        ThemAbnat += themScore;
+    }
+    public void AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3)
+    {
+        if (RecordingMode != BalootRecordingMode.Advanced || AdvancedDetails == null)
+            throw new ArgumentException("To add Mashare3 values you must use Advanced recording mode in the moshtara");
+        AdvancedDetails.UsData.Mashare3.AddMashare3(usMashare3);
+        AdvancedDetails.ThemData.Mashare3.AddMashare3(themMashare3);
+        CalculateAbnat();
+    }
 }
 public class MoshtaraDetails
 {
@@ -48,7 +63,7 @@ public class MoshtaraDetails
                 ThemData = new SunMoshtaraTeamDetails(new Mashare3Sun(sra.Item2, khamsen.Item2, me2a.Item2, rob3ome2a.Value.Item2), ekak.Item2, aklat.Item2, sunId.Value.Item2);
                 break;
             case MoshtaraType.Hokm:
-                if (hokmId is null) throw new ArgumentNullException(nameof(sunId));
+                if (hokmId is null) throw new ArgumentNullException(nameof(hokmId));
                 if (baloot is null) throw new ArgumentNullException(nameof(baloot));
                 UsData = new HokmMoshtaraTeamDetails(new Mashare3Hokm(baloot.Value.Item1, sra.Item1, khamsen.Item1, me2a.Item1), ekak.Item1, aklat.Item1, hokmId.Value.Item1);
                 ThemData = new HokmMoshtaraTeamDetails(new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2), ekak.Item2, aklat.Item2, hokmId.Value.Item2);
@@ -151,6 +166,7 @@ public abstract class Mashare3
     public int Me2a { get; set; }
     public abstract int CalcValue();
     public abstract int CalcDoubledValue();
+    public abstract void AddMashare3(Mashare3 mashare3);
 }
 public class Mashare3Sun : Mashare3
 {
@@ -161,23 +177,30 @@ public class Mashare3Sun : Mashare3
     }
 
     public int Rob3ome2a { get; set; }
-    [JsonIgnore]
-    public readonly IDictionary<string, int> Mashare3Values = new Dictionary<string, int>() {
-        { "Sra", 4 },
-        { "Khamsen", 10 },
-        { "Me2a", 20 },
-        { "Rob3ome2a", 40 },
-    };
 
     public override int CalcDoubledValue() =>
        CalcValue() * 2;
 
     public override int CalcValue() =>
-        Sra * Mashare3Values["Sra"] +
-        Khamsen * Mashare3Values["Khamsen"] +
-        Me2a * Mashare3Values["Me2a"] +
-        Rob3ome2a * Mashare3Values["Rob3ome2a"];
+        Sra * BalootConstants.Mashare3SunValues["Sra"] +
+        Khamsen * BalootConstants.Mashare3SunValues["Khamsen"] +
+        Me2a * BalootConstants.Mashare3SunValues["Me2a"] +
+        Rob3ome2a * BalootConstants.Mashare3SunValues["Rob3ome2a"];
 
+    public override void AddMashare3(Mashare3 mashare3)
+    {
+        if (mashare3 is Mashare3Sun mashare3Sun)
+        {
+            Sra += mashare3Sun.Sra;
+            Khamsen += mashare3Sun.Khamsen;
+            Me2a += mashare3Sun.Me2a;
+            Rob3ome2a += mashare3Sun.Rob3ome2a;
+        }
+        else
+        {
+            throw new ArgumentException($"{nameof(mashare3)} should be a sun moshtara with sun mashare3");
+        }
+    }
 }
 public class Mashare3Hokm : Mashare3
 {
@@ -187,24 +210,31 @@ public class Mashare3Hokm : Mashare3
         Baloot = baloot;
     }
     public int Baloot { get; set; }
-    [JsonIgnore]
-    public readonly IDictionary<string, int> Mashare3Values = new Dictionary<string, int>() {
-        { "Sra", 2 },
-        { "Khamsen", 5 },
-        { "Me2a", 10 },
-        { "Baloot", 2 },
-    };
 
     public override int CalcDoubledValue() =>
-       (CalcValue() * 2) - (Baloot * Mashare3Values["Baloot"]);
+       (CalcValue() * 2) - (Baloot * BalootConstants.Mashare3HokmValues["Baloot"]);
 
     public override int CalcValue() =>
-        Sra * Mashare3Values["Sra"] +
-        Khamsen * Mashare3Values["Khamsen"] +
-        Me2a * Mashare3Values["Me2a"] +
-        Baloot * Mashare3Values["Baloot"];
-}
+        Sra * BalootConstants.Mashare3HokmValues["Sra"] +
+        Khamsen * BalootConstants.Mashare3HokmValues["Khamsen"] +
+        Me2a * BalootConstants.Mashare3HokmValues["Me2a"] +
+        Baloot * BalootConstants.Mashare3HokmValues["Baloot"];
 
+    public override void AddMashare3(Mashare3 mashare3)
+    {
+        if (mashare3 is Mashare3Hokm mashare3Sun)
+        {
+            Sra += mashare3Sun.Sra;
+            Khamsen += mashare3Sun.Khamsen;
+            Me2a += mashare3Sun.Me2a;
+            Baloot += mashare3Sun.Baloot;
+        }
+        else
+        {
+            throw new ArgumentException($"{nameof(mashare3)} should be a Hokm moshtara with Hokm mashare3");
+        }
+    }
+}
 public abstract class MoshtaraScore
 {
     public string DisplayValue { get; set; } = null!;

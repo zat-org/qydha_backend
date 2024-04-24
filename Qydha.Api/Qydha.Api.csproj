@@ -27,8 +27,6 @@
       <Content Include="Templates\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Error_logs\" />
-    <Folder Include="Info_logs\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
