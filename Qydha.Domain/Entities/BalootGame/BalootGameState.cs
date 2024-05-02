@@ -49,19 +49,15 @@ public class BalootGameState
     {
         get => Sakkas.Aggregate(0, (totalScore, sakka) => totalScore + (sakka.Winner != null && sakka.Winner == BalootGameTeam.Them ? 1 : 0));
     }
+    public TimeSpan GameInterval
+    {
+        get
+        {
+            return CurrentSakka.SakkaInterval + Sakkas.Aggregate(TimeSpan.Zero, (totalInterval, sakka) => totalInterval + sakka.SakkaInterval);
+        }
+    }
     public BalootGameTeam? Winner { get; set; } = null;
-    // {
-    //     get
-    //     {
-    //         int winnerCountSakkas = (int)Math.Floor(MaxSakkaPerGame / 2.0 + 1);
-    //         if (UsSakkaScore >= winnerCountSakkas)
-    //             return BalootGameTeam.Us;
-    //         else if (ThemSakkaScore >= winnerCountSakkas)
-    //             return BalootGameTeam.Them;
-    //         else
-    //             return null;
-    //     }
-    // }
+
     #endregion
 
     #region ctor
@@ -141,7 +137,16 @@ public class BalootGameState
     }
 
 
-    #region  handlers Done 
+    #region  statistics  
+
+    public BalootGameStatistics GetStatistics() =>
+        CurrentSakka.GetStatistics() +
+            Sakkas.Aggregate(BalootGameStatistics.Zero(), (total, sakka) => total + sakka.GetStatistics());
+
+
+    #endregion
+
+    #region events handlers 
     public Result CanFire(GameTriggers trigger)
     {
         if (!_stateMachine.CanFire(trigger))
@@ -189,9 +194,6 @@ public class BalootGameState
         .OnSuccess(() => CurrentSakka.ChangeIsSakkaMashdoda(isSakkaMashdoda))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.ChangeIsSakkaMashdoda));
     }
-    #endregion
-
-    #region events handlers 
     public Result StartGame(string usName, string themName, int sakkaCount)
     {
         return CanFire(GameTriggers.StartGame)
@@ -209,16 +211,16 @@ public class BalootGameState
         .OnSuccess(() => CurrentSakka.StartSakka(isMashdoda))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.StartSakka));
     }
-    public Result StartMoshtara()
+    public Result StartMoshtara(DateTimeOffset triggeredAt)
     {
         return CanFire(GameTriggers.StartMoshtara)
-        .OnSuccess(CurrentSakka.StartMoshtara)
+        .OnSuccess(() => CurrentSakka.StartMoshtara(triggeredAt))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.StartMoshtara));
     }
-    public Result EndMoshtara(MoshtaraData moshtaraData)
+    public Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
         return CanFire(GameTriggers.EndMoshtara)
-        .OnSuccess(() => CurrentSakka.EndMoshtara(moshtaraData))
+        .OnSuccess(() => CurrentSakka.EndMoshtara(moshtaraData, triggeredAt))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.EndMoshtara));
     }
     public Result EndSakka(BalootGameTeam winner, BalootDrawHandler handler)
@@ -239,10 +241,10 @@ public class BalootGameState
         .OnSuccess(() => CurrentSakka.AddMashare3ToLastMoshtara(usScore, themScore))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.AddMashare3));
     }
-    public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3)
+    public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
     {
         return CanFire(GameTriggers.AddMashare3)
-        .OnSuccess(() => CurrentSakka.AddMashare3ToLastMoshtara(usMashare3, themMashare3))
+        .OnSuccess(() => CurrentSakka.AddMashare3ToLastMoshtara(usMashare3, themMashare3, selectedMoshtaraOwner))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.AddMashare3));
     }
     public Result Back()
@@ -305,15 +307,17 @@ public class BalootGameState
         _stateMachine.Fire(GameTriggers.EndGame);
         return Result.Ok();
     }
-    public Result PauseGame()
+    public Result PauseGame(DateTimeOffset triggeredAt)
     {
-        return CanFire(GameTriggers.StartGame)
+        return CanFire(GameTriggers.PauseGame)
+        .OnSuccess(() => CurrentSakka.PauseSakka(triggeredAt))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.PauseGame));
     }
-    public Result ResumeGame()
+    public Result ResumeGame(DateTimeOffset triggeredAt)
     {
-        return CanFire(GameTriggers.StartGame)
-        .OnSuccess(() => _stateMachine.Fire(GameTriggers.PauseGame));
+        return CanFire(GameTriggers.ResumeGame)
+        .OnSuccess(() => CurrentSakka.ResumeSakka(triggeredAt))
+        .OnSuccess(() => _stateMachine.Fire(GameTriggers.ResumeGame));
     }
     #endregion
 

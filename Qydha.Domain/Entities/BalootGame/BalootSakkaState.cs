@@ -46,6 +46,13 @@ public class BalootSakkaState
     {
         get => _stateMachine.IsInState(SakkaState.RunningWithoutMoshtaras);
     }
+    public TimeSpan SakkaInterval
+    {
+        get
+        {
+            return Moshtaras.Aggregate(TimeSpan.Zero, (totalInterval, moshtara) => totalInterval + moshtara.MoshtaraInterval);
+        }
+    }
     public BalootMoshtaraState CurrentMoshtara { get; set; } = new();
     public List<BalootMoshtaraState> Moshtaras { get; set; } = [];
     public bool IsMashdoda { get; set; }
@@ -176,35 +183,37 @@ public class BalootSakkaState
             return Result.Ok();
         });
     }
-    public Result PauseSakka()
+    public Result PauseSakka(DateTimeOffset triggeredAt)
     {
         return CanFire(SakkaTrigger.PauseSakka)
         .OnSuccess(() =>
         {
+            CurrentMoshtara.PauseMoshtara(triggeredAt);
             _stateMachine.Fire(SakkaTrigger.PauseSakka);
         });
     }
-    public Result ResumeSakka()
+    public Result ResumeSakka(DateTimeOffset triggeredAt)
     {
         return CanFire(SakkaTrigger.ResumeSakka)
         .OnSuccess(() =>
         {
+            CurrentMoshtara.ResumeMoshtara(triggeredAt);
             _stateMachine.Fire(SakkaTrigger.ResumeSakka);
         });
     }
-    public Result StartMoshtara()
+    public Result StartMoshtara(DateTimeOffset triggeredAt)
     {
         return CanFire(SakkaTrigger.StartMoshtara)
         .OnSuccess(() =>
         {
             _stateMachine.Fire(SakkaTrigger.StartMoshtara);
-            return CurrentMoshtara.StartMoshtara();
+            return CurrentMoshtara.StartMoshtara(triggeredAt);
         });
     }
-    public Result EndMoshtara(MoshtaraData moshtaraData)
+    public Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
         return CanFire(SakkaTrigger.EndMoshtara)
-        .OnSuccess(() => CurrentMoshtara.EndMoshtara(moshtaraData))
+        .OnSuccess(() => CurrentMoshtara.EndMoshtara(moshtaraData, triggeredAt))
         .OnSuccess(() =>
         {
             _stateMachine.Fire(SakkaTrigger.EndMoshtara);
@@ -218,10 +227,10 @@ public class BalootSakkaState
         .OnSuccess(() => Moshtaras.Last().AddMashare3(usScore, themScore))
         .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
     }
-    public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3)
+    public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
     {
         return CanFire(SakkaTrigger.AddMashare3)
-        .OnSuccess(() => Moshtaras.Last().AddMashare3(usMashare3, themMashare3))
+        .OnSuccess(() => Moshtaras.Last().AddMashare3(usMashare3, themMashare3, selectedMoshtaraOwner))
         .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
     }
     public Result Back()
@@ -247,4 +256,9 @@ public class BalootSakkaState
     {
         return JsonConvert.SerializeObject(this, BalootConstants.balootEventsSerializationSettings);
     }
+
+    public BalootGameStatistics GetStatistics() =>
+        Moshtaras.Aggregate(BalootGameStatistics.Zero(), (total, moshtara) => total + moshtara.GetStatistics());
+
 }
+

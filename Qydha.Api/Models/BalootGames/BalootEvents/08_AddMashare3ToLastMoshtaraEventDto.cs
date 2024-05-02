@@ -7,6 +7,8 @@ public class AddMashare3ToLastMoshtaraEventDto : BalootGameEventDto
     public int UsAbnat { get; set; }
     public int ThemAbnat { get; set; }
     public AdvancedMashare3DetailsDto? AdvancedDetails { get; set; }
+    public BalootGameTeam? SelectedMoshtaraOwner { get; set; }
+
     public override BalootGameEvent MapToCorrespondingEvent()
     {
         switch (RecordingMode)
@@ -25,7 +27,7 @@ public class AddMashare3ToLastMoshtaraEventDto : BalootGameEventDto
                 (int, int)? rob3ome2a = AdvancedDetails!.Moshtara == MoshtaraType.Sun ?
                     (AdvancedDetails!.UsData.Rob3ome2a!.Value, AdvancedDetails!.ThemData.Rob3ome2a!.Value) : null;
 
-                return new AddMashare3ToLastMoshtaraEvent(moshtaraType, sra, khamsen, me2a, baloot, rob3ome2a)
+                return new AddMashare3ToLastMoshtaraEvent(moshtaraType, sra, khamsen, me2a, baloot, rob3ome2a, SelectedMoshtaraOwner)
                 { TriggeredAt = TriggeredAt };
             default:
                 throw new Exception("Invalid Recording Case");

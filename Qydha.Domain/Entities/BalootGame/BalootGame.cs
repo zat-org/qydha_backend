@@ -14,5 +14,5 @@ public class BalootGame
 
     public List<BalootGameEvent> GetEvents() =>
             JsonConvert.DeserializeObject<List<BalootGameEvent>>(EventsJsonString, BalootConstants.balootEventsSerializationSettings) ?? [];
-
+  
 }

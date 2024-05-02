@@ -33,7 +33,7 @@ public class EndMoshtaraEventDto : BalootGameEventDto
             (HokmMoshtaraScoresId, HokmMoshtaraScoresId)? hokmId = AdvancedDetails!.Moshtara == MoshtaraType.Hokm ?
                         (AdvancedDetails!.UsData.HokmScoreId!.Value, AdvancedDetails!.ThemData.HokmScoreId!.Value) : null;
 
-            var moshtaraDetails = new MoshtaraDetails(moshtaraType, sunId, hokmId, sra, khamsen, me2a, baloot, rob3ome2a, ekak, aklat);
+            var moshtaraDetails = new MoshtaraDetails(moshtaraType, sunId, hokmId, sra, khamsen, me2a, baloot, rob3ome2a, ekak, aklat, AdvancedDetails!.SelectedMoshtaraOwner);
             moshtaraData = new MoshtaraData(moshtaraDetails);
         }
 
@@ -132,6 +132,7 @@ public class EndMoshtaraEventDtoValidator : AbstractValidator<EndMoshtaraEventDt
 public class AdvancedDetailsDto
 {
     public MoshtaraType Moshtara { get; set; }
+    public BalootGameTeam? SelectedMoshtaraOwner { get; set; }
     public TeamAdvancedDetailsDto UsData { get; set; } = null!;
     public TeamAdvancedDetailsDto ThemData { get; set; } = null!;
 }

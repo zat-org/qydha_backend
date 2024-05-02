@@ -44,4 +44,17 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
                 BadRequest
             );
     }
+
+    [Auth(SystemUserRoles.RegularUser)]
+    [HttpGet("{gameId}/statistics")]
+    public async Task<IActionResult> GetGameStatistics([FromRoute] Guid gameId)
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _balootGamesService
+            .GetGameById(user, gameId))
+            .Handle<BalootGame, IActionResult>(
+                (game) => Ok(new { game.Id, game.State, statistics = game.State.GetStatistics() }),
+                BadRequest
+            );
+    }
 }

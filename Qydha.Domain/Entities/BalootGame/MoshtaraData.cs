@@ -6,6 +6,8 @@ public class MoshtaraData
     public int UsAbnat { get; set; }
     public int ThemAbnat { get; set; }
     public MoshtaraDetails? AdvancedDetails { get; set; }
+
+
     private MoshtaraData() { }
     public MoshtaraData(int usAbnat, int themAbnat)
     {
@@ -19,6 +21,7 @@ public class MoshtaraData
         RecordingMode = BalootRecordingMode.Advanced;
         AdvancedDetails = advancedDetails;
         CalculateAbnat();
+
     }
     public void CalculateAbnat()
     {
@@ -33,25 +36,26 @@ public class MoshtaraData
         UsAbnat += usScore;
         ThemAbnat += themScore;
     }
-    public void AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3)
+    public void AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
     {
         if (RecordingMode != BalootRecordingMode.Advanced || AdvancedDetails == null)
             throw new ArgumentException("To add Mashare3 values you must use Advanced recording mode in the moshtara");
         AdvancedDetails.UsData.Mashare3.AddMashare3(usMashare3);
         AdvancedDetails.ThemData.Mashare3.AddMashare3(themMashare3);
         CalculateAbnat();
+        (AdvancedDetails.MoshtaraOwner, AdvancedDetails.IsMoshtaraSucceeded) = AdvancedDetails.CalculateMoshtaraOwnerAndResult(selectedMoshtaraOwner);
     }
 }
 public class MoshtaraDetails
 {
     public MoshtaraType Moshtara { get; set; }
-    // public BalootGameTeam MoshtaraOwner { get; set; } // TODO calculate it  
-    // public bool IsMoshtaraSucceeded { get; set; } // TODO calculate it 
+    public BalootGameTeam MoshtaraOwner { get; set; }
+    public bool IsMoshtaraSucceeded { get; set; }
     public MoshtaraTeamDetails UsData { get; set; } = null!;
     public MoshtaraTeamDetails ThemData { get; set; } = null!;
 
     private MoshtaraDetails() { }
-    public MoshtaraDetails(MoshtaraType moshtaraType, (SunMoshtaraScoresId, SunMoshtaraScoresId)? sunId, (HokmMoshtaraScoresId, HokmMoshtaraScoresId)? hokmId, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a, (int, int) ekak, (int, int) aklat)
+    public MoshtaraDetails(MoshtaraType moshtaraType, (SunMoshtaraScoresId, SunMoshtaraScoresId)? sunId, (HokmMoshtaraScoresId, HokmMoshtaraScoresId)? hokmId, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a, (int, int) ekak, (int, int) aklat, BalootGameTeam? selectedMoshtaraOwner)
     {
         Moshtara = moshtaraType;
         switch (moshtaraType)
@@ -68,6 +72,37 @@ public class MoshtaraDetails
                 UsData = new HokmMoshtaraTeamDetails(new Mashare3Hokm(baloot.Value.Item1, sra.Item1, khamsen.Item1, me2a.Item1), ekak.Item1, aklat.Item1, hokmId.Value.Item1);
                 ThemData = new HokmMoshtaraTeamDetails(new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2), ekak.Item2, aklat.Item2, hokmId.Value.Item2);
                 break;
+        }
+
+        (MoshtaraOwner, IsMoshtaraSucceeded) = CalculateMoshtaraOwnerAndResult(selectedMoshtaraOwner);
+    }
+    public (BalootGameTeam, bool) CalculateMoshtaraOwnerAndResult(BalootGameTeam? selectedMoshtaraOwner)
+    {
+        int usAbnat, themAbnat;
+        (usAbnat, themAbnat) = CalculateAbnat();
+        if ((UsData.IsScoreKhosaraOrKhosaretKaboot() && !ThemData.IsScoreDoubled()) ||
+            (ThemData.IsScoreKhosaraOrKhosaretKaboot() && !UsData.IsScoreDoubled()))
+        {
+            return (UsData.IsScoreKhosaraOrKhosaretKaboot() ? BalootGameTeam.Us : BalootGameTeam.Them, false);
+        }
+        else if (ThemData.IsScoreDoubled() || UsData.IsScoreDoubled() || usAbnat == themAbnat)
+        {
+            if (selectedMoshtaraOwner is null)
+            {
+                throw new ArgumentNullException(nameof(selectedMoshtaraOwner));
+            }
+            if (usAbnat == themAbnat)
+                return (selectedMoshtaraOwner.Value, true);
+            else
+            {
+                if (selectedMoshtaraOwner == BalootGameTeam.Us && UsData.IsScoreDoubled()) return (BalootGameTeam.Us, true);
+                else if (selectedMoshtaraOwner == BalootGameTeam.Them && ThemData.IsScoreDoubled()) return (BalootGameTeam.Them, true);
+                else return (selectedMoshtaraOwner.Value, false);
+            }
+        }
+        else
+        {
+            return (usAbnat > themAbnat ? BalootGameTeam.Us : BalootGameTeam.Them, true);
         }
     }
     public (int, int) CalculateAbnat()
@@ -116,6 +151,8 @@ public abstract class MoshtaraTeamDetails
     public abstract bool IsScoreKhosara();
     public abstract bool IsScoreDoubled();
     public abstract bool IsScoreKaboot();
+    public abstract bool IsScoreKhosaraOrKhosaretKaboot();
+
 }
 public class SunMoshtaraTeamDetails : MoshtaraTeamDetails
 {
@@ -132,6 +169,11 @@ public class SunMoshtaraTeamDetails : MoshtaraTeamDetails
     public override bool IsScoreKaboot() => RoundScoreId == SunMoshtaraScoresId.Kaboot;
 
     public override bool IsScoreKhosara() => RoundScoreId == SunMoshtaraScoresId.khosara;
+
+    public override bool IsScoreKhosaraOrKhosaretKaboot() =>
+        RoundScoreId == SunMoshtaraScoresId.khosaretKaboot || RoundScoreId == SunMoshtaraScoresId.khosara;
+
+
 }
 public class HokmMoshtaraTeamDetails :
         MoshtaraTeamDetails
@@ -150,6 +192,10 @@ public class HokmMoshtaraTeamDetails :
     public override bool IsScoreKaboot() => RoundScoreId == HokmMoshtaraScoresId.Kaboot;
 
     public override bool IsScoreKhosara() => RoundScoreId == HokmMoshtaraScoresId.khosara;
+
+    public override bool IsScoreKhosaraOrKhosaretKaboot() =>
+        RoundScoreId == HokmMoshtaraScoresId.khosaretKaboot || RoundScoreId == HokmMoshtaraScoresId.khosara;
+
 }
 
 public abstract class Mashare3

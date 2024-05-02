@@ -59,7 +59,7 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
         RecordingMode = BalootRecordingMode.Regular;
         AdvancedDetails = null;
     }
-    public AddMashare3ToLastMoshtaraEvent(MoshtaraType moshtaraType, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a)
+    public AddMashare3ToLastMoshtaraEvent(MoshtaraType moshtaraType, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a, BalootGameTeam? selectedMoshtaraOwner)
         : base(nameof(AddMashare3ToLastMoshtaraEvent))
     {
         RecordingMode = BalootRecordingMode.Advanced;
@@ -72,7 +72,8 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
                 AdvancedDetails = new AddMashare3Details(
                     MoshtaraType.Sun,
                     new Mashare3Sun(sra.Item1, khamsen.Item1, me2a.Item1, rob3ome2a.Value.Item1),
-                    new Mashare3Sun(sra.Item2, khamsen.Item2, me2a.Item2, rob3ome2a.Value.Item2)
+                    new Mashare3Sun(sra.Item2, khamsen.Item2, me2a.Item2, rob3ome2a.Value.Item2),
+                    selectedMoshtaraOwner
                 );
                 break;
             case MoshtaraType.Hokm:
@@ -80,7 +81,8 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
                 AdvancedDetails = new AddMashare3Details(
                    MoshtaraType.Sun,
                    new Mashare3Hokm(baloot.Value.Item1, sra.Item1, khamsen.Item1, me2a.Item1),
-                   new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2)
+                   new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2),
+                   selectedMoshtaraOwner
                );
                 break;
         }
@@ -88,14 +90,15 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
     public override Result ApplyToState(BalootGameState state)
     {
         if (RecordingMode == BalootRecordingMode.Advanced && AdvancedDetails is not null)
-            return state.AddMashare3ToLastMoshtara(AdvancedDetails.UsMashare3, AdvancedDetails.ThemMashare3);
+            return state.AddMashare3ToLastMoshtara(AdvancedDetails.UsMashare3, AdvancedDetails.ThemMashare3, AdvancedDetails.SelectedMoshtaraOwner);
         else
             return state.AddMashare3ToLastMoshtara(UsAbnat, ThemAbnat);
     }
 
-    public class AddMashare3Details(MoshtaraType moshtara, Mashare3 usMashare3, Mashare3 themMashare3)
+    public class AddMashare3Details(MoshtaraType moshtara, Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
     {
         public MoshtaraType Moshtara { get; set; } = moshtara;
+        public BalootGameTeam? SelectedMoshtaraOwner { get; set; } = selectedMoshtaraOwner;
         public Mashare3 UsMashare3 { get; set; } = usMashare3;
         public Mashare3 ThemMashare3 { get; set; } = themMashare3;
     }
@@ -132,7 +135,7 @@ public sealed class StartSakkaEvent : BalootGameEvent
 }
 public sealed class StartMoshtaraEvent() : BalootGameEvent(nameof(StartMoshtaraEvent))
 {
-    public override Result ApplyToState(BalootGameState state) => state.StartMoshtara();
+    public override Result ApplyToState(BalootGameState state) => state.StartMoshtara(TriggeredAt);
 }
 public sealed class EndMoshtaraEvent : BalootGameEvent
 {
@@ -144,7 +147,7 @@ public sealed class EndMoshtaraEvent : BalootGameEvent
     public MoshtaraData MoshtaraData { get; set; } = null!;
 
     public override Result ApplyToState(BalootGameState state) =>
-        state.EndMoshtara(MoshtaraData);
+        state.EndMoshtara(MoshtaraData, TriggeredAt);
 }
 public sealed class RemoveMoshtaraEvent() : BalootGameEvent(nameof(RemoveMoshtaraEvent))
 {
@@ -174,11 +177,11 @@ public sealed class EndGameEvent : BalootGameEvent
 }
 public sealed class PauseGameEvent() : BalootGameEvent(nameof(PauseGameEvent))
 {
-    public override Result ApplyToState(BalootGameState state) => state.PauseGame();
+    public override Result ApplyToState(BalootGameState state) => state.PauseGame(TriggeredAt);
 }
 public sealed class ResumeGameEvent() : BalootGameEvent(nameof(ResumeGameEvent))
 {
-    public override Result ApplyToState(BalootGameState state) => state.ResumeGame();
+    public override Result ApplyToState(BalootGameState state) => state.ResumeGame(TriggeredAt);
 }
 #endregion
 
