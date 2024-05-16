@@ -7,11 +7,17 @@ public static class AbstractValidatorExtensions
         var validationRes = validator.Validate(dto);
 
         if (!validationRes.IsValid)
-            return Result.Fail<T>(new Error()
+        {
+            var error = new InvalidBodyInputError();
+            validationRes.Errors.ForEach(e =>
             {
-                Code = ErrorType.InvalidBodyInput,
-                Message = string.Join(" ;", validationRes.Errors.Select(e => e.ErrorMessage))
+                if (error.ValidationErrors.TryGetValue(e.PropertyName, out List<string>? propErrorsList))
+                    propErrorsList.Add(e.ErrorMessage);
+                else
+                    error.ValidationErrors.Add(e.PropertyName, [e.ErrorMessage]);
             });
+            return Result.Fail<T>(error);
+        }
         else return Result.Ok(dto);
     }
 }

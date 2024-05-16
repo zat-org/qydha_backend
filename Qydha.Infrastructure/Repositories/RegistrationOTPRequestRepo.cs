@@ -3,11 +3,7 @@ public class RegistrationOTPRequestRepo(QydhaContext qydhaContext, ILogger<Regis
 {
     private readonly QydhaContext _dbCtx = qydhaContext;
     private readonly ILogger<RegistrationOTPRequestRepo> _logger = logger;
-    private readonly Error NotFoundError = new()
-    {
-        Code = ErrorType.RegistrationOTPRequestNotFound,
-        Message = "Registration OTP Request NotFound :: Entity Not Found"
-    };
+
     public async Task<Result<RegistrationOTPRequest>> AddAsync(RegistrationOTPRequest request)
     {
         await _dbCtx.RegistrationOtpRequests.AddAsync(request);
@@ -18,8 +14,8 @@ public class RegistrationOTPRequestRepo(QydhaContext qydhaContext, ILogger<Regis
     public async Task<Result<RegistrationOTPRequest>> GetByIdAsync(Guid requestId)
     {
         return await _dbCtx.RegistrationOtpRequests.FirstOrDefaultAsync(req => req.Id == requestId) is RegistrationOTPRequest req ?
-                Result.Ok(req) :
-                Result.Fail<RegistrationOTPRequest>(NotFoundError);
+            Result.Ok(req) :
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(RegistrationOTPRequest), ErrorType.RegistrationOTPRequestNotFound));
     }
     public async Task<Result> MarkRequestAsUsed(Guid requestId, Guid userId)
     {
@@ -29,6 +25,6 @@ public class RegistrationOTPRequestRepo(QydhaContext qydhaContext, ILogger<Regis
            );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(NotFoundError);
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(RegistrationOTPRequest), ErrorType.RegistrationOTPRequestNotFound));
     }
 }

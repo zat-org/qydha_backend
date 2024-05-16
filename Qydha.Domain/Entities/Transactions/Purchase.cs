@@ -10,25 +10,5 @@ public class Purchase
     public int NumberOfDays { get; set; }
     public virtual User User { get; set; } = null!;
 
-    public Purchase() { }
-
-    public Purchase(InfluencerCode influencerCode, Guid userId)
-    {
-        IAPHubPurchaseId = influencerCode.Id.ToString();
-        UserId = userId;
-        Type = "Influencer";
-        PurchaseDate = DateTimeOffset.UtcNow;
-        ProductSku = influencerCode.Code;
-        NumberOfDays = influencerCode.NumberOfDays;
-    }
-    public Purchase(UserPromoCode promoCode)
-    {
-        IAPHubPurchaseId = promoCode.Id.ToString();
-        UserId = promoCode.UserId;
-        Type = "promo_code";
-        PurchaseDate = DateTimeOffset.UtcNow;
-        ProductSku = promoCode.Code;
-        NumberOfDays = promoCode.NumberOfDays;
-    }
-
+    
 }

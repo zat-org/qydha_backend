@@ -25,4 +25,13 @@ public class UpdateEmailRequest
         CreatedAt = DateTimeOffset.UtcNow;
         SentBy = sender;
     }
+    public Result IsRequestValidToUse(Guid userId, string code, OtpManager _otpManager)
+    {
+        if (!_otpManager.IsOtpValid(CreatedAt))
+            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(UpdateEmailRequest), ErrorType.OTPExceededTimeLimit));
+
+        if (OTP != code || UserId != userId)
+            return Result.Fail(new IncorrectOtpError(nameof(UpdateEmailRequest)));
+        return Result.Ok();
+    }
 }

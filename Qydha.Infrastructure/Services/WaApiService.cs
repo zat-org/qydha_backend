@@ -26,48 +26,27 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
                     });
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
-            RootObject responseObject = JsonConvert.DeserializeObject<RootObject>(jsonResponse) 
+            RootObject responseObject = JsonConvert.DeserializeObject<RootObject>(jsonResponse)
                 ?? throw new Exception($"can't serialize the response from WaApi Service with body : {jsonResponse} ");
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogCritical("WaApi has Failure Status Code {statusCode} and response body : {response}", response.StatusCode, jsonResponse);
-                return Result.Fail<string>(new()
-                {
-                    Code = ErrorType.WaApiUnknownError,
-                    Message = $"UnExpected error occurred "
-                });
+                return Result.Fail(new WaApiUnknownError());
             }
             if (responseObject.Data.Status == DataStatus.error)
             {
-                _logger.LogCritical("WaApi has Success Status Code But with Error Status In Body :=> response body : {response}", responseObject);
+                _logger.LogCritical("WaApi has Success Status Code But with Error Status In Body :=> response body : {response}", jsonResponse);
                 if (responseObject.Data.Message == "instance not ready")
-                {
-                    return Result.Fail<string>(new()
-                    {
-                        Code = ErrorType.WaApiInstanceNotReady,
-                        Message = $"WaApi Instance NotReady"
-                    });
-                }
+                    return Result.Fail(new WaApiInstanceNotReadyError(instanceId));
                 else
-                {
-                    return Result.Fail<string>(new()
-                    {
-                        Code = ErrorType.WaApiUnknownError,
-                        Message = $"UnExpected error occurred "
-                    });
-                }
+                    return Result.Fail(new WaApiUnknownError());
             }
             return Result.Ok($"WhatsApp:WaApi:{instanceId}");
         }
-
         catch (Exception ex)
         {
             _logger.LogCritical("WaApi has Exception {exp}", ex);
-            return Result.Fail<string>(new()
-            {
-                Code = ErrorType.WaApiUnknownError,
-                Message = $"UnExpected ERROR occurred : {ex.Message}"
-            });
+            return Result.Fail(new WaApiUnknownError().CausedBy(ex));
         }
     }
 

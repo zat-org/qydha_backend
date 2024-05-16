@@ -39,59 +39,27 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     {
         Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, oldPassword);
         return checkingRes
-            .OnSuccessAsync<User>(async (user) =>
-                (await _userRepo.UpdateUserPassword(userId, BCrypt.Net.BCrypt.HashPassword(newPassword)))
-                .MapTo(user));
+            .OnSuccessAsync(async (user) =>
+                (await _userRepo.UpdateUserPassword(userId, PasswordHashingManager.HashPassword(newPassword))).ToResult(user));
     }
 
     public async Task<Result<User>> UpdateUserPassword(Guid userId, Guid phoneAuthReqId, string newPassword)
     {
-        Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
-        return getUserRes
-        .OnSuccessAsync(
-            async (user) =>
-                (await _phoneAuthenticationRequestRepo.GetByIdAsync(phoneAuthReqId))
-                .MapTo((request) => new Tuple<User, PhoneAuthenticationRequest>(user, request)))
-        .OnSuccess((tuple) =>
-        {
-            if (tuple.Item1.IsAnonymous)
-                return Result.Fail<User>(new()
-                {
-                    Code = ErrorType.InvalidActionByAnonymousUser,
-                    Message = "Invalid Operation On Anonymous User"
-                });
-
-            if (tuple.Item1.Id != tuple.Item2.UserId)
-                return Result.Fail<User>(new()
-                {
-                    Code = ErrorType.InvalidForgetPasswordRequest,
-                    Message = "User phone is not the same in the phone login request"
-                });
-
-            if (tuple.Item2.CreatedAt.AddDays(1) < DateTimeOffset.UtcNow)
-                return Result.Fail<User>(new()
-                {
-                    Code = ErrorType.ForgetPasswordRequestExceedTime,
-                    Message = "Forget Password Request Exceed Time of 1 Day"
-                });
-
-            return Result.Ok(tuple.Item1);
-        })
-        .OnSuccessAsync<User>(async (user) =>
-                (await _userRepo.UpdateUserPassword(userId, BCrypt.Net.BCrypt.HashPassword(newPassword)))
-                .MapTo(user));
+        return (await _phoneAuthenticationRequestRepo.GetByIdAsync(phoneAuthReqId))
+        .OnSuccess((req) => req.IsValidToUpdatePasswordUsingIt(userId))
+        .OnSuccessAsync(async () => await _userRepo.UpdateUserPassword(userId, PasswordHashingManager.HashPassword(newPassword)))
+        .OnSuccessAsync(async () => await _userRepo.GetByIdAsync(userId));
     }
 
     public async Task<Result> UpdateFCMToken(Guid userId, string token) =>
-      await _userRepo.UpdateUserFCMToken(userId, token);
-
+        await _userRepo.UpdateUserFCMToken(userId, token);
     public async Task<Result<User>> UpdateUserUsername(Guid userId, string password, string newUsername)
     {
         Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, password);
         return checkingRes
-            .OnSuccessAsync<User>(async (user) => (await _userRepo.IsUsernameAvailable(newUsername, userId)).MapTo(user))
-            .OnSuccessAsync<User>(async (user) => (await _userRepo.UpdateUserUsername(userId, newUsername)).MapTo(user))
-            .OnSuccess<User>(user =>
+            .OnSuccessAsync(async (user) => (await _userRepo.IsUsernameAvailable(newUsername, userId)).ToResult(user))
+            .OnSuccessAsync(async (user) => (await _userRepo.UpdateUserUsername(userId, newUsername)).ToResult(user))
+            .OnSuccess(user =>
             {
                 user.Username = newUsername;
                 return Result.Ok(user);
@@ -100,118 +68,59 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     public async Task<Result<UpdatePhoneRequest>> UpdateUserPhone(Guid userId, string password, string newPhone)
     {
         return (await _userRepo.CheckUserCredentials(userId, password))
-            .OnSuccessAsync<User>(async (user) => (await _userRepo.IsPhoneAvailable(newPhone)).MapTo(user))
+            .OnSuccessAsync(async (user) => (await _userRepo.IsPhoneAvailable(newPhone)).ToResult(user))
             .OnSuccessAsync(async (user) =>
             {
                 var otp = _otpManager.GenerateOTP();
-                return (await _messageService.SendOtpAsync(newPhone, user.Username!, otp))
-                    .MapTo((sender) => new Tuple<string, string>(otp, sender));
+                return (await _messageService.SendOtpAsync(newPhone, user.Username!, otp)).ToResult((sender) => (otp, sender));
             })
-            .OnSuccessAsync(async (tuple) => await _updatePhoneOTPRequestRepo.AddAsync(new(newPhone, tuple.Item1, userId, tuple.Item2)));
+            .OnSuccessAsync(async (tuple) => await _updatePhoneOTPRequestRepo.AddAsync(new(newPhone, tuple.otp, userId, tuple.sender)));
     }
     public async Task<Result<User>> ConfirmPhoneUpdate(Guid userId, string code, Guid requestId)
     {
         Result<UpdatePhoneRequest> getUPhoneRes = await _updatePhoneOTPRequestRepo.GetByIdAsync(requestId);
-        return getUPhoneRes.OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) =>
-            {
-                if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
-                    return Result.Fail<UpdatePhoneRequest>(new()
-                    {
-                        Code = ErrorType.OTPExceededTimeLimit,
-                        Message = "OTP Exceed Time Limit"
-                    });
-
-                if (otp_request.OTP != code || otp_request.UserId != userId)
-                    return Result.Fail<UpdatePhoneRequest>(new()
-                    {
-                        Code = ErrorType.IncorrectOTP,
-                        Message = "Incorrect OTP."
-                    });
-
-                return (await _updatePhoneOTPRequestRepo.MarkRequestAsUsed(requestId)).MapTo(otp_request);
-            })
-            .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.IsPhoneAvailable(otp_request.Phone)).MapTo(otp_request))
-            .OnSuccessAsync<UpdatePhoneRequest>(async (otp_request) => (await _userRepo.UpdateUserPhone(otp_request.UserId, otp_request.Phone)).MapTo(otp_request))
-            .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.UserId));
+        return getUPhoneRes
+        .OnSuccess(otpReq => otpReq.IsRequestValidToUse(userId, code, _otpManager).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) => (await _updatePhoneOTPRequestRepo.MarkRequestAsUsed(requestId)).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) => (await _userRepo.IsPhoneAvailable(otpReq.Phone)).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) => (await _userRepo.UpdateUserPhone(otpReq.UserId, otpReq.Phone)).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) => await _userRepo.GetByIdAsync(otpReq.UserId));
     }
     public async Task<Result<UpdateEmailRequest>> UpdateUserEmail(Guid userId, string password, string newEmail)
     {
-        Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, password);
-        return checkingRes
-            .OnSuccessAsync<User>(async (user) => (await _userRepo.IsEmailAvailable(newEmail, user.Id)).MapTo(user))
+        return (await _userRepo.CheckUserCredentials(userId, password))
+            .OnSuccessAsync(async (user) => (await _userRepo.IsEmailAvailable(newEmail, user.Id)).ToResult(user))
             .OnSuccessAsync(async (user) =>
             {
                 string otp = _otpManager.GenerateOTP();
-                Guid requestId = Guid.NewGuid();
-                var emailSubject = "تأكيد البريد الالكتروني لحساب تطبيق قيدها";
-                var emailBody = await _mailingService.GenerateConfirmEmailBody(otp, requestId.ToString(), user);
-                return (await _mailingService.SendEmailAsync(newEmail, emailSubject, emailBody))
-                        .MapTo((sender) => new Tuple<string, Guid, string>(otp, requestId, sender));
+                return await _mailingService.SendOtpToEmailAsync(newEmail, otp, user);
             })
-            .OnSuccessAsync(async (tuple) => await _updateEmailRequestRepo.AddAsync(new(tuple.Item2, newEmail, tuple.Item1, userId, tuple.Item3)));
+            .OnSuccessAsync(async (tuple) => await _updateEmailRequestRepo.AddAsync(new(tuple.requestId, newEmail, tuple.otp, userId, tuple.sender)));
     }
     public async Task<Result<User>> ConfirmEmailUpdate(Guid userId, string code, Guid requestId)
     {
-        Result<UpdateEmailRequest> getUEmailRes = await _updateEmailRequestRepo.GetByIdAsync(requestId);
-        return getUEmailRes.OnSuccessAsync<UpdateEmailRequest>(async (otp_request) =>
-        {
-            if (!_otpManager.IsOtpValid(otp_request.CreatedAt))
-                return Result.Fail<UpdateEmailRequest>(new()
-                {
-                    Code = ErrorType.OTPExceededTimeLimit,
-                    Message = "OTP Exceed Time Limit"
-                });
-
-            if (otp_request.OTP != code || otp_request.UserId != userId)
-                return Result.Fail<UpdateEmailRequest>(new()
-                {
-                    Code = ErrorType.IncorrectOTP,
-                    Message = "Incorrect OTP."
-                });
-
-            return (await _updateEmailRequestRepo.MarkRequestAsUsed(requestId)).MapTo(otp_request);
-        })
-        .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) => (await _userRepo.IsEmailAvailable(otp_request.Email, otp_request.UserId)).MapTo(otp_request))
-        .OnSuccessAsync<UpdateEmailRequest>(async (otp_request) =>
-            (await _userRepo.UpdateUserEmail(otp_request.UserId, otp_request.Email))
-            .MapTo(otp_request))
-        .OnSuccessAsync(async (otp_request) => await _userRepo.GetByIdAsync(otp_request.UserId));
+        return (await _updateEmailRequestRepo.GetByIdAsync(requestId))
+        .OnSuccess((otpReq) => otpReq.IsRequestValidToUse(userId, code, _otpManager).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) => (await _updateEmailRequestRepo.MarkRequestAsUsed(requestId)).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) => (await _userRepo.IsEmailAvailable(otpReq.Email, otpReq.UserId)).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) => (await _userRepo.UpdateUserEmail(otpReq.UserId, otpReq.Email)).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) => await _userRepo.GetByIdAsync(otpReq.UserId));
     }
 
     public async Task<Result<User>> UploadUserPhoto(Guid userId, IFormFile file)
     {
-        Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
-        return getUserRes
+        return (await _userRepo.GetByIdAsync(userId))
         .OnSuccessAsync(async (user) =>
         {
             if (user.AvatarPath is not null)
             {
-                (await _fileService.DeleteFile(user.AvatarPath))
-                .OnSuccess(() =>
-                {
-                    user.AvatarPath = null;
-                    user.AvatarUrl = null;
-                })
-                .OnFailure((err) =>
-                {
-                    _logger.LogError("Can't Delete user Avatar with user Id = {userId} and Avatar Path = {avatarPath} with Error code =  {errorCode},  Message = {errorMsg} ", user.Id, user.AvatarPath, err.Code, err.Message);
-                    return err;
-                });
+                await _fileService.DeleteFile(user.AvatarPath);
+                user.AvatarPath = null;
+                user.AvatarUrl = null;
             }
-            return (await _fileService.UploadFile(_avatarSettings.FolderPath, file))
-                    .OnFailure((err) =>
-                    {
-                        _logger.LogError("Can't Upload user Avatar with user Id = {userId} with file Data = {fileData} with Error code = {errorCode},  Message = {errorMsg} ", user.Id, new { file.Length, name = file.FileName, file.ContentType }, err.Code, err.Message);
-                        return new()
-                        {
-                            Code = ErrorType.FileUploadError,
-                            Message = "حدث عطل اثناء حفظ الصورة برجاء المحاولة مرة اخري"
-                        };
-                    });
+            return await _fileService.UploadFile(_avatarSettings.FolderPath, file);
         })
-        .OnSuccessAsync<FileData>(async (fileData) =>
-            (await _userRepo.UpdateUserAvatarData(userId, fileData.Path, fileData.Url))
-            .MapTo(fileData))
+        .OnSuccessAsync(async (fileData) => await _userRepo.UpdateUserAvatarData(userId, fileData.Path, fileData.Url))
         .OnSuccessAsync(async () => await _userRepo.GetByIdAsync(userId));
     }
 
@@ -221,48 +130,19 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     #region Delete User
     public async Task<Result<User>> DeleteUser(Guid userId, string password)
     {
-        Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
-        return getUserRes
-        .OnSuccess<User>((user) =>
-        {
-            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return Result.Fail<User>(new()
-                {
-                    Code = ErrorType.InvalidCredentials,
-                    Message = "كلمة المرور غير صحيحة"
-                });
-            return Result.Ok(user);
-        })
-        .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteAsync(user.Id)).MapTo(user))
-        .OnSuccessAsync<User>(async (user) =>
+        // TODO log delete user action 
+        Result<User> checkUserCredentials = await _userRepo.CheckUserCredentials(userId, password);
+        return checkUserCredentials
+        .OnSuccessAsync(async (user) => (await _userRepo.DeleteAsync(user.Id)).ToResult(user))
+        .OnSuccessAsync(async (user) =>
         {
             if (user.AvatarPath is not null)
-                (await _fileService.DeleteFile(user.AvatarPath))
-                .OnFailure((err) =>
-                {
-                    _logger.LogError("Can't Delete user Avatar with user Id = {userId} and Avatar Path = {avatarPath} with Error code =  {errorCode},  Message = {errorMsg} ", user.Id, user.AvatarPath, err.Code, err.Message);
-                    return err;
-                });
+                await _fileService.DeleteFile(user.AvatarPath);
             return Result.Ok(user);
         });
     }
 
-    public async Task<Result<User>> DeleteAnonymousUser(Guid userId)
-    {
-        Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
-        return getUserRes
-        .OnSuccess<User>((user) =>
-        {
-            if (!user.IsAnonymous)
-                return Result.Fail<User>(new()
-                {
-                    Code = ErrorType.InvalidActionByRegularUser,
-                    Message = "Can't Delete that Regular User"
-                });
-            return Result.Ok(user);
-        })
-        .OnSuccessAsync<User>(async (user) => (await _userRepo.DeleteAsync(user.Id)).MapTo(user));
-    }
+
     #endregion
 
     #region user  settings

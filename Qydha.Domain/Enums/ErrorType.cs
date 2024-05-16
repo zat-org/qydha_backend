@@ -98,9 +98,9 @@ public enum ErrorType
     #region BalootGame Errors 
     InvalidBalootGameAction = 4200,
     #endregion
-    
+
     #region server errors
-    UnknownServerError = 5000,
-    ServerErrorOnDB = 5001,
+    InternalServerError = 5000,
+    // ServerErrorOnDB = 5001,
     #endregion
 }

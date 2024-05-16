@@ -17,7 +17,7 @@ public class UserController(IUserService userService, INotificationService notif
     public async Task<IActionResult> GetUsers()
     {
         return (await _userService.GetAllRegularUsers())
-              .Handle<IEnumerable<User>, IActionResult>((users) =>
+            .Resolve((users) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
@@ -25,7 +25,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { users = users.Select(u => mapper.UserToUserDto(u)) },
                     message = "users fetched successfully."
                 });
-            }, BadRequest);
+            });
     }
 
     [HttpGet("me/")]
@@ -34,7 +34,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userService.GetUserWithSettingsByIdAsync(user.Id))
-       .Handle<User, IActionResult>(
+       .Resolve(
            (userData) =>
            {
                var mapper = new UserMapper();
@@ -49,16 +49,14 @@ public class UserController(IUserService userService, INotificationService notif
                    },
                    message = "User fetched successfully."
                });
-           },
-           BadRequest
-       );
+           });
     }
 
     [HttpGet("is-username-available")]
     public async Task<IActionResult> IsUserNameAvailable([FromBody] string username)
     {
         return (await _userService.IsUserNameAvailable(username))
-        .Handle<IActionResult>(
+        .Resolve(
             () =>
             {
                 return Ok(new
@@ -66,9 +64,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { IsAvailable = true },
                     message = "usernames is available."
                 });
-            },
-            BadRequest
-        );
+            });
     }
 
     #endregion
@@ -80,7 +76,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userService.UpdateUserPassword(user.Id, changePasswordDto.OldPassword, changePasswordDto.NewPassword))
-        .Handle<User, IActionResult>((user) =>
+        .Resolve((user) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
@@ -88,8 +84,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { user = mapper.UserToUserDto(user) },
                     message = "User updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -98,7 +93,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userService.UpdateUserPassword(user.Id, dto.RequestId, dto.NewPassword))
-        .Handle<User, IActionResult>((user) =>
+        .Resolve((user) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
@@ -106,8 +101,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { user = mapper.UserToUserDto(user) },
                     message = "User updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -116,7 +110,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userService.UpdateUserUsername(user.Id, changeUsernameDto.Password, changeUsernameDto.NewUsername))
-        .Handle<User, IActionResult>((user) =>
+        .Resolve((user) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
@@ -124,8 +118,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { user = mapper.UserToUserDto(user) },
                     message = "User updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -134,15 +127,14 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userService.UpdateUserPhone(user.Id, changePhoneDto.Password, changePhoneDto.NewPhone))
-        .Handle<UpdatePhoneRequest, IActionResult>((otp_request) =>
+        .Resolve((otp_request) =>
             {
                 return Ok(new
                 {
                     Data = new { RequestId = otp_request.Id },
                     Message = "Otp sent successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -152,7 +144,7 @@ public class UserController(IUserService userService, INotificationService notif
         User user = (User)HttpContext.Items["User"]!;
 
         return (await _userService.ConfirmPhoneUpdate(user.Id, confirmPhoneDto.Code, confirmPhoneDto.RequestId))
-        .Handle<User, IActionResult>((user) =>
+        .Resolve((user) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
@@ -160,8 +152,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { user = mapper.UserToUserDto(user) },
                     message = "User updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -171,7 +162,7 @@ public class UserController(IUserService userService, INotificationService notif
         User user = (User)HttpContext.Items["User"]!;
 
         return (await _userService.UpdateUserEmail(user.Id, changeEmailDto.Password, changeEmailDto.NewEmail))
-        .Handle<UpdateEmailRequest, IActionResult>((otp_request) =>
+        .Resolve((otp_request) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
@@ -179,8 +170,7 @@ public class UserController(IUserService userService, INotificationService notif
                     Data = new { RequestId = otp_request.Id },
                     Message = "User updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
     [Auth(SystemUserRoles.RegularUser)]
     [HttpPost("me/confirm-email-update/")]
@@ -189,7 +179,7 @@ public class UserController(IUserService userService, INotificationService notif
         User user = (User)HttpContext.Items["User"]!;
 
         return (await _userService.ConfirmEmailUpdate(user.Id, confirmEmailDto.Code, confirmEmailDto.RequestId))
-        .Handle<User, IActionResult>((user) =>
+        .Resolve((user) =>
         {
             var mapper = new UserMapper();
             return Ok(new
@@ -197,8 +187,7 @@ public class UserController(IUserService userService, INotificationService notif
                 data = new { user = mapper.UserToUserDto(user) },
                 message = "User updated successfully."
             });
-        },
-        BadRequest);
+        });
     }
     [Auth(SystemUserRoles.RegularUser)]
 
@@ -207,7 +196,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userService.UploadUserPhoto(user.Id, dto.File))
-        .Handle<User, IActionResult>((user) =>
+        .Resolve((user) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
@@ -215,7 +204,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { user = mapper.UserToUserDto(user) },
                     message = "User updated successfully."
                 });
-            }, BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -224,7 +213,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userService.UpdateFCMToken(user.Id, changeUserFCMTokenDto.FCMToken))
-        .Handle<IActionResult>(() => Ok(new { data = new { }, Message = "User fcm token Updated Successfully" }), BadRequest);
+        .Resolve(() => Ok(new { data = new { }, Message = "User fcm token Updated Successfully" }));
     }
 
 
@@ -233,21 +222,17 @@ public class UserController(IUserService userService, INotificationService notif
     public IActionResult UpdateUserData([FromBody] JsonPatchDocument<UpdateUserDto> updateUserDtoPatch)
     {
         if (updateUserDtoPatch is null)
-            return BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidBodyInput,
-                Message = "لا يوجد بيانات لتحديثها"
-            });
+            return BadRequest(new InvalidBodyInputError("لا يوجد بيانات لتحديثها"));
 
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
         return Result.Ok(user)
-        .OnSuccess<User>((user) =>
+        .OnSuccess((user) =>
         {
             var dto = mapper.UserToUpdateUserDto(user);
             return updateUserDtoPatch.ApplyToAsResult(dto)
-            .OnSuccess<UpdateUserDto>((dtoWithChanges) =>
+            .OnSuccess((dtoWithChanges) =>
             {
                 var validator = new UpdateUserDtoValidator();
                 return validator.ValidateAsResult(dtoWithChanges);
@@ -258,15 +243,15 @@ public class UserController(IUserService userService, INotificationService notif
                 return Result.Ok(user);
             });
         })
-        .OnSuccessAsync<User>(_userService.UpdateUser)
-        .Handle<User, IActionResult>((user) =>
+        .OnSuccessAsync(_userService.UpdateUser)
+        .Resolve((user) =>
         {
             return Ok(new
             {
                 data = new { user = mapper.UserToUserDto(user) },
                 message = "User updated Successfully"
             });
-        }, BadRequest);
+        });
     }
 
     #endregion
@@ -279,9 +264,7 @@ public class UserController(IUserService userService, INotificationService notif
         User user = (User)HttpContext.Items["User"]!;
 
         return (await _userService.DeleteUser(user.Id, deleteUserDto.Password))
-        .Handle<User, IActionResult>(
-            (user) => Ok(new { data = new { }, message = $"User with username: '{user.Username}' Deleted Successfully." })
-            , BadRequest);
+        .Resolve((user) => Ok(new { data = new { }, message = $"User with username: '{user.Username}' Deleted Successfully." }));
     }
 
 
@@ -295,7 +278,7 @@ public class UserController(IUserService userService, INotificationService notif
         User user = (User)HttpContext.Items["User"]!;
 
         return (await _notificationService.GetByUserId(user.Id, pageSize, pageNumber, isRead))
-        .Handle<IEnumerable<Notification>, IActionResult>((notifications) =>
+        .Resolve((notifications) =>
             {
                 var mapper = new NotificationMapper();
 
@@ -305,8 +288,7 @@ public class UserController(IUserService userService, INotificationService notif
                         data = new { notifications = notifications.Select(n => mapper.NotificationToGetNotificationDto(n)) },
                         message = "Notifications Fetched successfully."
                     });
-            }
-         , BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -315,7 +297,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _notificationService.MarkNotificationAsRead(user.Id, notificationId))
-        .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
+        .Resolve(() => Ok(new { data = new { }, message = "notification marked as read." }));
     }
     [Auth(SystemUserRoles.RegularUser)]
     [HttpPatch("me/notifications/mark-all-as-read/")]
@@ -323,7 +305,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _notificationService.MarkAllNotificationsOfUserAsRead(user.Id))
-        .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification marked as read." }), BadRequest);
+        .Resolve(() => Ok(new { data = new { }, message = "notification marked as read." }));
     }
     [Auth(SystemUserRoles.RegularUser)]
     [HttpDelete("me/notifications/{notificationId}")]
@@ -331,7 +313,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _notificationService.DeleteNotification(user.Id, notificationId))
-        .Handle<IActionResult>(() => Ok(new { data = new { }, message = "notification Deleted." }), BadRequest);
+        .Resolve(() => Ok(new { data = new { }, message = "notification Deleted." }));
     }
     [Auth(SystemUserRoles.RegularUser)]
     [HttpDelete("me/notifications/")]
@@ -339,7 +321,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _notificationService.DeleteAll(user.Id))
-        .Handle<IActionResult>(() => Ok(new { data = new { }, message = "All Notifications has been Deleted." }), BadRequest);
+        .Resolve(() => Ok(new { data = new { }, message = "All Notifications has been Deleted." }));
     }
     #endregion
 
@@ -350,17 +332,13 @@ public class UserController(IUserService userService, INotificationService notif
     public async Task<IActionResult> UpdateUserGeneralSettings([FromBody] JsonPatchDocument<UserGeneralSettingsDto> generalSettingsDtoPatch)
     {
         if (generalSettingsDtoPatch is null)
-            return BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidBodyInput,
-                Message = "لا يوجد بيانات لتحديثها"
-            });
+            return BadRequest(new InvalidBodyInputError("لا يوجد بيانات لتحديثها"));
 
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
         return (await _userService.GetUserGeneralSettings(user.Id))
-        .OnSuccess<UserGeneralSettings>((settings) =>
+        .OnSuccess((settings) =>
         {
             var dto = mapper.UserGeneralSettingsToDto(settings);
             return generalSettingsDtoPatch.ApplyToAsResult(dto)
@@ -371,8 +349,8 @@ public class UserController(IUserService userService, INotificationService notif
             });
 
         })
-        .OnSuccessAsync<UserGeneralSettings>(_userService.UpdateUserGeneralSettings)
-        .Handle<UserGeneralSettings, IActionResult>((settings) =>
+        .OnSuccessAsync(_userService.UpdateUserGeneralSettings)
+        .Resolve((settings) =>
         {
             return Ok(new
             {
@@ -383,7 +361,7 @@ public class UserController(IUserService userService, INotificationService notif
                 },
                 message = "User's General settings updated successfully."
             });
-        }, BadRequest);
+        });
     }
 
     [HttpPatch("me/hand-settings")]
@@ -391,21 +369,17 @@ public class UserController(IUserService userService, INotificationService notif
     public async Task<IActionResult> UpdateUserHandSettings([FromBody] JsonPatchDocument<UserHandSettingsDto> handSettingsDtoPatch)
     {
         if (handSettingsDtoPatch is null)
-            return BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidBodyInput,
-                Message = "لا يوجد بيانات لتحديثها"
-            });
+            return BadRequest(new InvalidBodyInputError("لا يوجد بيانات لتحديثها"));
 
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
         return (await _userService.GetUserHandSettings(user.Id))
-        .OnSuccess<UserHandSettings>((settings) =>
+        .OnSuccess((settings) =>
         {
             var dto = mapper.UserHandSettingsToDto(settings);
             return handSettingsDtoPatch.ApplyToAsResult(dto)
-            .OnSuccess<UserHandSettingsDto>((dtoWithChanges) =>
+            .OnSuccess((dtoWithChanges) =>
             {
                 var handSettingsValidator = new UserHandSettingsDtoValidator();
                 return handSettingsValidator.ValidateAsResult(dtoWithChanges);
@@ -416,15 +390,15 @@ public class UserController(IUserService userService, INotificationService notif
                 return Result.Ok(settings);
             });
         })
-        .OnSuccessAsync<UserHandSettings>(_userService.UpdateUserHandSettings)
-        .Handle<UserHandSettings, IActionResult>((settings) =>
+        .OnSuccessAsync(_userService.UpdateUserHandSettings)
+        .Resolve((settings) =>
         {
             return Ok(new
             {
                 data = new { user = mapper.UserToUserDto(user), handSettings = mapper.UserHandSettingsToDto(settings) },
                 message = "User's Hand settings updated successfully."
             });
-        }, BadRequest);
+        });
     }
 
     [HttpPatch("me/baloot-settings")]
@@ -432,17 +406,13 @@ public class UserController(IUserService userService, INotificationService notif
     public async Task<IActionResult> UpdateUserBalootSettings([FromBody] JsonPatchDocument<UserBalootSettingsDto> balootSettingsDtoPatch)
     {
         if (balootSettingsDtoPatch is null)
-            return BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidBodyInput,
-                Message = ".لا يوجد بيانات لتحديثها"
-            });
+            return BadRequest(new InvalidBodyInputError("لا يوجد بيانات لتحديثها"));
 
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
         return (await _userService.GetUserBalootSettings(user.Id))
-        .OnSuccess<UserBalootSettings>((settings) =>
+        .OnSuccess((settings) =>
         {
             var dto = mapper.UserBalootSettingsToDto(settings);
             return balootSettingsDtoPatch.ApplyToAsResult(dto)
@@ -452,15 +422,15 @@ public class UserController(IUserService userService, INotificationService notif
                  return Result.Ok(settings);
              });
         })
-        .OnSuccessAsync<UserBalootSettings>(_userService.UpdateUserBalootSettings)
-        .Handle<UserBalootSettings, IActionResult>((settings) =>
+        .OnSuccessAsync(_userService.UpdateUserBalootSettings)
+        .Resolve((settings) =>
         {
             return Ok(new
             {
                 data = new { user = mapper.UserToUserDto(user), balootSettings = mapper.UserBalootSettingsToDto(settings) },
                 message = "User's baloot settings updated successfully."
             });
-        }, BadRequest);
+        });
     }
 
     [HttpGet("me/general-settings")]
@@ -470,7 +440,7 @@ public class UserController(IUserService userService, INotificationService notif
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
         return (await _userService.GetUserGeneralSettings(user.Id))
-        .Handle<UserGeneralSettings, IActionResult>(
+        .Resolve(
             (settings) =>
             {
                 return Ok(new
@@ -478,8 +448,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { generalSettings = mapper.UserGeneralSettingsToDto(settings) },
                     message = "Settings fetched successfully."
                 });
-            }
-            , BadRequest);
+            });
     }
     [HttpGet("me/hand-settings")]
     [Auth(SystemUserRoles.RegularUser)]
@@ -488,7 +457,7 @@ public class UserController(IUserService userService, INotificationService notif
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
         return (await _userService.GetUserHandSettings(user.Id))
-        .Handle<UserHandSettings, IActionResult>(
+        .Resolve(
             (settings) =>
             {
                 return Ok(new
@@ -496,8 +465,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { handSettings = mapper.UserHandSettingsToDto(settings) },
                     message = "Settings fetched successfully."
                 });
-            }
-            , BadRequest);
+            });
     }
 
     [HttpGet("me/baloot-settings")]
@@ -507,7 +475,7 @@ public class UserController(IUserService userService, INotificationService notif
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
         return (await _userService.GetUserBalootSettings(user.Id))
-        .Handle<UserBalootSettings, IActionResult>(
+        .Resolve(
             (settings) =>
             {
                 return Ok(new
@@ -515,8 +483,7 @@ public class UserController(IUserService userService, INotificationService notif
                     data = new { balootSettings = mapper.UserBalootSettingsToDto(settings) },
                     message = "Settings fetched successfully."
                 });
-            }
-            , BadRequest);
+            });
     }
     #endregion
 

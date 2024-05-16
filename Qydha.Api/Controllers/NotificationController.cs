@@ -14,7 +14,7 @@ public class NotificationController(INotificationService notificationService) : 
     public async Task<IActionResult> GetPublicNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
     {
         return (await _notificationService.GetAllAnonymous(pageSize, pageNumber))
-        .Handle<IEnumerable<Notification>, IActionResult>(
+        .Resolve(
             (notificationsData) =>
             {
                 var mapper = new NotificationMapper();
@@ -25,9 +25,7 @@ public class NotificationController(INotificationService notificationService) : 
                         data = new { notifications = notificationsData.Select(n => mapper.NotificationToGetNotificationDto(n)) },
                         message = "Notifications Fetched successfully."
                     });
-            }
-            , BadRequest
-        );
+            });
     }
 
     [HttpPatch("click/{notificationId}")]
@@ -35,15 +33,13 @@ public class NotificationController(INotificationService notificationService) : 
     public async Task<IActionResult> ApplyAnonymousClickOnNotification([FromRoute] int notificationId)
     {
         return (await _notificationService.ApplyAnonymousClick(notificationId))
-        .Handle<IActionResult>(
+        .Resolve(
             () => Ok(
                     new
                     {
                         data = new { },
                         message = "Notification Clicked successfully."
-                    })
-            , BadRequest
-        );
+                    }));
     }
 
     [HttpPost("send-to-user/")]
@@ -71,9 +67,7 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             }, templateValues: []);
         })
-        .Handle<User, IActionResult>((user) =>
-            Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" })
-        , BadRequest);
+        .Resolve((user) => Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" }));
     }
 
 
@@ -102,9 +96,7 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             }, templateValues: []);
         })
-        .Handle<int, IActionResult>((usersCount) =>
-            Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" })
-        , BadRequest);
+        .Resolve((usersCount) => Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" }));
     }
 
     [HttpPost("send-to-anonymous-users/")]
@@ -132,8 +124,6 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             });
         })
-        .Handle<Notification, IActionResult>((notification) =>
-            Ok(new { message = $"Notification sent to the Anonymous users" })
-        , BadRequest);
+        .Resolve((notification) => Ok(new { message = $"Notification sent to the Anonymous users" }));
     }
 }

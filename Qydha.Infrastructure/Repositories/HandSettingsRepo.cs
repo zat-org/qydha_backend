@@ -10,12 +10,8 @@ public class UserHandSettingsRepo(QydhaContext dbContext, ILogger<UserHandSettin
     public async Task<Result<UserHandSettings>> GetByUserIdAsync(Guid userId)
     {
         return await _dbCtx.UserHandSettings.FirstOrDefaultAsync((settings) => settings.UserId == userId) is UserHandSettings settings ?
-          Result.Ok(settings) :
-          Result.Fail<UserHandSettings>(new()
-          {
-              Code = ErrorType.UserHandSettingsNotFound,
-              Message = $"User Hand Settings NotFound:: Entity not found"
-          });
+            Result.Ok(settings) :
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(UserHandSettings), ErrorType.UserHandSettingsNotFound));
     }
 
     public async Task<Result<UserHandSettings>> UpdateByUserIdAsync(UserHandSettings settings)
@@ -31,10 +27,7 @@ public class UserHandSettingsRepo(QydhaContext dbContext, ILogger<UserHandSettin
        );
         return affected == 1 ?
             Result.Ok(settings) :
-            Result.Fail<UserHandSettings>(new()
-            {
-                Code = ErrorType.UserHandSettingsNotFound,
-                Message = $"User Hand Settings NotFound:: Entity not found"
-            });
+            Result.Fail(new EntityNotFoundError<Guid>(settings.UserId, nameof(UserHandSettings), ErrorType.UserHandSettingsNotFound));
+
     }
 }

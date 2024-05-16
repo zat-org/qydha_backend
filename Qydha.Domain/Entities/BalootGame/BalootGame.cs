@@ -14,5 +14,9 @@ public class BalootGame
 
     public List<BalootGameEvent> GetEvents() =>
             JsonConvert.DeserializeObject<List<BalootGameEvent>>(EventsJsonString, BalootConstants.balootEventsSerializationSettings) ?? [];
-  
 }
+
+
+public class InvalidBalootGameActionError(string msg)
+    : ResultError(msg, ErrorType.InvalidBalootGameAction, StatusCodes.Status400BadRequest)
+{ }

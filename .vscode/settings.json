@@ -27,5 +27,6 @@
         "Sakkas",
         "Serilog",
         "Takweesh"
-    ]
+    ],
+    "files.autoSave": "afterDelay"
 }

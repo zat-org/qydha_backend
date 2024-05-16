@@ -11,11 +11,10 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IM
     public async Task<Result<InfluencerCode>> AddInfluencerCode(string code, int numOfDays, DateTimeOffset? expireDate, int MaxInfluencedUsersCount, int? categoryId)
     {
         var getCodeRes = await _influencerCodesRepo.IsCodeAvailable(code);
-        return getCodeRes
-        .OnSuccessAsync(async () =>
+        return getCodeRes.OnSuccessAsync(async () =>
         {
-            if (categoryId is not null)
-                return await _influencerCodesCategoriesRepo.GetByIdAsync(categoryId.Value);
+            if (categoryId != null)
+                return (await _influencerCodesCategoriesRepo.GetByIdAsync(categoryId.Value)).ToResult();
             return Result.Ok();
         })
         .OnSuccessAsync(async () => await _influencerCodesRepo.AddAsync(new InfluencerCode(code, numOfDays, expireDate, MaxInfluencedUsersCount, categoryId)));
@@ -25,53 +24,25 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IM
     {
         var getCodeRes = await _influencerCodesRepo.GetByCodeIfValidAsync(code);
         return getCodeRes
-        .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
+        .OnSuccessAsync(async (influencerCode) =>
         {
-            Result<int> getUsageNumRes = await _influencerCodesRepo.GetUserUsageCountByIdAsync(userId, influencerCode.Id);
-            return getUsageNumRes.OnSuccess(num =>
-            {
-                if (num > 0)
-                    return Result.Fail<InfluencerCode>(new()
-                    {
-                        Code = ErrorType.InfluencerCodeAlreadyUsed,
-                        Message = "Influencer Code Used Before"
-                    });
-                return Result.Ok(influencerCode);
-            });
+            return (await _influencerCodesRepo.GetUserUsageCountByIdAsync(userId, influencerCode.Id))
+                .OnSuccess(usageCount => influencerCode.IsUserReachLimit(usageCount)).ToResult(influencerCode);
         })
-        .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
+        .OnSuccessAsync(async (influencerCode) =>
         {
             if (influencerCode.MaxInfluencedUsersCount == 0) return Result.Ok(influencerCode);
-            Result<int> getUsageNumRes = await _influencerCodesRepo.GetUsersUsageCountByIdAsync(influencerCode.Id);
-            return getUsageNumRes.OnSuccess(num =>
-            {
-                if (num >= influencerCode.MaxInfluencedUsersCount)
-                    return Result.Fail<InfluencerCode>(new()
-                    {
-                        Code = ErrorType.InfluencerCodeExceedMaxUsageCount,
-                        Message = "InfluencerCode Exceed Max Usage Count"
-                    });
-                return Result.Ok(influencerCode);
-            });
+            return (await _influencerCodesRepo.GetUsersUsageCountByIdAsync(influencerCode.Id))
+                .OnSuccess(usageCount => influencerCode.IsUsersReachedMaxUsage(usageCount)).ToResult(influencerCode);
         })
-        .OnSuccessAsync<InfluencerCode>(async (influencerCode) =>
+        .OnSuccessAsync(async (influencerCode) =>
         {
             if (influencerCode.CategoryId is null) return Result.Ok(influencerCode);
-            return (await _influencerCodesCategoriesRepo.GetUserUsageCountFromCategoryByIdAsync(userId, influencerCode.CategoryId.Value)).MapTo((usage) => new Tuple<int, InfluencerCode>(usage, influencerCode))
-            .OnSuccess((tuple) =>
-            {
-                int usage = tuple.Item1;
-                int MaxUsageNum = tuple.Item2.Category!.MaxCodesPerUserInGroup;
-                if (usage >= MaxUsageNum)
-                    return Result.Fail<InfluencerCode>(new()
-                    {
-                        Code = ErrorType.InvalidBodyInput,
-                        Message = "عذرا لقد استخدمت كود آخر مشابه"
-                    });
-                return Result.Ok(influencerCode);
-            });
+            return (await _influencerCodesCategoriesRepo.GetUserUsageCountFromCategoryByIdAsync(userId, influencerCode.CategoryId.Value))
+                .ToResult((usage) => (usage, influencerCode))
+            .OnSuccess((tuple) => tuple.influencerCode.IsUserReachedCategoryMaxUsage(tuple.usage).ToResult(influencerCode));
         })
-        .OnSuccessAsync<InfluencerCode>(async (influencerCode) => await _influencerCodesRepo.UseInfluencerCode(userId, influencerCode))
+        .OnSuccessAsync(async (influencerCode) => await _influencerCodesRepo.UseInfluencerCode(userId, influencerCode))
         .OnSuccessAsync(async (influencerCode) =>
         {
             await _mediator.Publish(new AddTransactionNotification(userId, TransactionType.InfluencerCode));

@@ -11,40 +11,27 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
     public async Task<Result<BalootGame>> AddEvents(User user, Guid gameId, ICollection<BalootGameEvent> events)
     {
         return (await _balootGamesRepo.GetById(gameId))
-            .OnSuccessAsync<BalootGame>(async (game) =>
+            .OnSuccessAsync(async (game) =>
             {
                 if (user.Id != game.ModeratorId && user.Id != game.OwnerId)
-                    return Result.Fail<BalootGame>(new()
-                    {
-                        Code = ErrorType.InvalidActionOrForbidden,
-                        Message = "this user is not the moderator for this Game"
-                    });
+                    return Result.Fail(new ForbiddenError());
 
-
-                // Apply Events To Game State ...
                 foreach (var e in events)
                 {
                     Result res = e.ApplyToState(game.State);
-                    if (res.IsFailure)
-                    {
-                        return Result.Fail<BalootGame>(res.Error);
-                    }
+                    if (res.IsFailed) return res;
                 }
-                return (await _balootGamesRepo.AddEvents(game, events)).MapTo(game);
+                return (await _balootGamesRepo.AddEvents(game, events)).ToResult(game);
             });
     }
 
     public async Task<Result<BalootGame>> GetGameById(User Requester, Guid gameId)
     {
         return (await _balootGamesRepo.GetById(gameId))
-            .OnSuccess<BalootGame>((game) =>
+            .OnSuccess((game) =>
             {
                 if (Requester.Id != game.ModeratorId && Requester.Id != game.OwnerId)
-                    return Result.Fail<BalootGame>(new()
-                    {
-                        Code = ErrorType.InvalidActionOrForbidden,
-                        Message = "this user is not the moderator for this Game"
-                    });
+                    return Result.Fail(new ForbiddenError());
                 return Result.Ok(game);
             });
     }

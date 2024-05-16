@@ -4,9 +4,10 @@ using MimeKit;
 
 namespace Qydha.Infrastructure.Services;
 
-public class MailingService(IOptions<EmailSettings> mailSettings) : IMailingService
+public class MailingService(IOptions<EmailSettings> mailSettings, ILogger<MailingService> logger) : IMailingService
 {
     private readonly EmailSettings _mailSettings = mailSettings.Value;
+    private readonly ILogger<MailingService> _logger = logger;
 
     public async Task<Result<string>> SendEmailAsync(string mailTo, string subject, string body, IList<IFormFile>? attachments = null)
     {
@@ -46,13 +47,10 @@ public class MailingService(IOptions<EmailSettings> mailSettings) : IMailingServ
             var resStr = await smtp.SendAsync(email);
             return Result.Ok($"Email:MailKit:{_mailSettings.Email}");
         }
-        catch (Exception e)
+        catch (Exception exp)
         {
-            return Result.Fail<string>(new()
-            {
-                Code = ErrorType.OTPEmailSendingError,
-                Message = $"can't send the email using mailKit with message : {e.Message}"
-            });
+            _logger.LogCritical("Error in Sending Email using mailKit to {email} with exception message : {expMsg}", mailTo, exp.Message);
+            return Result.Fail(new OtpEmailSendingError("mailKit").CausedBy(exp));
         }
     }
 
@@ -71,4 +69,11 @@ public class MailingService(IOptions<EmailSettings> mailSettings) : IMailingServ
         return mailText.Replace("[code]", styledOtp);
     }
 
+    public async Task<Result<(string otp, Guid requestId, string sender)>> SendOtpToEmailAsync(string newEmail, string otp, User user)
+    {
+        Guid requestId = Guid.NewGuid();
+        var emailSubject = "تأكيد البريد الالكتروني لحساب تطبيق قيدها";
+        var emailBody = await GenerateConfirmEmailBody(otp, requestId.ToString(), user);
+        return (await SendEmailAsync(newEmail, emailSubject, emailBody)).ToResult((sender) => (otp, requestId, sender));
+    }
 }

@@ -15,7 +15,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
     public async Task<IActionResult> AddPromo(PromoCodesAddingDto dto)
     {
         return (await _userPromoCodesService.AddPromoCode(dto.UserId, dto.Code, dto.NumberOfDays, dto.ExpireAt))
-        .Handle<UserPromoCode, IActionResult>((promo) => Ok(new
+        .Resolve((promo) => Ok(new
         {
             Data = new
             {
@@ -24,7 +24,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
                 numberOfDays = promo.NumberOfDays
             },
             message = "Promo Code Added Successfully."
-        }), BadRequest);
+        }));
     }
 
     [HttpGet]
@@ -34,7 +34,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _userPromoCodesService.GetUserValidPromoCodeAsync(user.Id))
-        .Handle<IEnumerable<UserPromoCode>, IActionResult>((promoCodes) =>
+        .Resolve((promoCodes) =>
         {
             var mapper = new UserPromoCodeMapper();
             return Ok(new
@@ -42,8 +42,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
                 Data = new { promoCodes = promoCodes.Select(promo => mapper.PromoCodeToGetPromoCodeDto(promo)) },
                 message = "Promo Code Fetched Successfully."
             });
-        }
-        , BadRequest);
+        });
     }
 
     [HttpPost("use")]
@@ -54,7 +53,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
         User user = (User)HttpContext.Items["User"]!;
 
         return (await _userPromoCodesService.UsePromoCode(user.Id, dto.PromoCodeId))
-        .Handle<User, IActionResult>((user) =>
+        .Resolve((user) =>
         {
             var mapper = new UserMapper();
 
@@ -64,7 +63,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
                 ,
                 message = "Promo Code Used Successfully."
             });
-        }, BadRequest);
+        });
     }
 
 }

@@ -10,7 +10,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Register([FromBody] UserRegisterDTO dto)
     {
         return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken))
-        .Handle<RegistrationOTPRequest, IActionResult>(
+        .Resolve(
             (req) => Ok(
                 new
                 {
@@ -19,55 +19,44 @@ public class AuthController(IAuthService authService) : ControllerBase
                         RequestId = req.Id,
                     },
                     Message = "otp sent successfully."
-                }),
-            BadRequest
-        );
+                }
+            ));
     }
 
     [HttpPost("login/")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
         return (await _authService.Login(dto.Username, dto.Password, dto.FCMToken))
-        .Handle<Tuple<User, string>, IActionResult>(
+        .Resolve(
             (tuple) =>
             {
-                User user = tuple.Item1;
-                string token = tuple.Item2;
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(user),
-                        token
+                        user = mapper.UserToUserDto(tuple.user),
+                        token = tuple.jwtToken
                     },
                     message = "Logged In successfully."
                 });
-            },
-            (result) => BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidCredentials,
-                Message = "اسم المستخدم او كلمة السر غير صحيحة"
-            })
-        );
+            });
     }
 
     [HttpPost("confirm-registration-with-phone/")]
     public async Task<IActionResult> ConfirmRegistrationWithPhone([FromBody] ConfirmPhoneDto dto)
     {
         return (await _authService.ConfirmRegistrationWithPhone(dto.Code, dto.RequestId))
-        .Handle<Tuple<User, string>, IActionResult>(
+        .Resolve(
             (tuple) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { user = mapper.UserToUserDto(tuple.Item1), token = tuple.Item2 },
+                    data = new { user = mapper.UserToUserDto(tuple.user), token = tuple.jwtToken },
                     message = "Register in successfully."
                 });
-            },
-            BadRequest
-        );
+            });
     }
 
 
@@ -75,16 +64,14 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordDto dto)
     {
         return (await _authService.RequestPhoneAuthentication(dto.Phone!))
-        .Handle<PhoneAuthenticationRequest, IActionResult>(
-            (request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." })
-            , BadRequest);
+        .Resolve((request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." }));
     }
 
     [HttpPost("confirm-forget-password")]
     public async Task<IActionResult> ConfirmForgetPassword([FromBody] ConfirmForgetPasswordDto dto)
     {
         return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCMToken))
-        .Handle<Tuple<User, string>, IActionResult>(
+        .Resolve(
             (tuple) =>
             {
                 var mapper = new UserMapper();
@@ -92,13 +79,12 @@ public class AuthController(IAuthService authService) : ControllerBase
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.Item1),
-                        token = tuple.Item2
+                        user = mapper.UserToUserDto(tuple.user),
+                        token = tuple.jwtToken
                     },
                     message = "user logged in successfully."
                 });
-            }
-            , BadRequest);
+            });
     }
 
 
@@ -106,9 +92,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> LoginWithPhone([FromBody] LoginWithPhoneDto dto)
     {
         return (await _authService.RequestPhoneAuthentication(dto.Phone!))
-        .Handle<PhoneAuthenticationRequest, IActionResult>(
-            (request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." })
-            , BadRequest);
+        .Resolve((request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." }));
     }
 
     [HttpPost("confirm-login-with-phone")]
@@ -116,7 +100,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
 
         return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCMToken))
-        .Handle<Tuple<User, string>, IActionResult>(
+        .Resolve(
             (tuple) =>
             {
                 var mapper = new UserMapper();
@@ -124,13 +108,12 @@ public class AuthController(IAuthService authService) : ControllerBase
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.Item1),
-                        token = tuple.Item2
+                        user = mapper.UserToUserDto(tuple.user),
+                        token = tuple.jwtToken
                     },
                     message = "user logged in successfully."
                 });
-            }
-            , BadRequest);
+            });
     }
 
 
@@ -140,9 +123,8 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _authService.Logout(user.Id))
-        .Handle<IActionResult>(
-            () => Ok(new { data = new { }, message = "User logged out successfully." }),
-            BadRequest
+        .Resolve(
+            () => Ok(new { data = new { }, message = "User logged out successfully." })
         );
     }
 
@@ -153,7 +135,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
 
         return (await _authService.SendOtpToLoginWithQydha(dto.Username, "زات"))
-        .Handle<LoginWithQydhaRequest, IActionResult>(
+        .Resolve(
             (loginReq) =>
             {
                 return Ok(new
@@ -164,9 +146,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     },
                     message = "otp sent successfully to the user."
                 });
-            },
-            BadRequest
-        );
+            });
     }
 
     [Auth(SystemUserRoles.Admin)]
@@ -176,7 +156,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
 
         return (await _authService.ConfirmLoginWithQydha(dto.RequestId, dto.Otp))
-        .Handle<Tuple<User, string>, IActionResult>(
+        .Resolve(
             (tuple) =>
             {
                 var mapper = new UserMapper();
@@ -184,13 +164,12 @@ public class AuthController(IAuthService authService) : ControllerBase
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.Item1),
-                        token = tuple.Item2
+                        user = mapper.UserToUserDto(tuple.user),
+                        token = tuple.jwtToken
                     },
                     message = "user logged in successfully."
                 });
-            }
-            , BadRequest);
+            });
     }
 }
 

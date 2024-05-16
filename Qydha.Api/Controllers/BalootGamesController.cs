@@ -11,10 +11,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService.CreateSingleBalootGame(user))
-            .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.CreatedAt, game.Id, game.State }),
-                BadRequest
-            );
+            .Resolve((game) => Ok(new { game.CreatedAt, game.Id, game.State }));
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -26,10 +23,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         var events = eventsDtos.Select(dto => dto.MapToCorrespondingEvent()).ToList();
         return (await _balootGamesService
             .AddEvents(user, gameId, events))
-            .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.Id, game.State, Message = "Events Added!" }),
-                BadRequest
-            );
+            .Resolve((game) => Ok(new { game.Id, game.State, Message = "Events Added!" }));
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -39,10 +33,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService
             .GetGameById(user, gameId))
-            .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.Id, game.State }),
-                BadRequest
-            );
+            .Resolve((game) => Ok(new { game.Id, game.State }));
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -52,9 +43,6 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService
             .GetGameById(user, gameId))
-            .Handle<BalootGame, IActionResult>(
-                (game) => Ok(new { game.Id, game.State, statistics = game.State.GetStatistics() }),
-                BadRequest
-            );
+            .Resolve((game) => Ok(new { game.Id, game.State, statistics = game.State.GetStatistics() }));
     }
 }

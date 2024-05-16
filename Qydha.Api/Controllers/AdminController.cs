@@ -10,21 +10,16 @@ public class AdminController(IAdminUserService adminUserService) : ControllerBas
     public async Task<IActionResult> Login([FromBody] AdminUserLoginDto dto)
     {
         return (await _adminUserService.Login(dto.Username, dto.Password))
-        .Handle<Tuple<AdminUser, string>, IActionResult>(
+        .Resolve(
             (tuple) =>
             {
                 var mapper = new AdminUserMapper();
                 return Ok(new
                 {
-                    data = new { adminUser = mapper.AdminUserToAdminUserDto(tuple.Item1), token = tuple.Item2 },
+                    data = new { adminUser = mapper.AdminUserToAdminUserDto(tuple.adminUser), token = tuple.jwtToken },
                     message = "Logged in successfully."
                 });
-            },
-            (result) => BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidCredentials,
-                Message = "اسم المستخدم او كلمة السر غير صحيحة"
-            })
+            }
         );
     }
 
@@ -36,7 +31,7 @@ public class AdminController(IAdminUserService adminUserService) : ControllerBas
         AdminUser adminUser = (AdminUser)HttpContext.Items["User"]!;
 
         return (await _adminUserService.ChangePassword(adminUser.Id, dto.OldPassword, dto.NewPassword))
-        .Handle<AdminUser, IActionResult>((adminUser) =>
+        .Resolve((adminUser) =>
             {
                 var mapper = new AdminUserMapper();
                 return Ok(new
@@ -44,7 +39,6 @@ public class AdminController(IAdminUserService adminUserService) : ControllerBas
                     data = new { adminUser = mapper.AdminUserToAdminUserDto(adminUser) },
                     message = "Password updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 }

@@ -1,5 +1,4 @@
-﻿
-namespace Qydha.Domain.Settings;
+﻿namespace Qydha.Domain.Settings;
 
 public class AvatarSettings : FileSettings
 {

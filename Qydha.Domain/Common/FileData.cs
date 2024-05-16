@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-namespace Qydha.Domain.Common;
+﻿namespace Qydha.Domain.Common;
 
 public class FileData
 {

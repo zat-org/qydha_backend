@@ -11,10 +11,12 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
     [HttpPost]
     public async Task<IActionResult> IApHubWebHook([FromBody] WebHookDto webHookDto)
     {
+        // TODO
         if (!Request.Headers.TryGetValue("x-auth-token", out var authToken))
-            return Unauthorized(new { Error = new Error() { Code = ErrorType.InvalidIAPHupToken, Message = "x-auth-token header is Missing" } });
+            return Unauthorized(new InvalidIAPHupTokenError());
         string tokenValue = authToken.ToString();
-        if (tokenValue != _iAPHubSettings.XAuthToken) return Unauthorized(new { Error = new Error() { Code = ErrorType.InvalidIAPHupToken, Message = "x-auth-token header is wrong." } });
+        if (tokenValue != _iAPHubSettings.XAuthToken)
+            return Unauthorized(new InvalidIAPHupTokenError());
 
         switch (webHookDto.Type)
         {

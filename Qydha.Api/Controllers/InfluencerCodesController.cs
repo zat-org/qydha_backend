@@ -11,7 +11,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
     public async Task<IActionResult> AddInfluencerCode(AddInfluencerCodeDto dto)
     {
         return (await _influencerCodesService.AddInfluencerCode(dto.Code, dto.NumberOfDays, dto.ExpireAt, dto.MaxInfluencedUsersCount, dto.CategoryId))
-        .Handle<InfluencerCode, IActionResult>((infCode) => Ok(new
+        .Resolve((infCode) => Ok(new
         {
             Data = new
             {
@@ -21,7 +21,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
                 categoryId = infCode.CategoryId
             },
             message = "Influencer Code Added Successfully."
-        }), BadRequest);
+        }));
     }
 
     [HttpPost("use")]
@@ -31,7 +31,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
         User user = (User)HttpContext.Items["User"]!;
 
         return (await _influencerCodesService.UseInfluencerCode(user.Id, dto.Code))
-        .Handle<User, IActionResult>((user) =>
+        .Resolve((user) =>
         {
             var mapper = new UserMapper();
 
@@ -40,7 +40,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
                 Data = new { user = mapper.UserToUserDto(user) },
                 message = "Influencer Code Used Successfully."
             });
-        }, BadRequest);
+        });
     }
 
     // [HttpGet]

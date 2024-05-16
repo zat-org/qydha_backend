@@ -47,5 +47,3 @@ public class WaApiInstance(int instanceId)
     public readonly int InstanceId = instanceId;
     public DateTime? LastUsedAt { get; set; }
 }
-
-

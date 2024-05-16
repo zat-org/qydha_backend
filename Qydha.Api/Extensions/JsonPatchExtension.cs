@@ -1,4 +1,5 @@
-﻿namespace Qydha.API.Extensions;
+﻿
+namespace Qydha.API.Extensions;
 
 public static class JsonPatchExtension
 {
@@ -11,11 +12,8 @@ public static class JsonPatchExtension
         }
         catch (JsonPatchException exp)
         {
-            return Result.Fail<T>(new()
-            {
-                Code = ErrorType.InvalidPatchBodyInput,
-                Message = exp.Message
-            });
+            return Result.Fail(new InvalidPatchBodyInputError(exp.Message));
         }
     }
 }
+public class InvalidPatchBodyInputError(string msg) : ResultError(msg, ErrorType.InvalidPatchBodyInput, StatusCodes.Status400BadRequest) { }

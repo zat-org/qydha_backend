@@ -21,4 +21,14 @@ public class RegistrationOTPRequest
         FCMToken = fcmToken;
         SentBy = sender;
     }
+    public Result IsRequestValidToUse(OtpManager _otpManager, string otpCode)
+    {
+        if (OTP != otpCode)
+            return Result.Fail(new IncorrectOtpError(nameof(RegistrationOTPRequest)));
+
+        if (!_otpManager.IsOtpValid(CreatedAt))
+            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(RegistrationOTPRequest), ErrorType.OTPExceededTimeLimit));
+
+        return Result.Ok();
+    }
 }

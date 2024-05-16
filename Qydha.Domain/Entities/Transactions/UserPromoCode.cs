@@ -27,4 +27,26 @@ public class UserPromoCode
         CreatedAt = DateTimeOffset.UtcNow;
         UsedAt = null;
     }
+
+    public Result IsPromoCodeValidToUse(Guid userId)
+    {
+        if (userId != UserId)
+            return Result.Fail(new UserDoesNotOwnThisPromoCodeError());
+        if (UsedAt is not null)
+            return Result.Fail(new PromoCodeAlreadyUsedError(UsedAt.Value));
+        if (ExpireAt.Date < DateTimeOffset.UtcNow.Date)
+            return Result.Fail(new PromoCodeExpiredError(ExpireAt));
+        return Result.Ok();
+    }
 }
+
+public class UserDoesNotOwnThisPromoCodeError()
+    : ResultError($"Authenticated user doesn't own this promo code.", ErrorType.UserDoesNotOwnThePromoCode, StatusCodes.Status403Forbidden)
+{ }
+
+public class PromoCodeAlreadyUsedError(DateTimeOffset usedAt)
+    : ResultError($"this promo code is already used at  {usedAt}", ErrorType.PromoCodeAlreadyUsed, StatusCodes.Status400BadRequest)
+{ }
+public class PromoCodeExpiredError(DateTimeOffset expireAt)
+    : ResultError($"this promo code is Expired used at {expireAt} and can't used after that.", ErrorType.PromoCodeExpired, StatusCodes.Status400BadRequest)
+{ }

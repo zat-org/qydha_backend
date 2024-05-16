@@ -7,6 +7,8 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
     private readonly IHttpClientFactory _clientFactory = clientFactory;
     private readonly ILogger<WaApiService> _logger = logger;
 
+    
+
     public async Task<Result<string>> SendOtpAsync(string phoneNum, string username, string otp)
     {
         var body = new
@@ -63,24 +65,14 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
                 string jsonResponse = await response.Content.ReadAsStringAsync();
                 object responseObject = JsonConvert.DeserializeObject<object>(jsonResponse) ?? throw new Exception($"can't serialize the response from WhatsApp Service with body : {jsonResponse} ");
                 _logger.LogCritical("WhatsApp has Failure Status Code {statusCode} and response body : {response}", response.StatusCode, jsonResponse);
-                return Result.Fail<string>(
-                    new()
-                    {
-                        Code = ErrorType.OTPPhoneSendingError,
-                        Message = $"Failure From WhatsApp Service"
-                    }
-                );
+                return Result.Fail(new OtpPhoneSendingError("Official_WhatApp"));
             }
             return Result.Ok($"WhatsApp:Official:{_whatsSettings.InstanceId}");
         }
         catch (Exception ex)
         {
             _logger.LogCritical("WhatsApp Service has Exception {exp}", ex);
-            return Result.Fail<string>(new()
-            {
-                Code = ErrorType.OTPPhoneSendingError,
-                Message = $"UnExpected ERROR occurred on WhatsApp Service"
-            });
+            return Result.Fail(new OtpPhoneSendingError("Official_WhatApp").CausedBy(ex));
         }
     }
 }

@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using Microsoft.Extensions.Primitives;
 
-namespace Qydha.API.Controllers.Attributes;
+namespace Qydha.API.Attributes;
 
 public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRepo, ILogger<AuthorizationFilter> logger, IOptions<JWTSettings> options) : IAuthorizationFilter
 {
@@ -26,20 +26,14 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
             if (userIdStr is null || !Guid.TryParse(userIdStr, out Guid userId))
             {
                 _logger.LogInformation("401 : No userId value");
-                return Result.Fail<Tuple<ClaimsPrincipal, Guid>>(new Error()
-                {
-                    Code = ErrorType.InvalidAuthToken,
-                    Message = "Invalid Token User ID"
-                });
+                return Result.Fail(new InvalidAuthTokenError());
             }
-            return Result.Ok(new Tuple<ClaimsPrincipal, Guid>(principal, userId));
+            return Result.Ok((principal, userId));
         })
         .OnSuccess((tuple) =>
         {
-            var principal = tuple.Item1;
-            var userId = tuple.Item2;
-            List<string> userStringRoles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-            string? isAnonymousUserStr = principal.Claims.FirstOrDefault(c => c.Type == "isAnonymous")?.Value;
+            List<string> userStringRoles = tuple.principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+            string? isAnonymousUserStr = tuple.principal.Claims.FirstOrDefault(c => c.Type == "isAnonymous")?.Value;
 
             if (isAnonymousUserStr is not null && bool.TryParse(isAnonymousUserStr, out bool isAnonymousUser))
                 userStringRoles.Add(!isAnonymousUser ? "RegularUser" : "AnonymousUser");
@@ -56,31 +50,23 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
             if (userStringRoles.Count == 0 || userRole == 0)
             {
                 _logger.LogInformation("401 : No Role value");
-                return Result.Fail<Tuple<ClaimsPrincipal, Guid, int>>(new Error()
-                {
-                    Code = ErrorType.InvalidAuthToken,
-                    Message = "Invalid Token Role"
-                });
+                return Result.Fail(new InvalidAuthTokenError());
             }
-            return Result.Ok(new Tuple<ClaimsPrincipal, Guid, int>(principal, userId, userRole));
+            return Result.Ok((tuple.principal, tuple.userId, userRole));
         })
-        .OnSuccessAsync<Tuple<ClaimsPrincipal, Guid, int>>(async (tuple) =>
+        .OnSuccessAsync(async (tuple) =>
         {
-            var principal = tuple.Item1;
-            var userId = tuple.Item2;
-            var userRole = tuple.Item3;
+            var principal = tuple.principal;
+            var userId = tuple.userId;
+            var userRole = tuple.userRole;
 
             if ((userRole & (int)SystemUserRoles.User) != 0)
             {
                 Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
-                if (getUserRes.IsFailure)
+                if (getUserRes.IsFailed)
                 {
-                    _logger.LogInformation("401 : User Not found with id : {id} with failure message: {msg}", userId, getUserRes.Error.Message);
-                    return Result.Fail<Tuple<ClaimsPrincipal, Guid, int>>(new Error()
-                    {
-                        Code = ErrorType.InvalidAuthToken,
-                        Message = getUserRes.Error.Message
-                    });
+                    _logger.LogInformation("401 : User Not found with id : {id} with failure message: {msg}", userId, getUserRes.Errors[0].Message);
+                    return Result.Fail(new InvalidAuthTokenError());
                 }
                 ctx.HttpContext.Items["User"] = getUserRes.Value;
                 return Result.Ok(tuple);
@@ -88,37 +74,25 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
             else if ((userRole & (int)SystemUserRoles.Admin) != 0)
             {
                 Result<AdminUser> getAdminUserRes = await _adminUserRepo.GetByIdAsync(userId);
-                if (getAdminUserRes.IsFailure)
+                if (getAdminUserRes.IsFailed)
                 {
-                    _logger.LogInformation("401 : Admin Not found with id : {id} with failure message: {msg}", userId, getAdminUserRes.Error.Message);
-                    return Result.Fail<Tuple<ClaimsPrincipal, Guid, int>>(new Error()
-                    {
-                        Code = ErrorType.InvalidAuthToken,
-                        Message = getAdminUserRes.Error.Message
-                    });
+                    _logger.LogInformation("401 : Admin Not found with id : {id} with failure message: {msg}", userId, getAdminUserRes.Errors[0].Message);
+                    return Result.Fail(new InvalidAuthTokenError());
                 }
                 ctx.HttpContext.Items["User"] = getAdminUserRes.Value;
                 return Result.Ok(tuple);
             }
-            return Result.Fail<Tuple<ClaimsPrincipal, Guid, int>>(new Error()
-            {
-                Code = ErrorType.InvalidAuthToken,
-                Message = "Invalid Token User Role"
-            });
+            return Result.Fail(new InvalidAuthTokenError());
         })
-        .OnSuccess<Tuple<ClaimsPrincipal, Guid, int>>((tuple) =>
+        .OnSuccess((tuple) =>
         {
             AuthAttribute attr = authAttributes.LastOrDefault()!;
             if (attr.Role == SystemUserRoles.All) return Result.Ok(tuple);
 
-            if (((int)attr.Role & tuple.Item3) == 0)
+            if (((int)attr.Role & tuple.userRole) == 0)
             {
-                _logger.LogInformation("403 user forbidden from this action userId : {id} ", tuple.Item2);
-                return Result.Fail<Tuple<ClaimsPrincipal, Guid, int>>(new Error()
-                {
-                    Code = ErrorType.InvalidActionOrForbidden,
-                    Message = "the targeted action is not valid for provided user token."
-                });
+                _logger.LogInformation("403 user forbidden from this action userId : {id} ", tuple.userId);
+                return Result.Fail(new ForbiddenError());
             }
             else
                 return Result.Ok(tuple);
@@ -126,16 +100,17 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
         .Handle(
             (tuple) =>
             {
-                ctx.HttpContext.User = tuple.Item1;
+                ctx.HttpContext.User = tuple.principal;
             },
-            (err) =>
+            (errors) =>
             {
-                ctx.Result = err.Code switch
-                {
-                    ErrorType.InvalidAuthToken => new UnauthorizedObjectResult(err),
-                    ErrorType.InvalidActionOrForbidden => new ObjectResult(err) { StatusCode = 403 },
-                    _ => new ObjectResult(err) { StatusCode = 400 },
-                };
+                ctx.Result = errors.First().Handle();
+                // [0].Metadata["StatusCode"] switch
+                // {
+                //     ErrorType.InvalidAuthToken => new UnauthorizedObjectResult(err),
+                //     ErrorType.InvalidActionOrForbidden => new ObjectResult(err) { StatusCode = 403 },
+                //     _ => new ObjectResult(err) { StatusCode = 400 },
+                // };
             }
         );
 
@@ -154,11 +129,7 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
             }
         }
         _logger.LogInformation("401 : No Token provided");
-        return Result.Fail<string>(new Error()
-        {
-            Code = ErrorType.InvalidAuthToken,
-            Message = "Invalid Token"
-        });
+        return Result.Fail<string>(new InvalidAuthTokenError());
     }
 
     private Result<ClaimsPrincipal> ValidateToken(string token)
@@ -183,11 +154,7 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
         catch (Exception exp)
         {
             _logger.LogInformation("401 : Invalid token Signature with Token : {token} , with Message : {msg}", token, exp.Message);
-            return Result.Fail<ClaimsPrincipal>(new Error()
-            {
-                Code = ErrorType.InvalidAuthToken,
-                Message = "Invalid Token"
-            });
+            return Result.Fail<ClaimsPrincipal>(new InvalidAuthTokenError());
         }
     }
 

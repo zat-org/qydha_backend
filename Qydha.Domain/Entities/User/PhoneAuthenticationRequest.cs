@@ -1,4 +1,5 @@
-﻿namespace Qydha.Domain.Entities;
+﻿
+namespace Qydha.Domain.Entities;
 
 public class PhoneAuthenticationRequest
 {
@@ -7,7 +8,6 @@ public class PhoneAuthenticationRequest
     public Guid UserId { get; set; }
     public DateTimeOffset? UsedAt { get; set; } = null;
     public string SentBy { get; set; } = null!;
-
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public PhoneAuthenticationRequest() { }
     public PhoneAuthenticationRequest(Guid userId, string otp, string sender)
@@ -17,4 +17,22 @@ public class PhoneAuthenticationRequest
         CreatedAt = DateTimeOffset.UtcNow;
         SentBy = sender;
     }
+    public Result IsValidToUpdatePasswordUsingIt(Guid userId)
+    {
+        if (userId != UserId)
+            return Result.Fail(new InvalidPhoneAuthenticationRequestError());
+        if (CreatedAt.AddHours(1) < DateTimeOffset.UtcNow)
+            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(PhoneAuthenticationRequest), ErrorType.ForgetPasswordRequestExceedTime));
+        return Result.Ok();
+    }
+    public Result IsValidToConfirmPhoneAuthUsingIt(OtpManager _otpManager, string otpCode)
+    {
+        if (Otp != otpCode)
+            return Result.Fail(new IncorrectOtpError(nameof(UpdatePhoneRequest)));
+
+        if (!_otpManager.IsOtpValid(CreatedAt))
+            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(PhoneAuthenticationRequest), ErrorType.ForgetPasswordRequestExceedTime));
+        return Result.Ok();
+    }
+
 }

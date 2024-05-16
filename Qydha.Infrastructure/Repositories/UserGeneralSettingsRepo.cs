@@ -10,12 +10,8 @@ public class UserGeneralSettingsRepo(QydhaContext dbContext, ILogger<UserGeneral
     public async Task<Result<UserGeneralSettings>> GetByUserIdAsync(Guid userId)
     {
         return await _dbCtx.UserGeneralSettings.FirstOrDefaultAsync((settings) => settings.UserId == userId) is UserGeneralSettings settings ?
-          Result.Ok(settings) :
-          Result.Fail<UserGeneralSettings>(new()
-          {
-              Code = ErrorType.UserGeneralSettingsNotFound,
-              Message = $"User General Settings NotFound:: Entity not found"
-          });
+            Result.Ok(settings) :
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(UserGeneralSettings), ErrorType.UserGeneralSettingsNotFound));
     }
 
     public async Task<Result<UserGeneralSettings>> UpdateByUserIdAsync(UserGeneralSettings settings)
@@ -25,13 +21,9 @@ public class UserGeneralSettingsRepo(QydhaContext dbContext, ILogger<UserGeneral
                .SetProperty(settingsRow => settingsRow.EnableVibration, settings.EnableVibration)
                .SetProperty(settingsRow => settingsRow.PlayersNames, settings.PlayersNames)
                .SetProperty(settingsRow => settingsRow.TeamsNames, settings.TeamsNames)
-       );
+        );
         return affected == 1 ?
             Result.Ok(settings) :
-            Result.Fail<UserGeneralSettings>(new()
-            {
-                Code = ErrorType.UserGeneralSettingsNotFound,
-                Message = $"User General Settings NotFound:: Entity not found"
-            });
+            Result.Fail(new EntityNotFoundError<Guid>(settings.UserId, nameof(UserGeneralSettings), ErrorType.UserGeneralSettingsNotFound));
     }
 }

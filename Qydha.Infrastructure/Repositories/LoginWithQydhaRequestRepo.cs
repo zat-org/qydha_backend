@@ -6,11 +6,6 @@ public class LoginWithQydhaRequestRepo(QydhaContext qydhaContext, ILogger<LoginW
 {
     private readonly QydhaContext _dbCtx = qydhaContext;
     private readonly ILogger<LoginWithQydhaRequestRepo> _logger = logger;
-    private readonly Error NotFoundError = new()
-    {
-        Code = ErrorType.LoginWithQydhaRequestNotFound,
-        Message = "Login With Qydha Request NotFound :: Entity Not Found"
-    };
     public async Task<Result<LoginWithQydhaRequest>> AddAsync(LoginWithQydhaRequest request)
     {
         await _dbCtx.LoginWithQydhaRequests.AddAsync(request);
@@ -21,8 +16,8 @@ public class LoginWithQydhaRequestRepo(QydhaContext qydhaContext, ILogger<LoginW
     public async Task<Result<LoginWithQydhaRequest>> GetByIdAsync(Guid requestId)
     {
         return await _dbCtx.LoginWithQydhaRequests.FirstOrDefaultAsync(req => req.Id == requestId) is LoginWithQydhaRequest req ?
-               Result.Ok(req) :
-               Result.Fail<LoginWithQydhaRequest>(NotFoundError);
+            Result.Ok(req) :
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(LoginWithQydhaRequest), ErrorType.LoginWithQydhaRequestNotFound));
     }
 
     public async Task<Result> MarkRequestAsUsed(Guid requestId)
@@ -33,7 +28,8 @@ public class LoginWithQydhaRequestRepo(QydhaContext qydhaContext, ILogger<LoginW
            );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(NotFoundError);
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(LoginWithQydhaRequest), ErrorType.LoginWithQydhaRequestNotFound));
+
     }
 
 }

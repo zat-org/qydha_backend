@@ -9,12 +9,9 @@ public class UserBalootSettingsRepo(QydhaContext dbContext, ILogger<UserBalootSe
     public async Task<Result<UserBalootSettings>> GetByUserIdAsync(Guid userId)
     {
         return await _dbCtx.UserBalootSettings.FirstOrDefaultAsync((settings) => settings.UserId == userId) is UserBalootSettings settings ?
-           Result.Ok(settings) :
-           Result.Fail<UserBalootSettings>(new()
-           {
-               Code = ErrorType.UserBalootSettingsNotFound,
-               Message = $"User Baloot Settings NotFound:: Entity not found"
-           });
+            Result.Ok(settings) :
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(UserBalootSettings), ErrorType.UserBalootSettingsNotFound));
+
     }
 
     public async Task<Result<UserBalootSettings>> UpdateByUserIdAsync(UserBalootSettings settings)
@@ -30,10 +27,6 @@ public class UserBalootSettingsRepo(QydhaContext dbContext, ILogger<UserBalootSe
         );
         return affected == 1 ?
             Result.Ok(settings) :
-            Result.Fail<UserBalootSettings>(new()
-            {
-                Code = ErrorType.UserBalootSettingsNotFound,
-                Message = $"User Baloot Settings NotFound:: Entity not found"
-            });
+            Result.Fail(new EntityNotFoundError<Guid>(settings.UserId, nameof(UserBalootSettings), ErrorType.UserBalootSettingsNotFound));
     }
 }

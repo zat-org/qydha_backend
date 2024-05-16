@@ -2,15 +2,15 @@
 
 public interface IAuthService
 {
-    Task<Result<Tuple<User, string>>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId);
-    Task<Result<Tuple<User, string>>> Login(string username, string password, string? fcm_token);
+    Task<Result<(User user, string jwtToken)>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId);
+    Task<Result<(User user, string jwtToken)>> Login(string username, string password, string? fcm_token);
 
     Task<Result<PhoneAuthenticationRequest>> RequestPhoneAuthentication(string phone);
-    Task<Result<Tuple<User, string>>> ConfirmPhoneAuthentication(Guid requestId, string otp, string? fcmToken);
+    Task<Result<(User user, string jwtToken)>> ConfirmPhoneAuthentication(Guid requestId, string otp, string? fcmToken);
 
     Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken);
     Task<Result> Logout(Guid userId);
 
     Task<Result<LoginWithQydhaRequest>> SendOtpToLoginWithQydha(string username, string serviceConsumerName);
-    Task<Result<Tuple<User, string>>> ConfirmLoginWithQydha(Guid requestId, string otpCode);
+    Task<Result<(User user, string jwtToken)>> ConfirmLoginWithQydha(Guid requestId, string otpCode);
 }

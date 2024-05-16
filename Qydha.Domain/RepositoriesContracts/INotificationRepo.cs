@@ -13,5 +13,5 @@ public interface INotificationRepo
     Task<Result<int>> DeleteByIdsAsync(Guid userId, int notificationId);
     Task<Result<int>> MarkAllAsReadByUserIdAsync(Guid userId);
     Task<Result<int>> MarkAsReadByIdsAsync(Guid userId, int notificationId);
-    Task<Result> ApplyAnonymousClickById(int notificationId);
+    Task<Result<int>> ApplyAnonymousClickById(int notificationId);
 }

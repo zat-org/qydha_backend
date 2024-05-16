@@ -13,15 +13,14 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
     public async Task<IActionResult> UpdateBalootBook([FromForm] UpdateBalootBookDto dto)
     {
         return (await _appAssetsService.UpdateBalootBookData(dto.File))
-        .Handle<BookAsset, IActionResult>((bookAsset) =>
+        .Resolve((bookAsset) =>
             {
                 return Ok(new
                 {
                     data = new { book = bookAsset },
                     message = "Baloot Book updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.Admin | SystemUserRoles.RegularUser)]
@@ -29,48 +28,36 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
     public async Task<IActionResult> GetBalootBook()
     {
         return (await _appAssetsService.GetBalootBookData())
-        .Handle<BookAsset, IActionResult>((bookAsset) =>
+        .Resolve((bookAsset) =>
             {
                 return Ok(new
                 {
                     data = new { bookAsset.Url, bookAsset.LastUpdateAt },
                     message = "Baloot Book Fetched successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.Admin)]
     [HttpPatch("popup/")]
     public async Task<IActionResult> UpdatePopupData([FromBody] JsonPatchDocument<PopupDto> popupDtoPatch)
     {
-        if (popupDtoPatch is null)
-            return BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidBodyInput,
-                Message = "لا يوجد بيانات لتحديثها"
-            });
 
         var mapper = new AssetsMapper();
-
         return (await _appAssetsService.GetPopupAssetData())
-        .OnSuccess<PopUpAsset>((popupAsset) =>
+        .OnSuccess((popupAsset) =>
         {
             var dto = mapper.PopUpAssetToPopupDto(popupAsset);
             return popupDtoPatch.ApplyToAsResult(dto)
-            .OnSuccess<PopupDto>((dtoWithChanges) =>
+            .OnSuccess((dtoWithChanges) =>
             {
                 var validator = new PopupDtoValidator();
                 return validator.ValidateAsResult(dtoWithChanges);
             })
-            .OnSuccess<PopupDto>((dtoWithChanges) =>
+            .OnSuccess((dtoWithChanges) =>
             {
                 if (dtoWithChanges.Show && popupAsset.Image is null)
-                    return Result.Fail<PopupDto>(new Error()
-                    {
-                        Code = ErrorType.InvalidBodyInput,
-                        Message = "لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة"
-                    });
+                    return Result.Fail(new InvalidBodyInputError("لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة"));
                 else
                     return Result.Ok(dtoWithChanges);
             })
@@ -81,16 +68,15 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
             });
 
         })
-        .OnSuccessAsync<PopUpAsset>(async (popupAsset) => (await _appAssetsService.UpdatePopupData(popupAsset)).MapTo(popupAsset))
-        .Handle<PopUpAsset, IActionResult>((popupAsset) =>
+        .OnSuccessAsync(async (popupAsset) => (await _appAssetsService.UpdatePopupData(popupAsset)).ToResult(popupAsset))
+        .Resolve((popupAsset) =>
             {
                 return Ok(new
                 {
                     data = mapper.PopUpAssetToGetPopupDto(popupAsset),
                     message = "Popup updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
     [Auth(SystemUserRoles.Admin)]
@@ -98,7 +84,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
     public async Task<IActionResult> UpdatePopupImage([FromForm] UpdatePopupImageDto dto)
     {
         return (await _appAssetsService.UpdatePopupImage(dto.File))
-        .Handle<PopUpAsset, IActionResult>((popupAsset) =>
+        .Resolve((popupAsset) =>
             {
                 var mapper = new AssetsMapper();
 
@@ -107,8 +93,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
                     data = mapper.PopUpAssetToGetPopupDto(popupAsset),
                     message = "popup image updated successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 
 
@@ -118,14 +103,13 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
         var mapper = new AssetsMapper();
 
         return (await _appAssetsService.GetPopupAssetData())
-        .Handle<PopUpAsset, IActionResult>((popupAsset) =>
+        .Resolve((popupAsset) =>
             {
                 return Ok(new
                 {
                     data = mapper.PopUpAssetToGetPopupDto(popupAsset),
                     message = "Popup Fetched successfully."
                 });
-            },
-            BadRequest);
+            });
     }
 }

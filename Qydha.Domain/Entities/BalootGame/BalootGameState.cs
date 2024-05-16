@@ -150,11 +150,7 @@ public class BalootGameState
     public Result CanFire(GameTriggers trigger)
     {
         if (!_stateMachine.CanFire(trigger))
-            return Result.Fail(new()
-            {
-                Code = ErrorType.InvalidBalootGameAction,
-                Message = $"Can't Fire {trigger} On Game Current State {_stateMachine.State}"
-            });
+            return Result.Fail(new InvalidBalootGameActionError($"Can't Fire {trigger} On Game Current State {_stateMachine.State}"));
         return Result.Ok();
     }
     public Result ChangeTeamsNames(string usName, string themName)
@@ -179,12 +175,7 @@ public class BalootGameState
                 _stateMachine.Fire(GameTriggers.ChangeSakkaMaxCount);
                 return Result.Ok();
             }
-
-            return Result.Fail(new Error()
-            {
-                Code = ErrorType.InvalidBalootGameAction,
-                Message = "Invalid MaxSakkaCountPerGame => doesn't lead to a non winner state."
-            });
+            return Result.Fail(new InvalidBalootGameActionError("Invalid MaxSakkaCountPerGame => doesn't lead to a non winner state."));
         });
     }
 
@@ -276,11 +267,7 @@ public class BalootGameState
                 return CurrentSakka.Back();
             }
             else
-                return Result.Fail(new()
-                {
-                    Code = ErrorType.InvalidBalootGameAction,
-                    Message = $"Invalid Trigger :: back to apply on Game state :: {State}."
-                });
+                return Result.Fail(new InvalidBalootGameActionError($"Invalid Trigger :: back to apply on Game state :: {State}."));
         });
     }
     public BalootGameTeam? CheckWinner(int? newMaxSakkaPerGame = null)
@@ -298,11 +285,7 @@ public class BalootGameState
     {
         var calculatedWinner = CheckWinner();
         if (calculatedWinner is null)
-            return Result.Fail(new()
-            {
-                Code = ErrorType.InvalidBalootGameAction,
-                Message = $"Can't EndGame with total UsScore : {UsSakkaScore} total ThemScore : {ThemSakkaScore}"
-            });
+            return Result.Fail(new InvalidBalootGameActionError($"Can't EndGame with total UsScore : {UsSakkaScore} total ThemScore : {ThemSakkaScore}"));
         Winner = calculatedWinner;
         _stateMachine.Fire(GameTriggers.EndGame);
         return Result.Ok();

@@ -3,13 +3,10 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Qydha.Domain.Services.Implementation;
 
-public class TokenManager
+public class TokenManager(IOptions<JWTSettings> jwtSettings)
 {
-    private readonly JWTSettings _jwtSettings;
-    public TokenManager(IOptions<JWTSettings> jwtSettings)
-    {
-        _jwtSettings = jwtSettings.Value;
-    }
+    private readonly JWTSettings _jwtSettings = jwtSettings.Value;
+
     public string Generate(IEnumerable<Claim> claims)
     {
         var securityKey = new SymmetricSecurityKey(

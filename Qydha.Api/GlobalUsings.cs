@@ -16,7 +16,7 @@ global using Qydha.API.Models;
 global using Qydha.API.Settings;
 global using Qydha.API.Mappers;
 global using Qydha.API.Validators;
-global using Qydha.API.Controllers.Attributes;
+global using Qydha.API.Attributes;
 global using Qydha.API.Extensions;
 global using Qydha.API.Binders;
 
@@ -41,6 +41,7 @@ global using Serilog.Formatting.Json;
 global using FirebaseAdmin;
 global using Google.Apis.Auth.OAuth2;
 global using Microsoft.IdentityModel.Tokens;
+global using FluentResults;
 
 global using FluentValidation;
 global using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;

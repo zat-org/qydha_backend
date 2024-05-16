@@ -151,11 +151,7 @@ public class BalootMoshtaraState
     public Result CanFire(MoshtaraTrigger trigger)
     {
         if (!_stateMachine.CanFire(trigger))
-            return Result.Fail(new()
-            {
-                Code = ErrorType.InvalidBalootGameAction,
-                Message = $"Can't Fire {trigger} On Moshtara Current State {_stateMachine.State}"
-            });
+            return Result.Fail(new InvalidBalootGameActionError($"Can't Fire {trigger} On Moshtara Current State {_stateMachine.State}"));
         return Result.Ok();
     }
     public Result StartMoshtara(DateTimeOffset triggeredAt)
@@ -221,11 +217,7 @@ public class BalootMoshtaraState
             }
             catch (Exception ex)
             {
-                return Result.Fail(new()
-                {
-                    Code = ErrorType.InvalidBalootGameAction,
-                    Message = ex.Message
-                });
+                return Result.Fail(new InvalidBalootGameActionError(ex.Message));
             }
 
         }).OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
@@ -242,11 +234,7 @@ public class BalootMoshtaraState
             }
             catch (Exception ex)
             {
-                return Result.Fail(new()
-                {
-                    Code = ErrorType.InvalidBalootGameAction,
-                    Message = ex.Message
-                });
+                return Result.Fail(new InvalidBalootGameActionError(ex.Message));
             }
         })
         .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));

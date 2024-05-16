@@ -16,13 +16,8 @@ public class SMSService(IOptions<TwilioSettings> twilio) : IMessageService
             to: phoneNum
         );
         if (!string.IsNullOrEmpty(result.ErrorMessage))
-        {
-            return Result.Fail<string>(new()
-            {
-                Code = ErrorType.OTPPhoneSendingError,
-                Message = $"can't send the SMS using Twilio with code =  {result.ErrorCode} , and Message = {result.ErrorMessage}"
-            });
-        }
+            return Result.Fail(new OtpPhoneSendingError("SMS_Twilio"));
+
         return Result.Ok($"SMS:Twilio:{_twilio.TwilioPhoneNumber}");
     }
 }

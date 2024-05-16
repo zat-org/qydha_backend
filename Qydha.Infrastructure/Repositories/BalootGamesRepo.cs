@@ -22,11 +22,7 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     public async Task<Result<BalootGame>> GetById(Guid gameId)
     {
         var game = await _dbCtx.BalootGames.FirstOrDefaultAsync((g) => g.Id == gameId);
-        if (game == null) return Result.Fail<BalootGame>(new()
-        {
-            Code = ErrorType.BalootGameNotFound,
-            Message = "Baloot Game Not Found"
-        });
+        if (game == null) return Result.Fail(new EntityNotFoundError<Guid>(gameId, nameof(BalootGame), ErrorType.BalootGameNotFound));
         return Result.Ok(game);
     }
 
@@ -41,11 +37,7 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
                 game_state = {stateJsonString}::jsonb
             WHERE id = {gameId}::uuid");
         if (affectedRows != 1)
-            return Result.Fail(new Error()
-            {
-                Code = ErrorType.BalootGameNotFound,
-                Message = "Baloot Game Not Found"
-            });
+            Result.Fail(new EntityNotFoundError<Guid>(game.Id, nameof(BalootGame), ErrorType.BalootGameNotFound));
         return Result.Ok();
     }
 

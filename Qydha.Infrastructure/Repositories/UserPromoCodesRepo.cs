@@ -5,11 +5,6 @@ public class UserPromoCodesRepo(QydhaContext qydhaContext, ILogger<UserPromoCode
 {
     private readonly QydhaContext _dbCtx = qydhaContext;
     private readonly ILogger<UserPromoCodesRepo> _logger = logger;
-    private readonly Error NotFoundError = new()
-    {
-        Code = ErrorType.UserPromoCodeNotFound,
-        Message = "User Promo Code NotFound :: Entity Not Found"
-    };
 
     public async Task<Result<UserPromoCode>> AddAsync(UserPromoCode code)
     {
@@ -31,7 +26,7 @@ public class UserPromoCodesRepo(QydhaContext qydhaContext, ILogger<UserPromoCode
     {
         return await _dbCtx.UserPromoCodes.FirstOrDefaultAsync(code => code.Id == codeId) is UserPromoCode code ?
                 Result.Ok(code) :
-                Result.Fail<UserPromoCode>(NotFoundError);
+                Result.Fail<UserPromoCode>(new EntityNotFoundError<Guid>(codeId, nameof(UserPromoCode), ErrorType.UserPromoCodeNotFound));
     }
 
     public async Task<Result> MarkAsUsedByIdAsync(Guid codeId)
@@ -42,6 +37,6 @@ public class UserPromoCodesRepo(QydhaContext qydhaContext, ILogger<UserPromoCode
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(NotFoundError);
+            Result.Fail(new EntityNotFoundError<Guid>(codeId, nameof(UserPromoCode), ErrorType.UserPromoCodeNotFound));
     }
 }

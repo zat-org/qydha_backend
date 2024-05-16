@@ -140,11 +140,7 @@ public class BalootSakkaState
     public Result CanFire(SakkaTrigger trigger)
     {
         if (!_stateMachine.CanFire(trigger))
-            return Result.Fail(new()
-            {
-                Code = ErrorType.InvalidBalootGameAction,
-                Message = $"Can't Fire {trigger} On Sakka Current State {_stateMachine.State}"
-            });
+            return Result.Fail(new InvalidBalootGameActionError($"Can't Fire {trigger} On Sakka Current State {_stateMachine.State}"));
         return Result.Ok();
     }
     public Result ChangeIsSakkaMashdoda(bool isMashdoda)
@@ -172,11 +168,7 @@ public class BalootSakkaState
         {
             var calculatedWinner = CheckWinner(drawHandler, winner);
             if (calculatedWinner is null)
-                return Result.Fail(new()
-                {
-                    Code = ErrorType.InvalidBalootGameAction,
-                    Message = $"Can't EndSakka with total UsScore : {UsScore} total ThemScore : {ThemScore} and draw handler : {drawHandler}"
-                });
+                return Result.Fail(new InvalidBalootGameActionError($"Can't EndSakka with total UsScore : {UsScore} total ThemScore : {ThemScore} and draw handler : {drawHandler}"));
             Winner = calculatedWinner;
             DrawHandler = drawHandler;
             _stateMachine.Fire(SakkaTrigger.EndSakka);

@@ -12,26 +12,15 @@ public class OtpSenderByWhatsAppService(WaApiService waApiService, WaApiInstance
     {
         var instance = _instancesTracker.DequeueInstance();
         if (instance is null)
-        {
-            return Result.Fail<string>(new() { Code = ErrorType.OTPPhoneSendingError, Message = "can't send the otp now , please try again later" });
-            // return await _whatsAppService.SendOtpAsync(phoneNum, username, otp);
-        }
+            return Result.Fail(new OtpPhoneSendingError("WhatsApp"));
+        // return await _whatsAppService.SendOtpAsync(phoneNum, username, otp);
+
+        var sendingRes = await _waApiService.SendOtpAsync(phoneNum, username, otp, instance.InstanceId);
+        if (sendingRes.IsSuccess)
+            _instancesTracker.EnqueueInstance(instance);
         else
-        {
-            return (await _waApiService.SendOtpAsync(phoneNum, username, otp, instance.InstanceId))
-            .Handle(
-            (sender) =>
-            {
-                _instancesTracker.EnqueueInstance(instance);
-                return Result.Ok(sender);
-            },
-            (error) =>
-            {
-                _logger.LogCritical("WaApi Instance is out of Service with Instance id :=> {id}", instance.InstanceId);
-                // return await _whatsAppService.SendOtpAsync(phoneNum, username, otp);
-                return Result.Fail<string>(new() { Code = ErrorType.OTPPhoneSendingError, Message = "can't send the otp now , please try again later" });
-            });
-        }
+            _logger.LogCritical("WaApi Instance is out of Service with Instance id :=> {id}", instance.InstanceId);
+        return sendingRes;
     }
 }
 

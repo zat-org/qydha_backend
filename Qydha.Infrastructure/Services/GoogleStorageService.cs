@@ -11,8 +11,6 @@ public class GoogleStorageService
         _storageClient = StorageClient.Create(credential);
     }
 
-    public StorageClient GetStorageClient()
-    {
-        return _storageClient;
-    }
+    public StorageClient GetStorageClient() => _storageClient;
+
 }
