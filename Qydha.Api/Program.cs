@@ -5,9 +5,9 @@ FirebaseApp.Create(new AppOptions()
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.ReadConfigurationFile();
 builder.AddLoggerService();
 builder.ConfigureDb();
-builder.ReadConfigrationFile();
 string MyAllowSpecificOrigins = builder.ConfigureCORS();
 
 builder.Services.RegisterServices();
@@ -17,12 +17,11 @@ builder.Services.ConfigureFluentValidation();
 builder.Services.RegisterFilters();
 builder.Services.RegisterAttributes();
 builder.Services.ConfigureSwagger();
-builder.Services.ConfigreMediatR();
+builder.Services.ConfigureMediatR();
 builder.Services.RegisterSettings(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Configuration.GetValue<bool>("UseSwagger"))
 {
     app.UseSwagger();

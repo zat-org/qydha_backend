@@ -24,10 +24,10 @@
   </ItemGroup>
 
 	<ItemGroup>
-      <Content Include="Templates\**" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Templates\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <Content Include="wwwroot\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 

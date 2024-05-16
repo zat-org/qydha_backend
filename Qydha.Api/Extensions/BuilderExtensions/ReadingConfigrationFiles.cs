@@ -1,8 +1,8 @@
 ﻿namespace Qydha.API.Extensions;
 
-public static class ReadingConfigrationFiles
+public static class ReadingConfigurationFile
 {
-    public static void ReadConfigrationFile(this WebApplicationBuilder builder)
+    public static void ReadConfigurationFile(this WebApplicationBuilder builder)
     {
 
         builder.Configuration.AddJsonFile("app_keys.json");
@@ -12,6 +12,7 @@ public static class ReadingConfigrationFiles
             builder.Configuration.AddJsonFile("app_keys.Staging.json");
     }
 }
+// TODO
 // config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: 
 // true)
 //  .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: 

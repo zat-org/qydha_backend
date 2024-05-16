@@ -10,7 +10,13 @@ public class AppAssetsService(IAppAssetsRepo appAssetsRepo, IFileService fileSer
 
     public async Task<Result<PopUpAsset>> GetPopupAssetData() => await _appAssetsRepo.GetPopupAssetData();
     public async Task<Result<BookAsset>> GetBalootBookData() => await _appAssetsRepo.GetBalootBookAssetData();
-    public async Task<Result> UpdatePopupData(PopUpAsset popupAsset) => await _appAssetsRepo.UpdatePopupAssetData(popupAsset);
+    public async Task<Result> UpdatePopupData(PopUpAsset popupAsset)
+    {
+        if (popupAsset.Show && popupAsset.Image is null)
+            return Result.Fail(new InvalidBodyInputError("لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة"));
+        else
+            return await _appAssetsRepo.UpdatePopupAssetData(popupAsset);
+    }
 
     public async Task<Result<BookAsset>> UpdateBalootBookData(IFormFile bookFile)
     {

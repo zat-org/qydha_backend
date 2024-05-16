@@ -42,7 +42,6 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
     [HttpPatch("popup/")]
     public async Task<IActionResult> UpdatePopupData([FromBody] JsonPatchDocument<PopupDto> popupDtoPatch)
     {
-
         var mapper = new AssetsMapper();
         return (await _appAssetsService.GetPopupAssetData())
         .OnSuccess((popupAsset) =>
@@ -56,27 +55,19 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
             })
             .OnSuccess((dtoWithChanges) =>
             {
-                if (dtoWithChanges.Show && popupAsset.Image is null)
-                    return Result.Fail(new InvalidBodyInputError("لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة"));
-                else
-                    return Result.Ok(dtoWithChanges);
-            })
-            .OnSuccess((dtoWithChanges) =>
-            {
-                mapper.PopupDtoToPopUpAsset(dto, popupAsset);
+                mapper.PopupDtoToPopUpAsset(dtoWithChanges, popupAsset);
                 return Result.Ok(popupAsset);
             });
-
         })
         .OnSuccessAsync(async (popupAsset) => (await _appAssetsService.UpdatePopupData(popupAsset)).ToResult(popupAsset))
         .Resolve((popupAsset) =>
+        {
+            return Ok(new
             {
-                return Ok(new
-                {
-                    data = mapper.PopUpAssetToGetPopupDto(popupAsset),
-                    message = "Popup updated successfully."
-                });
+                data = mapper.PopUpAssetToGetPopupDto(popupAsset),
+                message = "Popup updated successfully."
             });
+        });
     }
 
     [Auth(SystemUserRoles.Admin)]

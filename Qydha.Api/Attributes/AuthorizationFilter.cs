@@ -123,13 +123,12 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
             string? bearerToken = authorizationHeaders.FirstOrDefault(header => header is not null && header.StartsWith("Bearer "));
             if (!string.IsNullOrEmpty(bearerToken))
             {
-                token = bearerToken.Substring("Bearer ".Length);
-                // _logger.LogInformation("Enter AuthFilter with token = {token}", token);
+                token = bearerToken["Bearer ".Length..];
                 return Result.Ok(token);
             }
         }
         _logger.LogInformation("401 : No Token provided");
-        return Result.Fail<string>(new InvalidAuthTokenError());
+        return Result.Fail(new InvalidAuthTokenError());
     }
 
     private Result<ClaimsPrincipal> ValidateToken(string token)

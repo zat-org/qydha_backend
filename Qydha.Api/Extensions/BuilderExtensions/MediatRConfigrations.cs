@@ -1,8 +1,8 @@
 ﻿namespace Qydha.API.Extensions;
 
-public static class MediatRConfigrations
+public static class MediatRConfigurations
 {
-    public static IServiceCollection ConfigreMediatR(this IServiceCollection services)
+    public static IServiceCollection ConfigureMediatR(this IServiceCollection services)
     {
 
         services.AddMediatR(cfg =>

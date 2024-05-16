@@ -221,9 +221,6 @@ public class UserController(IUserService userService, INotificationService notif
     [HttpPatch("me/")]
     public IActionResult UpdateUserData([FromBody] JsonPatchDocument<UpdateUserDto> updateUserDtoPatch)
     {
-        if (updateUserDtoPatch is null)
-            return BadRequest(new InvalidBodyInputError("لا يوجد بيانات لتحديثها"));
-
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
@@ -331,9 +328,6 @@ public class UserController(IUserService userService, INotificationService notif
     [Auth(SystemUserRoles.RegularUser)]
     public async Task<IActionResult> UpdateUserGeneralSettings([FromBody] JsonPatchDocument<UserGeneralSettingsDto> generalSettingsDtoPatch)
     {
-        if (generalSettingsDtoPatch is null)
-            return BadRequest(new InvalidBodyInputError("لا يوجد بيانات لتحديثها"));
-
         User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 

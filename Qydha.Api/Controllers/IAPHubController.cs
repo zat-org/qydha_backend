@@ -11,31 +11,25 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
     [HttpPost]
     public async Task<IActionResult> IApHubWebHook([FromBody] WebHookDto webHookDto)
     {
-        // TODO
         if (!Request.Headers.TryGetValue("x-auth-token", out var authToken))
-            return Unauthorized(new InvalidIAPHupTokenError());
+            return new InvalidIAPHupTokenError().Handle();
         string tokenValue = authToken.ToString();
         if (tokenValue != _iAPHubSettings.XAuthToken)
-            return Unauthorized(new InvalidIAPHupTokenError());
+            return new InvalidIAPHupTokenError().Handle();
 
         switch (webHookDto.Type)
         {
             case "purchase":
-                return (await _purchaseService.AddPurchase(webHookDto.Id, webHookDto.Data!.UserId, webHookDto.Data.ProductSku, webHookDto.Data.PurchaseDate)).Handle<User, IActionResult>(
+                return (await _purchaseService.AddPurchase(webHookDto.Id, webHookDto.Data!.UserId, webHookDto.Data.ProductSku, webHookDto.Data.PurchaseDate))
+                .Resolve(
                     (user) =>
                     {
                         var mapper = new UserMapper();
-                        return Ok(new { Data = new { user = mapper.UserToUserDto(user) }, message = "Enjoy your subscription." });
-                    },
-                    (err) =>
-                    {
-                        _logger.LogError("Error in IAPHUB WebHook type = \"purchase\" and  userId = {userId} with Data : {webhookData}", webHookDto.Data!.UserId, webHookDto);
-                        return BadRequest(err);
-                    }
-                );
+                        return Ok(new { Data = new { }, message = "Purchase Added Successfully." });
+                    });
             default:
                 _logger.LogWarning("Unhandled IAPHUB Action Type : {type} , Data => {data}", webHookDto.Type, webHookDto);
-                return Ok();
+                return BadRequest();
         }
     }
 
