@@ -192,14 +192,24 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     #endregion
 
 
-    public async Task<Result<User>> CheckUserCredentials(Guid userId, string password) =>
-        (await GetByIdAsync(userId))
+    public async Task<Result<User>> CheckUserCredentials(Guid userId, string password)
+    {
+        var checkRes = (await GetByIdAsync(userId))
+               .OnSuccess(user => PasswordHashingManager.VerifyPassword(user.PasswordHash, password));
+        if (checkRes.IsFailed)
+            return Result.Fail(new InvalidCredentialsError("اسم المستخدم او كلمة المرور غير صحيحة"));
+        else
+            return checkRes;
+    }
+    public async Task<Result<User>> CheckUserCredentials(string username, string password)
+    {
+        var checkRes = (await GetByUsernameAsync(username))
             .OnSuccess(user => PasswordHashingManager.VerifyPassword(user.PasswordHash, password));
-
-    public async Task<Result<User>> CheckUserCredentials(string username, string password) =>
-        (await GetByUsernameAsync(username))
-            .OnSuccess(user => PasswordHashingManager.VerifyPassword(user.PasswordHash, password));
-
+        if (checkRes.IsFailed)
+            return Result.Fail(new InvalidCredentialsError("اسم المستخدم او كلمة المرور غير صحيحة"));
+        else
+            return checkRes;
+    }
     public async Task<Result<User>> UpdateAsync(User user)
     {
         var affected = await _dbCtx.Users.Where(userRaw => userRaw.Id == user.Id).ExecuteUpdateAsync(

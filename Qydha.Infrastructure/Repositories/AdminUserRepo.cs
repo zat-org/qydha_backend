@@ -62,13 +62,24 @@ public class AdminUserRepo(QydhaContext dbContext, ILogger<AdminUserRepo> logger
     }
     #endregion
 
-    public async Task<Result<AdminUser>> CheckUserCredentials(Guid userId, string password) =>
-        (await GetByIdAsync(userId))
+    public async Task<Result<AdminUser>> CheckUserCredentials(Guid userId, string password)
+    {
+        var checkRes = (await GetByIdAsync(userId))
             .OnSuccess(adminUser => PasswordHashingManager.VerifyPassword(password, adminUser.PasswordHash));
+        if (checkRes.IsFailed)
+            return Result.Fail(new InvalidCredentialsError("اسم المستخدم او كلمة المرور غير صحيحة"));
+        else
+            return checkRes;
+    }
 
 
-    public async Task<Result<AdminUser>> CheckUserCredentials(string username, string password) =>
-        (await GetByUsernameAsync(username))
+    public async Task<Result<AdminUser>> CheckUserCredentials(string username, string password)
+    {
+        var checkRes = (await GetByUsernameAsync(username))
             .OnSuccess(adminUser => PasswordHashingManager.VerifyPassword(password, adminUser.PasswordHash));
-
+        if (checkRes.IsFailed)
+            return Result.Fail(new InvalidCredentialsError("اسم المستخدم او كلمة المرور غير صحيحة"));
+        else
+            return checkRes;
+    }
 }

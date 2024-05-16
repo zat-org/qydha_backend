@@ -91,7 +91,8 @@ public class InvalidCredentialsError(string userMessage)
 
 // TODO can be converted to 403
 public class InvalidPhoneAuthenticationRequestError()
-    : ResultError($"Authenticated User is not the same in the phone Authentication request", ErrorType.InvalidForgetPasswordRequest, StatusCodes.Status400BadRequest)
+    : ResultError($"Authenticated User is not the same in the phone Authentication request",
+    ErrorType.InvalidForgetPasswordRequest, StatusCodes.Status400BadRequest)
 { }
 
 public class RequestExceedTimeError(DateTimeOffset referenceTime, string requestEntityName)
