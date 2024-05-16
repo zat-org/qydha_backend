@@ -94,10 +94,10 @@ public class InvalidPhoneAuthenticationRequestError()
     : ResultError($"Authenticated User is not the same in the phone Authentication request", ErrorType.InvalidForgetPasswordRequest, StatusCodes.Status400BadRequest)
 { }
 
-public class RequestExceedTimeError(DateTimeOffset referenceTime, string requestEntityName, ErrorType exceedTimeErrorType)
+public class RequestExceedTimeError(DateTimeOffset referenceTime, string requestEntityName)
     : ResultError(
         $"Request of ( {requestEntityName} ) Exceed the time Interval reference time at : {referenceTime} , current time :{DateTimeOffset.UtcNow}",
-        exceedTimeErrorType,
+        ErrorType.OTPExceededTimeLimit,
         StatusCodes.Status400BadRequest)
 { }
 public class IncorrectOtpError(string requestEntityName)

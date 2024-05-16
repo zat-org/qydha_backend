@@ -24,7 +24,7 @@ public class LoginWithQydhaRequest
         if (Otp != otpCode)
             return Result.Fail(new IncorrectOtpError(nameof(LoginWithQydhaRequest)));
         if (!_otpManager.IsOtpValid(CreatedAt))
-            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(LoginWithQydhaRequest), ErrorType.OTPExceededTimeLimit));
+            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(LoginWithQydhaRequest)));
         return Result.Ok();
     }
 }

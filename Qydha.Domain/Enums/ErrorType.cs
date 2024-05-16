@@ -10,8 +10,6 @@ public enum ErrorType
     #region AuthN , AuthZ errors
     InvalidAuthToken = 4010, // 401
     InvalidCredentials = 4011, // 400
-    InvalidActionByAnonymousUser = 4012, // 400
-    InvalidActionByRegularUser = 4013, // 400
     InvalidActionOrForbidden = 4014, //403
     #endregion
 
@@ -30,9 +28,7 @@ public enum ErrorType
     #endregion
 
     #region db errors
-    DbForeignKeyViolation = 4038,
     DbUniqueViolation = 4039,
-    EntityNotFound = 4040,
     UserNotFound = 4041,
     AdminUserNotFound = 4042,
     InfluencerCodeNotFound = 4043,
@@ -60,17 +56,13 @@ public enum ErrorType
 
     #region Purchase Errors
     InvalidIAPHupToken = 4090,
-    FreeSubscriptionExceededTheLimit = 4091,
     InvalidProductSku = 4092,
 
     #endregion
 
     #region Push Notifications Errors
-    InvalidTopicName = 4100,
     InvalidFCMToken = 4101,
-    InvalidFCMTokensArray = 4102,
     FcmMessagingException = 4103,
-    FcmRegularException = 4104,
     #endregion
 
 

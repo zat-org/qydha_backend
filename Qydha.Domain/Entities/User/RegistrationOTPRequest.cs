@@ -27,7 +27,7 @@ public class RegistrationOTPRequest
             return Result.Fail(new IncorrectOtpError(nameof(RegistrationOTPRequest)));
 
         if (!_otpManager.IsOtpValid(CreatedAt))
-            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(RegistrationOTPRequest), ErrorType.OTPExceededTimeLimit));
+            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(RegistrationOTPRequest)));
 
         return Result.Ok();
     }
