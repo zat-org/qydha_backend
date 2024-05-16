@@ -34,7 +34,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
     {
         return await _dbCtx.NotificationsData.FirstOrDefaultAsync(n => n.Id == notificationDataId) is NotificationData notification ?
                 Result.Ok(notification) :
-                Result.Fail(new EntityNotFoundError<int>(notificationDataId, nameof(NotificationData), ErrorType.NotificationNotFound));
+                Result.Fail(new EntityNotFoundError<int>(notificationDataId, nameof(NotificationData)));
     }
 
     public async Task<Result<Notification>> AssignToUser(Guid userId, int notificationId, Dictionary<string, string> templateValues)
@@ -142,7 +142,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
         var affected = await _dbCtx.NotificationUserLinks.Where(ul => ul.UserId == userId).ExecuteDeleteAsync();
         return affected > 0 ?
             Result.Ok(affected) :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(NotificationData), ErrorType.NotificationNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(NotificationData)));
     }
 
     public async Task<Result<int>> DeleteByIdsAsync(Guid userId, int notificationId)
@@ -152,7 +152,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
                 .ExecuteDeleteAsync();
         return affected == 1 ?
             Result.Ok(affected) :
-            Result.Fail(new EntityNotFoundError<int>(notificationId, nameof(NotificationData), ErrorType.NotificationNotFound));
+            Result.Fail(new EntityNotFoundError<int>(notificationId, nameof(NotificationData)));
     }
 
     public async Task<Result<int>> MarkAllAsReadByUserIdAsync(Guid userId)
@@ -163,7 +163,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
        );
         return affected > 0 ?
             Result.Ok(affected) :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(NotificationData), ErrorType.NotificationNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(NotificationData)));
     }
 
     public async Task<Result<int>> MarkAsReadByIdsAsync(Guid userId, int notificationId)
@@ -176,7 +176,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
             );
         return affected == 1 ?
             Result.Ok(affected) :
-            Result.Fail(new EntityNotFoundError<int>(notificationId, nameof(NotificationData), ErrorType.NotificationNotFound));
+            Result.Fail(new EntityNotFoundError<int>(notificationId, nameof(NotificationData)));
     }
 
     public async Task<Result<int>> ApplyAnonymousClickById(int notificationId)
@@ -189,6 +189,6 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
             );
         return affected == 1 ?
             Result.Ok(affected) :
-            Result.Fail(new EntityNotFoundError<int>(notificationId, nameof(NotificationData), ErrorType.NotificationNotFound));
+            Result.Fail(new EntityNotFoundError<int>(notificationId, nameof(NotificationData)));
     }
 }

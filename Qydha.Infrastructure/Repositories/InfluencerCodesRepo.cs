@@ -12,7 +12,7 @@ public class InfluencerCodesRepo(QydhaContext qydhaContext, ILogger<InfluencerCo
             .Include(c => c.Category)
             .FirstOrDefaultAsync(code => code.Id == id) is InfluencerCode code ?
                 Result.Ok(code) :
-                Result.Fail(new EntityNotFoundError<Guid>(id, nameof(InfluencerCode), ErrorType.InfluencerCodeNotFound));
+                Result.Fail(new EntityNotFoundError<Guid>(id, nameof(InfluencerCode)));
     }
     public async Task<Result<int>> GetUserUsageCountByIdAsync(Guid userId, Guid codeId) =>
          Result.Ok(await _dbCtx.InfluencerCodeUserLinks
@@ -28,7 +28,7 @@ public class InfluencerCodesRepo(QydhaContext qydhaContext, ILogger<InfluencerCo
             .Include(c => c.Category)
             .FirstOrDefaultAsync(code => code.NormalizedCode == codeName.ToUpper()) is InfluencerCode influencerCode ?
            Result.Ok(influencerCode) :
-           Result.Fail(new EntityNotFoundError<string>(codeName, nameof(InfluencerCode), ErrorType.InfluencerCodeNotFound));
+           Result.Fail(new EntityNotFoundError<string>(codeName, nameof(InfluencerCode)));
     }
     public async Task<Result<InfluencerCode>> GetByCodeIfValidAsync(string codeName)
     {
@@ -36,7 +36,7 @@ public class InfluencerCodesRepo(QydhaContext qydhaContext, ILogger<InfluencerCo
             .Include(c => c.Category)
             .FirstOrDefaultAsync(code => code.NormalizedCode == codeName.ToUpper());
         if (code == null)
-            return Result.Fail(new EntityNotFoundError<string>(codeName, nameof(InfluencerCode), ErrorType.InfluencerCodeNotFound));
+            return Result.Fail(new EntityNotFoundError<string>(codeName, nameof(InfluencerCode)));
         if (code.ExpireAt is not null && code.ExpireAt.Value < DateTimeOffset.UtcNow)
             return Result.Fail(new InfluencerCodeExpiredError(code.ExpireAt.Value));
         return Result.Ok(code);
@@ -63,7 +63,7 @@ public class InfluencerCodesRepo(QydhaContext qydhaContext, ILogger<InfluencerCo
         );
         return effected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(codeId, nameof(InfluencerCode), ErrorType.InfluencerCodeNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(codeId, nameof(InfluencerCode)));
     }
 
     public async Task<Result> UpdateExpireDate(Guid codeId, DateTimeOffset expireAt)
@@ -74,7 +74,7 @@ public class InfluencerCodesRepo(QydhaContext qydhaContext, ILogger<InfluencerCo
         );
         return effected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(codeId, nameof(InfluencerCode), ErrorType.InfluencerCodeNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(codeId, nameof(InfluencerCode)));
     }
 
     public async Task<Result> UpdateNumberOfDays(Guid codeId, int numOfDays)
@@ -85,7 +85,7 @@ public class InfluencerCodesRepo(QydhaContext qydhaContext, ILogger<InfluencerCo
         );
         return effected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(codeId, nameof(InfluencerCode), ErrorType.InfluencerCodeNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(codeId, nameof(InfluencerCode)));
     }
 
     #endregion

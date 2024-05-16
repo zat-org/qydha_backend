@@ -66,39 +66,30 @@ public class NotifyingInvalidFCMTokenError(string token) : ResultError(
 public class FCMError() : ResultError(
     "unknown fcm error",
     ErrorType.FcmMessagingException,
-    StatusCodes.Status400BadRequest)
+    StatusCodes.Status500InternalServerError)
 { }
 
-public class EntityNotFoundError<T>(T identifier, string entityName, ErrorType notFoundErrorCode)
+public class EntityNotFoundError<T>(T identifier, string entityName)
 : ResultError(
     $"Entity {entityName} Not Found with identifier : {identifier}",
-    notFoundErrorCode,
+    ErrorType.EntityNotFound,
     StatusCodes.Status404NotFound)
 { }
 
 public class EntityUniqueViolationError(string userMessage) : ResultError(
     userMessage,
     ErrorType.DbUniqueViolation,
-    StatusCodes.Status400BadRequest)
+    StatusCodes.Status409Conflict)
 { }
-
-
 
 public class InvalidCredentialsError(string userMessage)
     : ResultError(userMessage, ErrorType.InvalidCredentials, StatusCodes.Status400BadRequest)
 { }
 
-
-// TODO can be converted to 403
-public class InvalidPhoneAuthenticationRequestError()
-    : ResultError($"Authenticated User is not the same in the phone Authentication request",
-    ErrorType.InvalidForgetPasswordRequest, StatusCodes.Status400BadRequest)
-{ }
-
 public class RequestExceedTimeError(DateTimeOffset referenceTime, string requestEntityName)
     : ResultError(
         $"Request of ( {requestEntityName} ) Exceed the time Interval reference time at : {referenceTime} , current time :{DateTimeOffset.UtcNow}",
-        ErrorType.OTPExceededTimeLimit,
+        ErrorType.RequestExceededTimeLimit,
         StatusCodes.Status400BadRequest)
 { }
 public class IncorrectOtpError(string requestEntityName)
@@ -110,13 +101,9 @@ public class OtpAlreadyUsedError(DateTimeOffset usedAt, string requestEntityName
 { }
 
 
-public class InvalidIAPHupTokenError()
-    : ResultError($"x-auth-token header is Missing OR wrong", ErrorType.InvalidIAPHupToken, StatusCodes.Status403Forbidden)
-{ }
-
 public class InvalidAuthTokenError()
     : ResultError($"Invalid Bearer Token", ErrorType.InvalidAuthToken, StatusCodes.Status401Unauthorized)
 { }
 
-public class ForbiddenError() : ResultError($"Auth user is has not previliadge to do the requested action", ErrorType.InvalidActionOrForbidden, StatusCodes.Status403Forbidden)
+public class ForbiddenError() : ResultError($"you haven't previliadge to do this action", ErrorType.InvalidActionOrForbidden, StatusCodes.Status403Forbidden)
 { }

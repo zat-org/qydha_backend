@@ -10,7 +10,7 @@ public class UserBalootSettingsRepo(QydhaContext dbContext, ILogger<UserBalootSe
     {
         return await _dbCtx.UserBalootSettings.FirstOrDefaultAsync((settings) => settings.UserId == userId) is UserBalootSettings settings ?
             Result.Ok(settings) :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(UserBalootSettings), ErrorType.UserBalootSettingsNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(UserBalootSettings)));
 
     }
 
@@ -27,6 +27,6 @@ public class UserBalootSettingsRepo(QydhaContext dbContext, ILogger<UserBalootSe
         );
         return affected == 1 ?
             Result.Ok(settings) :
-            Result.Fail(new EntityNotFoundError<Guid>(settings.UserId, nameof(UserBalootSettings), ErrorType.UserBalootSettingsNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(settings.UserId, nameof(UserBalootSettings)));
     }
 }

@@ -15,7 +15,7 @@ public class RegistrationOTPRequestRepo(QydhaContext qydhaContext, ILogger<Regis
     {
         return await _dbCtx.RegistrationOtpRequests.FirstOrDefaultAsync(req => req.Id == requestId) is RegistrationOTPRequest req ?
             Result.Ok(req) :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(RegistrationOTPRequest), ErrorType.RegistrationOTPRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(RegistrationOTPRequest)));
     }
     public async Task<Result> MarkRequestAsUsed(Guid requestId, Guid userId)
     {
@@ -25,6 +25,6 @@ public class RegistrationOTPRequestRepo(QydhaContext qydhaContext, ILogger<Regis
            );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(RegistrationOTPRequest), ErrorType.RegistrationOTPRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(RegistrationOTPRequest)));
     }
 }

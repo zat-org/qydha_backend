@@ -17,7 +17,7 @@ public class LoginWithQydhaRequestRepo(QydhaContext qydhaContext, ILogger<LoginW
     {
         return await _dbCtx.LoginWithQydhaRequests.FirstOrDefaultAsync(req => req.Id == requestId) is LoginWithQydhaRequest req ?
             Result.Ok(req) :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(LoginWithQydhaRequest), ErrorType.LoginWithQydhaRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(LoginWithQydhaRequest)));
     }
 
     public async Task<Result> MarkRequestAsUsed(Guid requestId)
@@ -28,7 +28,7 @@ public class LoginWithQydhaRequestRepo(QydhaContext qydhaContext, ILogger<LoginW
            );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(LoginWithQydhaRequest), ErrorType.LoginWithQydhaRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(LoginWithQydhaRequest)));
 
     }
 

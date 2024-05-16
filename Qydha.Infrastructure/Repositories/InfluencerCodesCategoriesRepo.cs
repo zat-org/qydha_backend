@@ -8,14 +8,14 @@ public class InfluencerCodesCategoriesRepo(QydhaContext qydhaContext, ILogger<In
     {
         return await _dbCtx.InfluencerCodeCategories.FirstOrDefaultAsync(code => code.Id == id) is InfluencerCodeCategory category ?
             Result.Ok(category) :
-            Result.Fail(new EntityNotFoundError<int>(id, nameof(InfluencerCodeCategory), ErrorType.InfluencerCodeCategoryNotFound));
+            Result.Fail(new EntityNotFoundError<int>(id, nameof(InfluencerCodeCategory)));
     }
 
     public async Task<Result<InfluencerCodeCategory>> GetByCategoryNameAsync(string categoryName)
     {
         return await _dbCtx.InfluencerCodeCategories.FirstOrDefaultAsync(code => code.CategoryName == categoryName.ToUpper()) is InfluencerCodeCategory category ?
            Result.Ok(category) :
-           Result.Fail(new EntityNotFoundError<string>(categoryName, nameof(InfluencerCodeCategory), ErrorType.InfluencerCodeCategoryNotFound));
+           Result.Fail(new EntityNotFoundError<string>(categoryName, nameof(InfluencerCodeCategory)));
     }
 
     public async Task<Result> IsCategoryNameAvailableAsync(string categoryName, int? categoryId = null)
@@ -42,7 +42,7 @@ public class InfluencerCodesCategoriesRepo(QydhaContext qydhaContext, ILogger<In
             );
         return affected == 1 ?
             Result.Ok(category) :
-            Result.Fail(new EntityNotFoundError<int>(category.Id, nameof(InfluencerCodeCategory), ErrorType.InfluencerCodeCategoryNotFound));
+            Result.Fail(new EntityNotFoundError<int>(category.Id, nameof(InfluencerCodeCategory)));
     }
 
     public async Task<Result> Delete(int categoryId)
@@ -50,7 +50,7 @@ public class InfluencerCodesCategoriesRepo(QydhaContext qydhaContext, ILogger<In
         var affected = await _dbCtx.InfluencerCodeCategories.Where(c => c.Id == categoryId).ExecuteDeleteAsync();
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<int>(categoryId, nameof(InfluencerCodeCategory), ErrorType.InfluencerCodeCategoryNotFound));
+            Result.Fail(new EntityNotFoundError<int>(categoryId, nameof(InfluencerCodeCategory)));
     }
 
     public async Task<Result<IEnumerable<InfluencerCodeCategory>>> GetAll()

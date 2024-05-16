@@ -17,7 +17,7 @@ public class UpdateEmailRequestRepo(QydhaContext qydhaContext, ILogger<UpdateEma
     {
         return await _dbCtx.UpdateEmailRequests.FirstOrDefaultAsync(req => req.Id == requestId) is UpdateEmailRequest req ?
                 Result.Ok(req) :
-                Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(UpdateEmailRequest), ErrorType.UpdateEmailRequestNotFound));
+                Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(UpdateEmailRequest)));
     }
     public async Task<Result> MarkRequestAsUsed(Guid requestId)
     {
@@ -27,6 +27,6 @@ public class UpdateEmailRequestRepo(QydhaContext qydhaContext, ILogger<UpdateEma
            );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(UpdateEmailRequest), ErrorType.UpdateEmailRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(UpdateEmailRequest)));
     }
 }

@@ -20,7 +20,11 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         .OnSuccessAsync(async (notification) =>
         {
             if (!string.IsNullOrEmpty(user.FCMToken))
-                await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description);
+            {
+                var notifyingRes = await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description);
+                if (notifyingRes.IsFailed)
+                    await _userRepo.UpdateUserFCMToken(user.Id, string.Empty);
+            }
             return Result.Ok(user);
         });
     }
@@ -35,7 +39,11 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         .OnSuccessAsync(async (notification) =>
         {
             if (!string.IsNullOrEmpty(user.FCMToken))
-                await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description);
+            {
+                var notifyingRes = await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description);
+                if (notifyingRes.IsFailed)
+                    await _userRepo.UpdateUserFCMToken(user.Id, string.Empty);
+            }
             return Result.Ok(user);
         });
     }

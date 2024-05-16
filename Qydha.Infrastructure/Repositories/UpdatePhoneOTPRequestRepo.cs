@@ -17,7 +17,7 @@ public class UpdatePhoneOTPRequestRepo(QydhaContext qydhaContext, ILogger<Update
     {
         return await _dbCtx.UpdatePhoneRequests.FirstOrDefaultAsync(req => req.Id == requestId) is UpdatePhoneRequest req ?
             Result.Ok(req) :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(UpdatePhoneRequest), ErrorType.UpdatePhoneRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(UpdatePhoneRequest)));
     }
     public async Task<Result> MarkRequestAsUsed(Guid requestId)
     {
@@ -27,6 +27,6 @@ public class UpdatePhoneOTPRequestRepo(QydhaContext qydhaContext, ILogger<Update
            );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(UpdatePhoneRequest), ErrorType.UpdatePhoneRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(UpdatePhoneRequest)));
     }
 }

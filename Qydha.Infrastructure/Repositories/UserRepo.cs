@@ -27,7 +27,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             .AsSplitQuery()
             .FirstOrDefaultAsync((user) => user.Id == userId) is User user ?
             Result.Ok(user) :
-            Result.Fail<User>(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail<User>(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
 
     public async Task<Result<IEnumerable<User>>> GetAllRegularUsers()
@@ -39,22 +39,22 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     public async Task<Result<User>> GetByIdAsync(Guid id) =>
         await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Id == id) is User user ?
             Result.Ok(user) :
-            Result.Fail<User>(new EntityNotFoundError<Guid>(id, nameof(User), ErrorType.UserNotFound));
+            Result.Fail<User>(new EntityNotFoundError<Guid>(id, nameof(User)));
 
     public async Task<Result<User>> GetByPhoneAsync(string phone) =>
        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Phone == phone) is User user ?
             Result.Ok(user) :
-            Result.Fail<User>(new EntityNotFoundError<string>(phone, nameof(User), ErrorType.UserNotFound));
+            Result.Fail<User>(new EntityNotFoundError<string>(phone, nameof(User)));
 
     public async Task<Result<User>> GetByEmailAsync(string email) =>
         await _dbCtx.Users.FirstOrDefaultAsync((user) => user.NormalizedEmail == email.ToUpper()) is User user ?
             Result.Ok(user) :
-            Result.Fail<User>(new EntityNotFoundError<string>(email, nameof(User), ErrorType.UserNotFound));
+            Result.Fail<User>(new EntityNotFoundError<string>(email, nameof(User)));
 
     public async Task<Result<User>> GetByUsernameAsync(string username) =>
         await _dbCtx.Users.FirstOrDefaultAsync((user) => user.NormalizedUsername == username.ToUpper()) is User user ?
             Result.Ok(user) :
-            Result.Fail<User>(new EntityNotFoundError<string>(username, nameof(User), ErrorType.UserNotFound));
+            Result.Fail<User>(new EntityNotFoundError<string>(username, nameof(User)));
 
     public async Task<Result> IsUsernameAvailable(string username, Guid? userId = null)
     {
@@ -91,7 +91,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
     public async Task<Result> UpdateUserFCMToken(Guid userId, string fcmToken)
     {
@@ -101,7 +101,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
     public async Task<Result> UpdateUserPassword(Guid userId, string passwordHash)
     {
@@ -111,7 +111,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
     public async Task<Result> UpdateUserUsername(Guid userId, string username)
     {
@@ -122,7 +122,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
     public async Task<Result> UpdateUserPhone(Guid userId, string phone)
     {
@@ -132,7 +132,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
     public async Task<Result> UpdateUserEmail(Guid userId, string email)
     {
@@ -144,7 +144,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
     public async Task<Result> UpdateUserAvatarData(Guid userId, string avatarPath, string avatarUrl)
     {
@@ -155,7 +155,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
 
     public async Task<Result<User>> UpdateUserExpireDate(Guid userId)
@@ -186,7 +186,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
                 .SetProperty(user => user.ExpireDate, expireAt)
         );
         if (affected != 1)
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
         return await GetUserWithSettingsByIdAsync(userId);
     }
     #endregion
@@ -219,7 +219,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
        );
         return affected == 1 ?
             Result.Ok(user) :
-            Result.Fail<User>(new EntityNotFoundError<Guid>(user.Id, nameof(User), ErrorType.UserNotFound));
+            Result.Fail<User>(new EntityNotFoundError<Guid>(user.Id, nameof(User)));
     }
 
     public async Task<Result> DeleteAsync(Guid userId)
@@ -227,7 +227,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         var affected = await _dbCtx.Users.Where(c => c.Id == userId).ExecuteDeleteAsync();
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
 }
 internal class Transaction

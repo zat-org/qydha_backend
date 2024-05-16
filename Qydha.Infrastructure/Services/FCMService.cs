@@ -107,6 +107,7 @@ public class FCMService(IOptions<PushNotificationsSettings> pushNotificationsSet
             return Result.Fail(new FCMError().CausedBy(exp));
         }
     }
+   
     private async Task<Result> SendToTopic(string topicName, string title, string body)
     {
         if (string.IsNullOrEmpty(topicName)) throw new ArgumentNullException(nameof(topicName));

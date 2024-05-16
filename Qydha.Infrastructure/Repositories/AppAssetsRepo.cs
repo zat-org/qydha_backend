@@ -15,11 +15,11 @@ public class AppAssetsRepo(QydhaContext dbContext, ILogger<AppAssetsRepo> logger
             if (bookAsset == null)
             {
                 _logger.LogCritical("can't Deserialization baloot book asset with key : {assetKey}", BalootBookKey);
-                return Result.Fail(new EntityNotFoundError<string>(BalootBookKey, nameof(BookAsset), ErrorType.AssetNotFound));
+                return Result.Fail(new EntityNotFoundError<string>(BalootBookKey, nameof(BookAsset)));
             }
             return Result.Ok(bookAsset);
         }
-        return Result.Fail(new EntityNotFoundError<string>(BalootBookKey, nameof(BookAsset), ErrorType.AssetNotFound));
+        return Result.Fail(new EntityNotFoundError<string>(BalootBookKey, nameof(BookAsset)));
     }
 
     public async Task<Result> UpdateBalootBookAssetData(BookAsset bookAsset)
@@ -30,7 +30,7 @@ public class AppAssetsRepo(QydhaContext dbContext, ILogger<AppAssetsRepo> logger
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<string>(BalootBookKey, nameof(BookAsset), ErrorType.AssetNotFound));
+            Result.Fail(new EntityNotFoundError<string>(BalootBookKey, nameof(BookAsset)));
 
     }
 
@@ -43,11 +43,11 @@ public class AppAssetsRepo(QydhaContext dbContext, ILogger<AppAssetsRepo> logger
             if (popupAsset == null)
             {
                 _logger.LogCritical("can't Deserialization Popup asset with key : {assetKey}", PopupKey);
-                return Result.Fail(new EntityNotFoundError<string>(PopupKey, nameof(PopUpAsset), ErrorType.AssetNotFound));
+                return Result.Fail(new EntityNotFoundError<string>(PopupKey, nameof(PopUpAsset)));
             }
             return Result.Ok(popupAsset);
         }
-        return Result.Fail(new EntityNotFoundError<string>(PopupKey, nameof(PopUpAsset), ErrorType.AssetNotFound));
+        return Result.Fail(new EntityNotFoundError<string>(PopupKey, nameof(PopUpAsset)));
     }
 
     public async Task<Result> UpdatePopupAssetData(PopUpAsset popupAsset)
@@ -58,6 +58,6 @@ public class AppAssetsRepo(QydhaContext dbContext, ILogger<AppAssetsRepo> logger
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<string>(PopupKey, nameof(PopUpAsset), ErrorType.AssetNotFound));
+            Result.Fail(new EntityNotFoundError<string>(PopupKey, nameof(PopUpAsset)));
     }
 }

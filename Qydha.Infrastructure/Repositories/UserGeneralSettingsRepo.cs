@@ -11,7 +11,7 @@ public class UserGeneralSettingsRepo(QydhaContext dbContext, ILogger<UserGeneral
     {
         return await _dbCtx.UserGeneralSettings.FirstOrDefaultAsync((settings) => settings.UserId == userId) is UserGeneralSettings settings ?
             Result.Ok(settings) :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(UserGeneralSettings), ErrorType.UserGeneralSettingsNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(UserGeneralSettings)));
     }
 
     public async Task<Result<UserGeneralSettings>> UpdateByUserIdAsync(UserGeneralSettings settings)
@@ -24,6 +24,6 @@ public class UserGeneralSettingsRepo(QydhaContext dbContext, ILogger<UserGeneral
         );
         return affected == 1 ?
             Result.Ok(settings) :
-            Result.Fail(new EntityNotFoundError<Guid>(settings.UserId, nameof(UserGeneralSettings), ErrorType.UserGeneralSettingsNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(settings.UserId, nameof(UserGeneralSettings)));
     }
 }

@@ -14,7 +14,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
         if (getUserRes.IsFailed)
         {
             _logger.LogCritical("trying to add purchase to not found user with id : {userId} and the purchase id is : {purchaseId}", userId, purchaseId);
-            return Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User), ErrorType.UserNotFound));
+            return Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
         }
         return getUserRes
         .OnSuccess((user) => _productsSettings.GetNumberOfDaysForProductSku(productSku, purchaseId).ToResult((numberOfDays) => (user, numberOfDays)))

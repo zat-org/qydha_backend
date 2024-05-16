@@ -20,9 +20,9 @@ public class PhoneAuthenticationRequest
     public Result IsValidToUpdatePasswordUsingIt(Guid userId)
     {
         if (userId != UserId)
-            return Result.Fail(new InvalidPhoneAuthenticationRequestError());
+            return Result.Fail(new ForbiddenError());
         if (CreatedAt.AddHours(1) < DateTimeOffset.UtcNow)
-            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(PhoneAuthenticationRequest), ErrorType.ForgetPasswordRequestExceedTime));
+            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(PhoneAuthenticationRequest)));
         return Result.Ok();
     }
     public Result IsValidToConfirmPhoneAuthUsingIt(OtpManager _otpManager, string otpCode)
@@ -31,7 +31,7 @@ public class PhoneAuthenticationRequest
             return Result.Fail(new IncorrectOtpError(nameof(UpdatePhoneRequest)));
 
         if (!_otpManager.IsOtpValid(CreatedAt))
-            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(PhoneAuthenticationRequest), ErrorType.ForgetPasswordRequestExceedTime));
+            return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(PhoneAuthenticationRequest)));
         return Result.Ok();
     }
 

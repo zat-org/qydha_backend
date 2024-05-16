@@ -13,14 +13,14 @@ public class AdminUserRepo(QydhaContext dbContext, ILogger<AdminUserRepo> logger
     {
         return await _dbCtx.Admins.FirstOrDefaultAsync((admin) => admin.Id == id) is AdminUser admin ?
             Result.Ok(admin) :
-            Result.Fail(new EntityNotFoundError<Guid>(id, nameof(AdminUser), ErrorType.AdminUserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(id, nameof(AdminUser)));
     }
 
     public async Task<Result<AdminUser>> GetByUsernameAsync(string username)
     {
         return await _dbCtx.Admins.FirstOrDefaultAsync((admin) => admin.NormalizedUsername == username.ToUpper()) is AdminUser admin ?
             Result.Ok(admin) :
-            Result.Fail(new EntityNotFoundError<string>(username, nameof(AdminUser), ErrorType.AdminUserNotFound));
+            Result.Fail(new EntityNotFoundError<string>(username, nameof(AdminUser)));
 
     }
 
@@ -44,7 +44,7 @@ public class AdminUserRepo(QydhaContext dbContext, ILogger<AdminUserRepo> logger
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(adminId, nameof(AdminUser), ErrorType.AdminUserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(adminId, nameof(AdminUser)));
 
     }
 
@@ -57,7 +57,7 @@ public class AdminUserRepo(QydhaContext dbContext, ILogger<AdminUserRepo> logger
         );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(adminId, nameof(AdminUser), ErrorType.AdminUserNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(adminId, nameof(AdminUser)));
 
     }
     #endregion

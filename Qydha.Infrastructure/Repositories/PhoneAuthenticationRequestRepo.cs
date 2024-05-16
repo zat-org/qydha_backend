@@ -15,7 +15,7 @@ public class PhoneAuthenticationRequestRepo(QydhaContext qydhaContext, ILogger<P
     {
         return await _dbCtx.PhoneAuthenticationRequests.FirstOrDefaultAsync(req => req.Id == requestId) is PhoneAuthenticationRequest req ?
             Result.Ok(req) :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(PhoneAuthenticationRequest), ErrorType.PhoneAuthenticationRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(PhoneAuthenticationRequest)));
 
     }
 
@@ -27,6 +27,6 @@ public class PhoneAuthenticationRequestRepo(QydhaContext qydhaContext, ILogger<P
            );
         return affected == 1 ?
             Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(PhoneAuthenticationRequest), ErrorType.PhoneAuthenticationRequestNotFound));
+            Result.Fail(new EntityNotFoundError<Guid>(requestId, nameof(PhoneAuthenticationRequest)));
     }
 }
