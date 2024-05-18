@@ -38,7 +38,7 @@ public class WaApiService(IOptions<WaApiSettings> settings, IHttpClientFactory c
             }
             if (responseObject.Data.Status == DataStatus.error)
             {
-                _logger.LogCritical("WaApi has Success Status Code But with Error Status In Body :=> response body : {response}", responseObject);
+                _logger.LogCritical("WaApi has Success Status Code But with Error Status In Body :=> response body : {response}", jsonResponse);
                 if (responseObject.Data.Message == "instance not ready")
                 {
                     return Result.Fail<string>(new()
