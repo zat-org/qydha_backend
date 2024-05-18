@@ -122,9 +122,9 @@ public static class ErrorHandler
     public static IActionResult Handle(this IError error)
     {
         if (error is ResultError resultError)
-            return resultError.ToIResult(HttpContext.TraceIdentifier);
+            return resultError.ToIResult("Just Trace ID");
         else
-            return new JsonResult(new ErrorResponse(ErrorType.InternalServerError, error.Message, HttpContext.TraceIdentifier))
+            return new JsonResult(new ErrorResponse(ErrorType.InternalServerError, error.Message, "Just Trace ID"))
             {
                 StatusCode = StatusCodes.Status500InternalServerError
             };
