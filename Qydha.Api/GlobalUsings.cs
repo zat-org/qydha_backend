@@ -6,12 +6,13 @@ global using Qydha.Domain.Enums;
 global using Qydha.Domain.Repositories;
 global using Qydha.Domain.Settings;
 global using Qydha.Domain.Constants;
+global using Qydha.Domain.Exceptions;
+
 
 global using Qydha.Infrastructure;
 global using Qydha.Infrastructure.Services;
 global using Qydha.Infrastructure.Repositories;
 global using Qydha.Infrastructure.Settings;
-global using Qydha.API.Exceptions;
 global using Qydha.API.Models;
 global using Qydha.API.Settings;
 global using Qydha.API.Mappers;

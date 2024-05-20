@@ -1,5 +1,5 @@
 ﻿
-namespace Qydha.API.Exceptions;
+namespace Qydha.Domain.Exceptions;
 
 public class InvalidBalootGameEventException : System.Exception
 {

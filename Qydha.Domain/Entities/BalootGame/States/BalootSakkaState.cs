@@ -250,6 +250,8 @@ public class BalootSakkaState
         return CanFire(SakkaTrigger.Back)
         .OnSuccess(() =>
         {
+            if (Moshtaras.Count == 0)
+                throw new InvalidBalootGameEventException($"can't apply event back on sakka that has not any moshtaras , its state {State}");
             CurrentMoshtara = Moshtaras.Last();
             Moshtaras.Remove(CurrentMoshtara);
             if (_stateMachine.IsInState(SakkaState.Ended))

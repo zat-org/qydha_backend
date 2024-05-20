@@ -5,6 +5,8 @@ global using Microsoft.AspNetCore.JsonPatch;
 global using System.Security.Claims;
 global using System.Text;
 
+global using Qydha.Domain.Exceptions;
+
 global using Qydha.Domain.Entities;
 global using Qydha.Domain.Repositories;
 global using Qydha.Domain.Enums;
