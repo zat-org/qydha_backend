@@ -131,7 +131,7 @@ public sealed class StartSakkaEvent : BalootGameEvent
     }
     public bool IsSakkaMashdoda { get; set; }
 
-    public override Result ApplyToState(BalootGameState state) => state.StartSakka(IsSakkaMashdoda);
+    public override Result ApplyToState(BalootGameState state) => state.StartSakka(IsSakkaMashdoda, TriggeredAt);
 }
 public sealed class StartMoshtaraEvent() : BalootGameEvent(nameof(StartMoshtaraEvent))
 {
@@ -163,7 +163,7 @@ public sealed class EndSakkaEvent : BalootGameEvent
     }
     public BalootGameTeam Winner { get; set; }
     public BalootDrawHandler DrawHandler { get; set; }
-    public override Result ApplyToState(BalootGameState state) => state.EndSakka(Winner, DrawHandler);
+    public override Result ApplyToState(BalootGameState state) => state.EndSakka(Winner, DrawHandler, TriggeredAt);
 }
 public sealed class EndGameEvent : BalootGameEvent
 {

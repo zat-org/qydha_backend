@@ -167,16 +167,17 @@ public class BalootSakkaState
             _stateMachine.Fire(SakkaTrigger.ChangeIsSakkaMashdoda);
         });
     }
-    public Result StartSakka(bool isMashdoda)
+    public Result StartSakka(bool isMashdoda, DateTimeOffset triggeredAt)
     {
         return CanFire(SakkaTrigger.StartSakka)
         .OnSuccess(() =>
         {
+            StartedAt = triggeredAt;
             IsMashdoda = isMashdoda;
             _stateMachine.Fire(SakkaTrigger.StartSakka);
         });
     }
-    public Result EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler)
+    public Result EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
     {
         return CanFire(SakkaTrigger.EndSakka)
         .OnSuccess(() =>
@@ -184,6 +185,7 @@ public class BalootSakkaState
             var calculatedWinner = CheckWinner(drawHandler, winner);
             if (calculatedWinner is null)
                 return Result.Fail(new InvalidBalootGameActionError($"Can't EndSakka with total UsScore : {UsScore} total ThemScore : {ThemScore} and draw handler : {drawHandler}"));
+            EndedAt = triggeredAt;
             Winner = calculatedWinner;
             DrawHandler = drawHandler;
             _stateMachine.Fire(SakkaTrigger.EndSakka);
@@ -258,6 +260,7 @@ public class BalootSakkaState
             {
                 Winner = null;
                 DrawHandler = BalootDrawHandler.None;
+                EndedAt = null;
             }
             return CurrentMoshtara.Back();
         })

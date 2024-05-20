@@ -257,10 +257,10 @@ public class BalootGameState
             _stateMachine.Fire(GameTriggers.StartGame);
         });
     }
-    public Result StartSakka(bool isMashdoda)
+    public Result StartSakka(bool isMashdoda, DateTimeOffset triggeredAt)
     {
         return CanFire(GameTriggers.StartSakka)
-        .OnSuccess(() => CurrentSakka.StartSakka(isMashdoda))
+        .OnSuccess(() => CurrentSakka.StartSakka(isMashdoda, triggeredAt))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.StartSakka));
     }
     public Result StartMoshtara(DateTimeOffset triggeredAt)
@@ -275,10 +275,10 @@ public class BalootGameState
         .OnSuccess(() => CurrentSakka.EndMoshtara(moshtaraData, triggeredAt))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.EndMoshtara));
     }
-    public Result EndSakka(BalootGameTeam winner, BalootDrawHandler handler)
+    public Result EndSakka(BalootGameTeam winner, BalootDrawHandler handler, DateTimeOffset triggeredAt)
     {
         return CanFire(GameTriggers.EndSakka)
-        .OnSuccess(() => CurrentSakka.EndSakka(winner, handler))
+        .OnSuccess(() => CurrentSakka.EndSakka(winner, handler, triggeredAt))
         .OnSuccess(() =>
         {
             Sakkas.Add(CurrentSakka);
