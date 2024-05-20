@@ -46,9 +46,15 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
 
 
 
-    public async Task<Result<(BalootGame Game, List<BalootGameTimeLineBlock> Timeline)>> GetGameTimeLineById(Guid gameId)
+    public async Task<Result<List<BalootGameTimeLineBlock>>> GetGameTimeLineById(Guid gameId)
     {
-        return (await _balootGamesRepo.GetById(gameId)).
-        OnSuccess((game) => Result.Ok((game, game.State.GetGameTimelineForEditing())));
+        return (await _balootGamesRepo.GetById(gameId))
+            .OnSuccess((game) => Result.Ok(game.State.GetGameTimelineForEditing()));
+    }
+
+    public async Task<Result<BalootGameStatistics>> GetGameStatisticsById(Guid gameId)
+    {
+        return (await _balootGamesRepo.GetById(gameId))
+            .OnSuccess((game) => Result.Ok(game.State.GetStatistics()));
     }
 }

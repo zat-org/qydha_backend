@@ -36,14 +36,17 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             .Resolve((game) => Ok(new { game.Id, game.State }));
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Auth(SystemUserRoles.Admin)]
     [HttpGet("{gameId}/statistics")]
     public async Task<IActionResult> GetGameStatistics([FromRoute] Guid gameId)
     {
-        User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService
-            .GetGameById(user, gameId))
-            .Resolve((game) => Ok(new { game.Id, game.State, statistics = game.State.GetStatistics() }));
+            .GetGameStatisticsById(gameId))
+            .Resolve((statistics) => Ok(new
+            {
+                Data = new { Statistics = statistics },
+                Message = "Game Statistics fetched successfully."
+            }));
     }
 
     [Auth(SystemUserRoles.Admin)]
@@ -52,8 +55,12 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     {
         return (await _balootGamesService
             .GetGameTimeLineById(gameId))
-            .Resolve((tuple) =>
-                Ok(new { tuple.Game.Id, tuple.Game.State, timeline = tuple.Timeline }));
+            .Resolve((timeline) =>
+                Ok(new
+                {
+                    Data = new { Timeline = timeline },
+                    Message = "Game Timeline fetched successfully."
+                }));
     }
     [HttpGet("archive")]
     [Auth(SystemUserRoles.RegularUser)]
