@@ -8,6 +8,7 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
     {
         return await _balootGamesRepo.CreateSingleBalootGame(owner.Id);
     }
+
     public async Task<Result<BalootGame>> AddEvents(User user, Guid gameId, ICollection<BalootGameEvent> events)
     {
         return (await _balootGamesRepo.GetById(gameId))
@@ -34,5 +35,11 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
                     return Result.Fail(new ForbiddenError());
                 return Result.Ok(game);
             });
+    }
+
+    public async Task<Result<(BalootGame Game, List<BalootGameTimeLineBlock> Timeline)>> GetGameTimeLineById(Guid gameId)
+    {
+        return (await _balootGamesRepo.GetById(gameId)).
+        OnSuccess((game) => Result.Ok((game, game.State.GetGameTimelineForEditing())));
     }
 }

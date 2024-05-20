@@ -30,7 +30,7 @@ public class BalootMoshtaraState
     public MoshtaraState State => _stateMachine.State;
     public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset? EndedAt { get; set; } = null;
-    public List<(DateTimeOffset, DateTimeOffset?)> PausingIntervals { get; set; } = [];
+    public List<(DateTimeOffset StartAt, DateTimeOffset? EndAt)> PausingIntervals { get; set; } = [];
 
     public TimeSpan MoshtaraInterval
     {
@@ -188,9 +188,9 @@ public class BalootMoshtaraState
         return CanFire(MoshtaraTrigger.ResumeMoshtara)
         .OnSuccess(() =>
         {
-            (DateTimeOffset, DateTimeOffset?) pauseInterval = PausingIntervals.Last();
+            var pauseInterval = PausingIntervals.Last();
             PausingIntervals.RemoveAt(PausingIntervals.Count - 1);
-            pauseInterval.Item2 = triggeredAt;
+            pauseInterval.EndAt = triggeredAt;
             PausingIntervals.Add(pauseInterval);
             _stateMachine.Fire(MoshtaraTrigger.ResumeMoshtara);
         });

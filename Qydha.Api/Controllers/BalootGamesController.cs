@@ -45,4 +45,14 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             .GetGameById(user, gameId))
             .Resolve((game) => Ok(new { game.Id, game.State, statistics = game.State.GetStatistics() }));
     }
+
+    [Auth(SystemUserRoles.Admin)]
+    [HttpGet("{gameId}/timeline")]
+    public async Task<IActionResult> GetGameTimeLine([FromRoute] Guid gameId)
+    {
+        return (await _balootGamesService
+            .GetGameTimeLineById(gameId))
+            .Resolve((tuple) =>
+                Ok(new { tuple.Game.Id, tuple.Game.State, timeline = tuple.Timeline }));
+    }
 }

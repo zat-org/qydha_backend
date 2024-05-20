@@ -32,20 +32,19 @@ public class BalootGameState
     }
     #endregion
 
-    #region  Data
+    #region Data
     public GameStates State => _stateMachine.State;
     private readonly StateMachine<GameStates, GameTriggers> _stateMachine;
     public string UsName { get; set; } = "لنا";
     public string ThemName { get; set; } = "لهم";
     public int MaxSakkaPerGame { get; set; } = 1;
-
     public BalootSakkaState CurrentSakka { get; set; } = new();
     public List<BalootSakkaState> Sakkas { get; set; } = [];
-    public int UsSakkaScore
+    public int UsGameScore
     {
         get => Sakkas.Aggregate(0, (totalScore, sakka) => totalScore + (sakka.Winner != null && sakka.Winner == BalootGameTeam.Us ? 1 : 0));
     }
-    public int ThemSakkaScore
+    public int ThemGameScore
     {
         get => Sakkas.Aggregate(0, (totalScore, sakka) => totalScore + (sakka.Winner != null && sakka.Winner == BalootGameTeam.Them ? 1 : 0));
     }
@@ -102,7 +101,7 @@ public class BalootGameState
             .PermitReentry(GameTriggers.ChangeSakkaMaxCount)
             .PermitReentry(GameTriggers.ChangeTeamsNames)
             .PermitReentry(GameTriggers.ChangeIsSakkaMashdoda)
-            .PermitReentry(GameTriggers.StartSakka)
+            .PermitReentryIf(GameTriggers.StartSakka, () => CheckWinner() == null)
             .PermitReentry(GameTriggers.StartMoshtara)
             .PermitReentry(GameTriggers.EndMoshtara)
             .Permit(GameTriggers.PauseGame, GameStates.Paused)
@@ -111,8 +110,6 @@ public class BalootGameState
             .PermitIf(GameTriggers.Back, GameStates.RunningWithoutSakkas, () => Sakkas.Count == 0)
             .PermitReentryIf(GameTriggers.Back, () => Sakkas.Count > 0)
             .PermitReentryIf(GameTriggers.AddMashare3, () => CurrentSakka.IsRunningWithMoshtaras);
-
-
 
         _stateMachine.Configure(GameStates.Ended)
             .PermitIf(GameTriggers.Back, GameStates.RunningWithoutSakkas, () => Sakkas.Count == 0)
@@ -125,6 +122,7 @@ public class BalootGameState
     }
     #endregion
 
+    #region utils
     public string ToJson()
     {
         return JsonConvert.SerializeObject(this, BalootConstants.balootEventsSerializationSettings);
@@ -136,6 +134,69 @@ public class BalootGameState
         ?? throw new JsonSerializationException("can't parse the object to the target ");
     }
 
+    #endregion
+
+    #region TimeLine
+
+    public List<BalootGameTimeLineBlock> GetGameTimelineForEditing()
+    {
+        List<BalootGameTimeLineBlock> blocks = [];
+        TimeSpan triggerAfter = TimeSpan.Zero;
+        List<TimeSpan> SakkasIntervals = [];
+        int usGameScore = 0;
+        int themGameScore = 0;
+        for (int sakkaIndex = 0; sakkaIndex < Sakkas.Count; sakkaIndex++)
+        {
+            var sakka = Sakkas[sakkaIndex];
+            int usSakkaScore = 0;
+            int themSakkaScore = 0;
+            List<int> usSakkaScores = [];
+            List<int> themSakkaScores = [];
+            for (int moshtaraIndex = 0; moshtaraIndex < sakka.Moshtaras.Count; moshtaraIndex++)
+            {
+                var currentMoshtara = sakka.Moshtaras[moshtaraIndex];
+                triggerAfter += currentMoshtara.MoshtaraInterval;
+                usSakkaScore += currentMoshtara.UsScore;
+                themSakkaScore += currentMoshtara.ThemScore;
+                usSakkaScores.Add(currentMoshtara.UsScore);
+                themSakkaScores.Add(currentMoshtara.ThemScore);
+                if (moshtaraIndex == sakka.Moshtaras.Count - 1)
+                {
+                    usGameScore += sakka.Winner != null && sakka.Winner == BalootGameTeam.Us ? 1 : 0;
+                    themGameScore += sakka.Winner != null && sakka.Winner == BalootGameTeam.Them ? 1 : 0;
+                }
+                blocks.Add(new(
+                    moshtaraIndex == sakka.Moshtaras.Count - 1 ?
+                            TimeLineBlockType.ScoreWithWinner : TimeLineBlockType.ScoreWithoutWinner,
+                    triggerAfter,
+                    new(UsName, usGameScore, usSakkaScore, [.. usSakkaScores]),
+                    new(ThemName, themGameScore, themSakkaScore, [.. themSakkaScores])
+                ));
+            }
+
+            SakkasIntervals.Add(sakka.SakkaInterval);
+            triggerAfter = SakkasIntervals.Aggregate(TimeSpan.Zero, (a, b) => a + b);
+        }
+
+        List<int> usCurrentSakkaScores = [];
+        List<int> themCurrentSakkaScores = [];
+        for (int moshtaraIndex = 0; moshtaraIndex < CurrentSakka.Moshtaras.Count; moshtaraIndex++)
+        {
+            var currentMoshtara = CurrentSakka.Moshtaras[moshtaraIndex];
+            triggerAfter += currentMoshtara.MoshtaraInterval;
+            usCurrentSakkaScores.Add(currentMoshtara.UsScore);
+            themCurrentSakkaScores.Add(currentMoshtara.ThemScore);
+            blocks.Add(new(
+                TimeLineBlockType.ScoreWithoutWinner,
+                triggerAfter,
+                new(UsName, usGameScore, usCurrentSakkaScores.Sum(), [.. usCurrentSakkaScores]),
+                new(ThemName, themGameScore, themCurrentSakkaScores.Sum(), [.. themCurrentSakkaScores])
+            ));
+        }
+        return blocks;
+    }
+
+    #endregion
 
     #region  statistics  
 
@@ -274,9 +335,9 @@ public class BalootGameState
     {
         int maxSakkaPerGame = newMaxSakkaPerGame ?? MaxSakkaPerGame;
         int winningScore = maxSakkaPerGame / 2 + 1;
-        if (UsSakkaScore >= winningScore && UsSakkaScore > ThemSakkaScore)
+        if (UsGameScore >= winningScore && UsGameScore > ThemGameScore)
             return BalootGameTeam.Us;
-        else if (ThemSakkaScore >= winningScore && ThemSakkaScore > UsSakkaScore)
+        else if (ThemGameScore >= winningScore && ThemGameScore > UsGameScore)
             return BalootGameTeam.Them;
         else
             return null;
@@ -285,7 +346,7 @@ public class BalootGameState
     {
         var calculatedWinner = CheckWinner();
         if (calculatedWinner is null)
-            return Result.Fail(new InvalidBalootGameActionError($"Can't EndGame with total UsScore : {UsSakkaScore} total ThemScore : {ThemSakkaScore}"));
+            return Result.Fail(new InvalidBalootGameActionError($"Can't EndGame with total UsScore : {UsGameScore} total ThemScore : {ThemGameScore}"));
         Winner = calculatedWinner;
         _stateMachine.Fire(GameTriggers.EndGame);
         return Result.Ok();
@@ -303,5 +364,4 @@ public class BalootGameState
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.ResumeGame));
     }
     #endregion
-
 }

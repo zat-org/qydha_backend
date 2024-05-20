@@ -8,6 +8,10 @@ public abstract class ResultError(string msg, ErrorType errorCode, int statusCod
     public int StatusCode { get; set; } = statusCode;
     public virtual IActionResult ToIResult(string traceId) =>
         new JsonResult(new ErrorResponse(ErrorCode, Message, traceId)) { StatusCode = StatusCode };
+
+    public virtual ObjectResult ToObjectResult(string traceId) =>
+        new(new ErrorResponse(ErrorCode, Message, traceId)) { StatusCode = StatusCode };
+
 }
 public class InvalidBodyInputError : ResultError
 {

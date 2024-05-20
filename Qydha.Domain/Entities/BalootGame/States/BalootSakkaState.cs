@@ -46,13 +46,13 @@ public class BalootSakkaState
     {
         get => _stateMachine.IsInState(SakkaState.RunningWithoutMoshtaras);
     }
-    public TimeSpan SakkaInterval
-    {
-        get
-        {
-            return Moshtaras.Aggregate(TimeSpan.Zero, (totalInterval, moshtara) => totalInterval + moshtara.MoshtaraInterval);
-        }
-    }
+    // public TimeSpan SakkaInterval
+    // {
+    //     get
+    //     {
+    //         return Moshtaras.Aggregate(TimeSpan.Zero, (totalInterval, moshtara) => totalInterval + moshtara.MoshtaraInterval);
+    //     }
+    // }
     public BalootMoshtaraState CurrentMoshtara { get; set; } = new();
     public List<BalootMoshtaraState> Moshtaras { get; set; } = [];
     public bool IsMashdoda { get; set; }
@@ -85,6 +85,20 @@ public class BalootSakkaState
     {
         get => Moshtaras.Aggregate(0, (totalScore, moshtara) => totalScore + moshtara.ThemScore);
     }
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? EndedAt { get; set; } = null;
+    public List<(DateTimeOffset StartAt, DateTimeOffset? EndAt)> PausingIntervals { get; set; } = [];
+
+    public TimeSpan SakkaInterval
+    {
+        get
+        {
+            if (!_stateMachine.IsInState(SakkaState.Ended) || EndedAt == null) return TimeSpan.Zero;
+            return EndedAt.Value - StartedAt - PausingIntervals.Aggregate(TimeSpan.Zero,
+                (total, interval) => total + (interval.StartAt - interval.EndAt!.Value));
+        }
+    }
+
     #endregion
 
     #region  ctor
@@ -119,6 +133,7 @@ public class BalootSakkaState
             .SubstateOf(SakkaState.Running)
             .PermitReentry(SakkaTrigger.StartMoshtara)
             .PermitReentryIf(SakkaTrigger.EndMoshtara, () => CheckWinner(BalootDrawHandler.None, BalootGameTeam.Us) == null)
+            // TODO
             .PermitReentryIf(SakkaTrigger.Back, () => Moshtaras.Count > 0)
             .PermitIf(SakkaTrigger.Back, SakkaState.RunningWithoutMoshtaras, () => Moshtaras.Count == 0)
             .Permit(SakkaTrigger.EndSakka, SakkaState.Ended)
@@ -180,6 +195,7 @@ public class BalootSakkaState
         return CanFire(SakkaTrigger.PauseSakka)
         .OnSuccess(() =>
         {
+            PausingIntervals.Add((triggeredAt, null));
             CurrentMoshtara.PauseMoshtara(triggeredAt);
             _stateMachine.Fire(SakkaTrigger.PauseSakka);
         });
@@ -189,6 +205,10 @@ public class BalootSakkaState
         return CanFire(SakkaTrigger.ResumeSakka)
         .OnSuccess(() =>
         {
+            var pauseInterval = PausingIntervals.Last();
+            PausingIntervals.RemoveAt(PausingIntervals.Count - 1);
+            pauseInterval.EndAt = triggeredAt;
+            PausingIntervals.Add(pauseInterval);
             CurrentMoshtara.ResumeMoshtara(triggeredAt);
             _stateMachine.Fire(SakkaTrigger.ResumeSakka);
         });

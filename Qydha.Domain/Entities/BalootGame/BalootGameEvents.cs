@@ -167,8 +167,8 @@ public sealed class EndSakkaEvent : BalootGameEvent
 }
 public sealed class EndGameEvent : BalootGameEvent
 {
-    private EndGameEvent() : base(nameof(EndSakkaEvent)) { }
-    public EndGameEvent(BalootGameTeam winnerTeam) : base(nameof(EndSakkaEvent))
+    private EndGameEvent() : base(nameof(EndGameEvent)) { }
+    public EndGameEvent(BalootGameTeam winnerTeam) : base(nameof(EndGameEvent))
     {
         Winner = winnerTeam;
     }

@@ -12,31 +12,21 @@ public class ExceptionHandlerAttribute(ILogger<ExceptionHandlerAttribute> logger
         ObjectResult res;
         if (exception is InvalidBalootGameEventException balootEventException)
         {
-            res = new ObjectResult(new InvalidBodyInputError(balootEventException.Message))
-            {
-                StatusCode = StatusCodes.Status400BadRequest
-            };
+            // TODO
+            res = new InvalidBodyInputError(balootEventException.Message).ToObjectResult("Just Trace id");
+
         }
         else if (exception is DbException dbException)
         {
             _logger.LogError(dbException, "Error caught by Exception Filter DbException Message :: {msg} ", dbException.Message); //logger 
-            res = new ObjectResult(new InternalServerError())
-            {
-                StatusCode = StatusCodes.Status500InternalServerError
-            };
+            // TODO
+            res = new InternalServerError().ToObjectResult("Just Trace id");
+
         }
         else
         {
-            _logger.LogError(exception, "Error caught by Exception Filter Outer (to get the source of error in code) exception Message :: {msg} ", exception.Message); //logger 
-            while (exception.InnerException != null)
-            {
-                exception = exception.InnerException;
-            }
-            _logger.LogError(exception, "Error caught by Exception Filter Inner (to get the cause of error) exception Message :: {msg} ", exception.Message); //logger 
-            res = new ObjectResult(new InternalServerError())
-            {
-                StatusCode = StatusCodes.Status500InternalServerError
-            };
+            _logger.LogError(exception, "Error caught by Exception Handler exception Message :: {msg} ", exception.Message); //logger 
+            res = new InternalServerError().ToObjectResult("Just Trace id");
         }
         context.Result = res;
     }
