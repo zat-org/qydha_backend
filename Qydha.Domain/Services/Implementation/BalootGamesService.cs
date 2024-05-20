@@ -37,6 +37,15 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
             });
     }
 
+    public async Task<Result<(PagedList<BalootGame> Games, int WinsCount)>> GetUserArchive(User user, PaginationParameters parameters)
+    {
+        return (await _balootGamesRepo.GetUserBalootGamesArchive(user, parameters))
+        .OnSuccessAsync(async (games) => (await _balootGamesRepo.GetUserBalootGamesWinsCount(user))
+            .ToResult((winsCount) => (games, winsCount)));
+    }
+
+
+
     public async Task<Result<(BalootGame Game, List<BalootGameTimeLineBlock> Timeline)>> GetGameTimeLineById(Guid gameId)
     {
         return (await _balootGamesRepo.GetById(gameId)).

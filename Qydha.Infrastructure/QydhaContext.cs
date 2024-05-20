@@ -26,6 +26,18 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
     public virtual DbSet<BalootGame> BalootGames { get; set; }
 
     #endregion
+
+    public async Task<PagedList<T>> GetPagedData<T>(
+         IQueryable<T> query, int pageNumber, int pageSize) where T : class
+    {
+        var count = await query.CountAsync();
+        var items = await query.Skip((pageNumber - 1) * pageSize)
+                               .Take(pageSize)
+                               .ToListAsync();
+
+        return new PagedList<T>(items, count, pageNumber, pageSize);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         #region data creation for seeding

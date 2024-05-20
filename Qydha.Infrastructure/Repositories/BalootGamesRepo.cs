@@ -41,4 +41,17 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
         return Result.Ok();
     }
 
+    public async Task<Result<PagedList<BalootGame>>> GetUserBalootGamesArchive(User user, PaginationParameters parameters)
+    {
+        var query = _dbCtx.BalootGames.Where(g => g.OwnerId == user.Id).OrderByDescending(g => g.CreatedAt);
+        PagedList<BalootGame> games = await _dbCtx.GetPagedData(query, parameters.PageNumber, parameters.PageSize);
+        return Result.Ok(games);
+    }
+    public async Task<Result<int>> GetUserBalootGamesWinsCount(User user)
+    {
+        int winsCount = await _dbCtx.Database.SqlQuery<string>
+            ($"select id from baloot_games where owner_id = {user.Id} and game_state ->> 'winner' = 'Us'").CountAsync();
+        return Result.Ok(winsCount);
+    }
+
 }

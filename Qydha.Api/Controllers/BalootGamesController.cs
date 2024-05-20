@@ -55,4 +55,20 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             .Resolve((tuple) =>
                 Ok(new { tuple.Game.Id, tuple.Game.State, timeline = tuple.Timeline }));
     }
+    [HttpGet("archive")]
+    [Auth(SystemUserRoles.RegularUser)]
+
+    public async Task<IActionResult> GetPagedArchive([FromQuery] PaginationParameters paginationParameters)
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _balootGamesService.GetUserArchive(user, paginationParameters))
+            .Resolve((tuple) =>
+            {
+                return Ok(new
+                {
+                    Data = new BalootGameMapper().PageToGameArchiveDto(tuple.Games, tuple.WinsCount),
+                    Message = "Archive Fetched."
+                });
+            });
+    }
 }
