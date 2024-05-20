@@ -8,4 +8,5 @@ public class UserBalootSettingsDto
     public bool ShowWhoWonDialogOnDraw { get; set; } = false;
     public bool IsNumbersSoundEnabled { get; set; } = false;
     public bool IsCommentsSoundEnabled { get; set; } = false;
+    public bool IsEkakAklatShown { get; set; } = false;
 }

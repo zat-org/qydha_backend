@@ -348,6 +348,9 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
             entity.Property(e => e.ShowWhoWonDialogOnDraw)
                 .HasDefaultValue(false)
                 .HasColumnName("show_who_won_dialog_on_draw");
+            entity.Property(e => e.IsEkakAklatShown)
+                .HasDefaultValue(false)
+                .HasColumnName("is_ekak_aklat_shown");
 
             entity.HasOne(d => d.User).WithOne(p => p.UserBalootSettings)
                 .HasForeignKey<UserBalootSettings>(d => d.UserId)

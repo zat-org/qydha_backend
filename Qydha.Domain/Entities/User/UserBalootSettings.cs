@@ -15,6 +15,9 @@ public class UserBalootSettings
     public bool IsNumbersSoundEnabled { get; set; } = true;
 
     public bool IsCommentsSoundEnabled { get; set; } = true;
+
+    public bool IsEkakAklatShown { get; set; } = false;
+
     public virtual User User { get; set; } = null!;
 
 }
