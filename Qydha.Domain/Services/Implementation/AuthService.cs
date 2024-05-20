@@ -56,7 +56,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         })
         .OnSuccessAsync(async (tuple) =>
         {
-            string passwordHash = PasswordHashingManager.HashPassword(password);
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
             RegistrationOTPRequest registrationOTP = new(username, phone, passwordHash, tuple.otp, fcmToken, tuple.sender);
             return await _registrationOTPRequestRepo.AddAsync(registrationOTP);
         });

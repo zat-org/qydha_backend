@@ -40,14 +40,14 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
         Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, oldPassword);
         return checkingRes
             .OnSuccessAsync(async (user) =>
-                (await _userRepo.UpdateUserPassword(userId, PasswordHashingManager.HashPassword(newPassword))).ToResult(user));
+                (await _userRepo.UpdateUserPassword(userId, BCrypt.Net.BCrypt.HashPassword(newPassword))).ToResult(user));
     }
 
     public async Task<Result<User>> UpdateUserPassword(Guid userId, Guid phoneAuthReqId, string newPassword)
     {
         return (await _phoneAuthenticationRequestRepo.GetByIdAsync(phoneAuthReqId))
         .OnSuccess((req) => req.IsValidToUpdatePasswordUsingIt(userId))
-        .OnSuccessAsync(async () => await _userRepo.UpdateUserPassword(userId, PasswordHashingManager.HashPassword(newPassword)))
+        .OnSuccessAsync(async () => await _userRepo.UpdateUserPassword(userId, BCrypt.Net.BCrypt.HashPassword(newPassword)))
         .OnSuccessAsync(async () => await _userRepo.GetByIdAsync(userId));
     }
 

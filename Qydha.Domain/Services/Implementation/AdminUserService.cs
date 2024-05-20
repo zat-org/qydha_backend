@@ -19,6 +19,6 @@ public class AdminUserService(IAdminUserRepo adminUserRepo, TokenManager tokenMa
     {
         Result<AdminUser> checkingRes = await _adminUserRepo.CheckUserCredentials(adminUserId, oldPassword);
         return checkingRes.OnSuccessAsync(async (adminUser) =>
-            (await _adminUserRepo.UpdateUserPassword(adminUserId, PasswordHashingManager.HashPassword(newPassword))).ToResult(adminUser));
+            (await _adminUserRepo.UpdateUserPassword(adminUserId, BCrypt.Net.BCrypt.HashPassword(newPassword))).ToResult(adminUser));
     }
 }
