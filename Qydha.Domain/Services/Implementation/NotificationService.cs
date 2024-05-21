@@ -77,10 +77,10 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         (await _notificationRepo.DeleteByIdsAsync(userId, notificationId)).ToResult();
     public async Task<Result> DeleteAll(Guid userId) =>
         (await _notificationRepo.DeleteAllByUserIdAsync(userId)).ToResult();
-    public async Task<Result<IEnumerable<Notification>>> GetByUserId(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null) =>
-        await _notificationRepo.GetAllByUserId(userId, pageSize, pageNumber, isRead);
-    public async Task<Result<IEnumerable<Notification>>> GetAllAnonymous(int pageSize = 10, int pageNumber = 1) =>
-           await _notificationRepo.GetAllAnonymous(pageSize, pageNumber);
+    public async Task<Result<PagedList<Notification>>> GetByUserId(Guid userId, PaginationParameters pageParams) =>
+        await _notificationRepo.GetAllByUserId(userId, pageParams);
+    public async Task<Result<PagedList<Notification>>> GetAllAnonymous(PaginationParameters pageParams) =>
+        await _notificationRepo.GetAllAnonymous(pageParams);
     public async Task<Result<FileData>> UploadNotificationImage(IFormFile file)
     {
         return await _fileService.UploadFile(_imageSettings.FolderPath, file);

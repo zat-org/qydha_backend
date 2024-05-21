@@ -270,21 +270,18 @@ public class UserController(IUserService userService, INotificationService notif
     #region users notifications
     [Auth(SystemUserRoles.RegularUser)]
     [HttpGet("me/notifications")]
-    public async Task<IActionResult> GetUserNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1, [FromQuery] bool? isRead = null)
+    public async Task<IActionResult> GetUserNotifications([FromQuery] PaginationParameters pageParams)
     {
         User user = (User)HttpContext.Items["User"]!;
 
-        return (await _notificationService.GetByUserId(user.Id, pageSize, pageNumber, isRead))
+        return (await _notificationService.GetByUserId(user.Id, pageParams))
         .Resolve((notifications) =>
             {
-                var mapper = new NotificationMapper();
-
-                return Ok(
-                    new
-                    {
-                        data = new { notifications = notifications.Select(n => mapper.NotificationToGetNotificationDto(n)) },
-                        message = "Notifications Fetched successfully."
-                    });
+                return Ok(new
+                {
+                    Data = new NotificationMapper().PageListToNotificationPageDto(notifications),
+                    Message = "Notifications Fetched successfully."
+                });
             });
     }
 

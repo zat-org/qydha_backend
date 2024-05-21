@@ -11,3 +11,11 @@ public class GetNotificationDto
     public string ActionType { get; set; } = null!;
     public NotificationDataPayload Payload { get; set; } = null!;
 }
+
+public class NotificationPage : Page<GetNotificationDto>
+{
+    public NotificationPage(List<GetNotificationDto> items, int count, int pageNumber, int pageSize)
+        : base(items, count, pageNumber, pageSize)
+    { }
+
+}

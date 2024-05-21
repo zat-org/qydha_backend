@@ -98,13 +98,10 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
         return Result.Ok(MapToNotification(notification));
     }
 
-    public async Task<Result<IEnumerable<Notification>>> GetAllByUserId(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null)
+    public async Task<Result<PagedList<Notification>>> GetAllByUserId(Guid userId, PaginationParameters pageParams)
     {
-        List<Notification> notifications = await _dbCtx.NotificationUserLinks
-            .Where(ul =>
-                    ul.UserId == userId
-                        && (isRead == null || (isRead == true && ul.ReadAt != null) || (isRead == false && ul.ReadAt == null))
-                    )
+        var query = _dbCtx.NotificationUserLinks
+            .Where(ul => ul.UserId == userId)
             .Include(ul => ul.Notification)
             .Select(ul => new Notification()
             {
@@ -118,23 +115,19 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
                 ReadAt = ul.ReadAt,
                 TemplateValues = new List<Dictionary<string, string>>() { ul.Notification.TemplateValues, ul.TemplateValues },
             })
-            .OrderByDescending(ul => ul.SentAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-        return Result.Ok((IEnumerable<Notification>)notifications);
+            .OrderByDescending(ul => ul.SentAt);
+        PagedList<Notification> notifications = await _dbCtx.GetPagedData(query, pageParams.PageNumber, pageParams.PageSize);
+        return Result.Ok(notifications);
     }
 
-    public async Task<Result<IEnumerable<Notification>>> GetAllAnonymous(int pageSize = 10, int pageNumber = 1)
+    public async Task<Result<PagedList<Notification>>> GetAllAnonymous(PaginationParameters pageParams)
     {
         NotificationVisibility[] visibilities = [NotificationVisibility.Public, NotificationVisibility.Anonymous];
-        List<Notification> notifications = await _dbCtx.NotificationsData.Where(n => visibilities.Contains(n.Visibility))
+        var query = _dbCtx.NotificationsData.Where(n => visibilities.Contains(n.Visibility))
             .OrderByDescending(n => n.CreatedAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .Select(n => MapToNotification(n))
-            .ToListAsync();
-        return Result.Ok((IEnumerable<Notification>)notifications);
+            .Select(n => MapToNotification(n));
+        PagedList<Notification> notifications = await _dbCtx.GetPagedData(query, pageParams.PageNumber, pageParams.PageSize);
+        return Result.Ok(notifications);
     }
 
     public async Task<Result<int>> DeleteAllByUserIdAsync(Guid userId)

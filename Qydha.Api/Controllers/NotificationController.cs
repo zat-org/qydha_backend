@@ -11,20 +11,17 @@ public class NotificationController(INotificationService notificationService) : 
 
     [HttpGet("public/")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetPublicNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
+    public async Task<IActionResult> GetPublicNotifications([FromQuery] PaginationParameters pageParams)
     {
-        return (await _notificationService.GetAllAnonymous(pageSize, pageNumber))
+        return (await _notificationService.GetAllAnonymous(pageParams))
         .Resolve(
-            (notificationsData) =>
+            (notifications) =>
             {
-                var mapper = new NotificationMapper();
-
-                return Ok(
-                    new
-                    {
-                        data = new { notifications = notificationsData.Select(n => mapper.NotificationToGetNotificationDto(n)) },
-                        message = "Notifications Fetched successfully."
-                    });
+                return Ok(new
+                {
+                    Data = new NotificationMapper().PageListToNotificationPageDto(notifications),
+                    Message = "Notifications Fetched successfully."
+                });
             });
     }
 
