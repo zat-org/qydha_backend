@@ -31,16 +31,11 @@
       <Content Include="wwwroot\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>
-      <Content Include="ServicesAccounts\**" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Qydha.Domain\Qydha.Domain.csproj" />
     <ProjectReference Include="..\Qydha.Infrastructure\Qydha.Infrastructure.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <EnableDefaultContentItems>false</EnableDefaultContentItems>
-  </PropertyGroup>
+
 </Project>
