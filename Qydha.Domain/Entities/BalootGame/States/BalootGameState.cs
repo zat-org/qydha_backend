@@ -52,10 +52,15 @@ public class BalootGameState
     {
         get
         {
-            return CurrentSakka.SakkaInterval + Sakkas.Aggregate(TimeSpan.Zero, (totalInterval, sakka) => totalInterval + sakka.SakkaInterval);
+            if (!_stateMachine.IsInState(GameStates.Ended) || EndedAt == null) return TimeSpan.Zero;
+            return EndedAt.Value - StartedAt - PausingIntervals.Aggregate(TimeSpan.Zero,
+                (total, interval) => total + (interval.StartAt - interval.EndAt!.Value));
         }
     }
     public BalootGameTeam? Winner { get; set; } = null;
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? EndedAt { get; set; } = null;
+    public List<(DateTimeOffset StartAt, DateTimeOffset? EndAt)> PausingIntervals { get; set; } = [];
 
     #endregion
 
@@ -246,7 +251,7 @@ public class BalootGameState
         .OnSuccess(() => CurrentSakka.ChangeIsSakkaMashdoda(isSakkaMashdoda))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.ChangeIsSakkaMashdoda));
     }
-    public Result StartGame(string usName, string themName, int sakkaCount)
+    public Result StartGame(string usName, string themName, int sakkaCount, DateTimeOffset triggeredAt)
     {
         return CanFire(GameTriggers.StartGame)
         .OnSuccess(() =>
@@ -254,6 +259,7 @@ public class BalootGameState
             UsName = usName;
             ThemName = themName;
             MaxSakkaPerGame = sakkaCount;
+            StartedAt = triggeredAt;
             _stateMachine.Fire(GameTriggers.StartGame);
         });
     }
@@ -312,6 +318,7 @@ public class BalootGameState
             else if (_stateMachine.IsInState(GameStates.Ended))
             {
                 Winner = null;
+                EndedAt = null;
                 CurrentSakka = Sakkas.Last();
                 Sakkas.Remove(CurrentSakka);
                 _stateMachine.Fire(GameTriggers.Back);
@@ -342,12 +349,13 @@ public class BalootGameState
         else
             return null;
     }
-    public Result EndGame(BalootGameTeam winner)
+    public Result EndGame(BalootGameTeam winner, DateTimeOffset triggeredAt)
     {
         var calculatedWinner = CheckWinner();
         if (calculatedWinner is null)
             return Result.Fail(new InvalidBalootGameActionError($"Can't EndGame with total UsScore : {UsGameScore} total ThemScore : {ThemGameScore}"));
         Winner = calculatedWinner;
+        EndedAt = triggeredAt;
         _stateMachine.Fire(GameTriggers.EndGame);
         return Result.Ok();
     }
@@ -355,13 +363,24 @@ public class BalootGameState
     {
         return CanFire(GameTriggers.PauseGame)
         .OnSuccess(() => CurrentSakka.PauseSakka(triggeredAt))
-        .OnSuccess(() => _stateMachine.Fire(GameTriggers.PauseGame));
+        .OnSuccess(() =>
+        {
+            PausingIntervals.Add((triggeredAt, null));
+            _stateMachine.Fire(GameTriggers.PauseGame);
+        });
     }
     public Result ResumeGame(DateTimeOffset triggeredAt)
     {
         return CanFire(GameTriggers.ResumeGame)
         .OnSuccess(() => CurrentSakka.ResumeSakka(triggeredAt))
-        .OnSuccess(() => _stateMachine.Fire(GameTriggers.ResumeGame));
+        .OnSuccess(() =>
+        {
+            var pauseInterval = PausingIntervals.Last();
+            PausingIntervals.RemoveAt(PausingIntervals.Count - 1);
+            pauseInterval.EndAt = triggeredAt;
+            PausingIntervals.Add(pauseInterval);
+            _stateMachine.Fire(GameTriggers.ResumeGame);
+        });
     }
     #endregion
 }

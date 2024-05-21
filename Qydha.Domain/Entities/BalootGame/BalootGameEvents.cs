@@ -120,7 +120,7 @@ public sealed class StartBalootGameEvent : BalootGameEvent
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
 
-    public override Result ApplyToState(BalootGameState state) => state.StartGame(UsName, ThemName, SakkaCountPerGame);
+    public override Result ApplyToState(BalootGameState state) => state.StartGame(UsName, ThemName, SakkaCountPerGame, TriggeredAt);
 }
 public sealed class StartSakkaEvent : BalootGameEvent
 {
@@ -173,7 +173,7 @@ public sealed class EndGameEvent : BalootGameEvent
         Winner = winnerTeam;
     }
     public BalootGameTeam Winner { get; set; }
-    public override Result ApplyToState(BalootGameState state) => state.EndGame(Winner);
+    public override Result ApplyToState(BalootGameState state) => state.EndGame(Winner, TriggeredAt);
 }
 public sealed class PauseGameEvent() : BalootGameEvent(nameof(PauseGameEvent))
 {

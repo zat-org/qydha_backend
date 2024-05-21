@@ -38,7 +38,7 @@ public class BalootMoshtaraState
         {
             if (!_stateMachine.IsInState(MoshtaraState.Ended) || EndedAt == null) return TimeSpan.Zero;
             return EndedAt.Value - StartedAt - PausingIntervals.Aggregate(TimeSpan.Zero,
-                (total, interval) => total + (interval.Item1 - interval.Item2!.Value));
+                (total, interval) => total + (interval.StartAt - interval.EndAt!.Value));
         }
     }
     private readonly StateMachine<MoshtaraState, MoshtaraTrigger> _stateMachine;
