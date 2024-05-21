@@ -1,17 +1,15 @@
 ﻿namespace Qydha.API.Mappers;
 [Mapper]
-
 public partial class BalootGameMapper
 {
     public BalootGamesPage PageToGameArchiveDto(PagedList<BalootGame> games, int totalWins)
     {
-        return new BalootGamesPage(games.Select(BalootGameToBalootGameDto).ToList(),
+        return new BalootGamesPage(games.Select(MapBalootGameToBalootGameDto).ToList(),
             games.TotalCount,
             games.CurrentPage,
             games.PageSize,
             totalWins);
     }
-
 
     [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.State)], [nameof(BalootGameDto.State)])]
     [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.UsName)], [nameof(BalootGameDto.UsName)])]
@@ -28,7 +26,22 @@ public partial class BalootGameMapper
     [MapperIgnoreSource(nameof(BalootGame.Moderator))]
     [MapperIgnoreSource(nameof(BalootGame.Owner))]
     [MapperIgnoreSource(nameof(BalootGame.OwnerId))]
-    public partial BalootGameDto BalootGameToBalootGameDto(BalootGame game);
+    private partial BalootGameDto BalootGameToBalootGameDto(BalootGame game);
+
+    // [UserMapping(Default = true)]
+    public BalootGameDto MapBalootGameToBalootGameDto(BalootGame game)
+    {
+        // custom before map code...
+        var dto = BalootGameToBalootGameDto(game);
+        // custom after map code...
+        if (game.State.CurrentSakka.Moshtaras.Count > 0)
+        {
+            var currentSakkaDto = BalootSakkaStateToSakkaDto(game.State.CurrentSakka);
+            dto.Sakkas.Add(currentSakkaDto);
+        }
+        return dto;
+    }
+
 
     [MapProperty(nameof(BalootSakkaState.Winner), nameof(BalootSakkaDto.Winner))]
     [MapProperty(nameof(BalootSakkaState.IsMashdoda), nameof(BalootSakkaDto.IsMashdoda))]
@@ -59,6 +72,5 @@ public partial class BalootGameMapper
     [MapperIgnoreSource(nameof(BalootMoshtaraState.PausingIntervals))]
     public partial BalootMoshtaraDto BalootMoshtaraStateToMoshtaraDto(BalootMoshtaraState moshtara);
 
-    // [UseMapper()]
     private int TimeSpanToSeconds(TimeSpan t) => t.Seconds;
 }
