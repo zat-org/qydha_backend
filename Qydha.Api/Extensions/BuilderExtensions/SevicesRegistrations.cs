@@ -2,15 +2,16 @@
 
 public static class SevicesRegistrations
 {
-    public static IServiceCollection RegisterServices(this IServiceCollection services)
+    public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
     {
 
         #region DI Services
         services.AddSingleton<TokenManager>();
         services.AddSingleton<OtpManager>();
         services.AddSingleton<WaApiInstancesTracker>();
-        services.AddSingleton(new GoogleStorageService("googleCloud_private_key.json"));
 
+        services.AddSingleton(new GoogleStorageService(configuration.GetSection("GoogleStorage")["JsonKeyPath"]
+           ?? throw new ArgumentNullException("can't get storage service key.")));
 
         services.AddHttpClient();
 

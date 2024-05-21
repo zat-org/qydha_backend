@@ -34,6 +34,9 @@ public static class SettingsRegistrations
         services.Configure<RegisterGiftSetting>(configuration.GetSection("RegisterGiftSetting"));
         // WaApiSettings
         services.Configure<WaApiSettings>(configuration.GetSection("WaApiSettings"));
+        // GoogleStorageSettings
+        services.Configure<GoogleStorageSettings>(configuration.GetSection("GoogleStorage"));
+
         #endregion
         return services;
     }

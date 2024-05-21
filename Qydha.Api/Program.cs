@@ -9,8 +9,8 @@ builder.ReadConfigurationFile();
 builder.AddLoggerService();
 builder.ConfigureDb();
 string MyAllowSpecificOrigins = builder.ConfigureCORS();
-
-builder.Services.RegisterServices();
+// builder.Configuration
+builder.Services.RegisterServices(builder.Configuration);
 builder.Services.RegisterRepos();
 builder.Services.ConfigureControllers();
 builder.Services.ConfigureFluentValidation();
@@ -47,6 +47,3 @@ app.UseSerilogRequestLogging(op =>
 app.MapControllers();
 
 app.Run();
-
-
-

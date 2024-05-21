@@ -15,17 +15,14 @@ public static class LoggerServiceExtension
             .WriteTo.Console()
             .WriteTo.File(new JsonFormatter(renderMessage: true), "./Error_logs/qydha_.json", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning, retainedFileTimeLimit: TimeSpan.FromDays(30));
 
-        if (builder.Environment.IsProduction())
+        if (!builder.Environment.IsDevelopment())
         {
-            string serviceAccountCredential = File.ReadAllText("googleCloud_private_key.json");
             var googleLoggerConfig = builder.Configuration.GetSection("GoogleLogger");
+            string serviceAccountCredential = File.ReadAllText(googleLoggerConfig["JsonKeyPath"]
+                    ?? throw new ArgumentNullException("can't get logging service key."));
             var googleCloudConfig = new GoogleCloudLoggingSinkOptions(
                 projectId: googleLoggerConfig["ProjectId"],
-                googleCredentialJson: serviceAccountCredential,
-                serviceName: googleLoggerConfig["ServiceName"],
-                resourceLabels: new Dictionary<string, string>() { { "logging_source", googleLoggerConfig["ServiceName"] ?? "qydha" } },
-                labels: new Dictionary<string, string>() { { "logging_source", googleLoggerConfig["ServiceName"] ?? "qydha" } }
-            )
+                googleCredentialJson: serviceAccountCredential)
             { };
             loggerConfig.WriteTo.GoogleCloudLogging(googleCloudConfig);
         }

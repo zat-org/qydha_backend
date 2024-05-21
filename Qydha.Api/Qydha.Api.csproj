@@ -26,14 +26,23 @@
 	<ItemGroup>
     <Content Include="Templates\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+
   <ItemGroup>
       <Content Include="wwwroot\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+      <Content Include="ServiceAccountsKeys\**" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Qydha.Domain\Qydha.Domain.csproj" />
     <ProjectReference Include="..\Qydha.Infrastructure\Qydha.Infrastructure.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="ServiceAccountsKeys\" />
   </ItemGroup>
 
 </Project>
