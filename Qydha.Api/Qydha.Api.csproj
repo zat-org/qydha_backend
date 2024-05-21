@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-      <Content Include="ServiceAccountsKeys\**" CopyToPublishDirectory="PreserveNewest" />
+      <Content Include="ServicesAccounts\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,7 +42,7 @@
 
 
   <ItemGroup>
-    <Folder Include="ServiceAccountsKeys\" />
+    <Folder Include="ServicesAccounts\" />
   </ItemGroup>
 
 </Project>

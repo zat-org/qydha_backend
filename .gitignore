@@ -366,11 +366,11 @@ app_keys.json
 app_keys.*.json
 
 firebase_private_key.json
+googleCloud_private_key.json
 
 Qydha.Api/Error_logs/*.json
 Qydha.Api/info_logs/*.json
 Qydha.Api/app_keys.Staging.json
-
 migration_script.sql
 
 ServicesAccounts/
