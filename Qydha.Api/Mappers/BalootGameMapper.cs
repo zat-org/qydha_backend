@@ -60,5 +60,5 @@ public partial class BalootGameMapper
     public partial BalootMoshtaraDto BalootMoshtaraStateToMoshtaraDto(BalootMoshtaraState moshtara);
 
     // [UseMapper()]
-    // private int TimeSpanToSeconds(TimeSpan t) => t.Seconds;
+    private int TimeSpanToSeconds(TimeSpan t) => t.Seconds;
 }

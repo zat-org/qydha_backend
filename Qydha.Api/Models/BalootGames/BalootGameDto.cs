@@ -15,7 +15,7 @@ public class BalootGameDto
     public int UsGameScore { get; set; }
     public int ThemGameScore { get; set; }
     public BalootGameTeam? Winner { get; set; } = null;
-    public TimeSpan GameInterval { get; set; }
+    public int GameInterval { get; set; }
     public List<BalootSakkaDto> Sakkas { get; set; } = null!;
 
 }
