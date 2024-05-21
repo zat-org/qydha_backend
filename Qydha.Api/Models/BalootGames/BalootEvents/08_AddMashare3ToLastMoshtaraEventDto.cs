@@ -9,12 +9,13 @@ public class AddMashare3ToLastMoshtaraEventDto : BalootGameEventDto
     public AdvancedMashare3DetailsDto? AdvancedDetails { get; set; }
     public BalootGameTeam? SelectedMoshtaraOwner { get; set; }
 
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
         switch (RecordingMode)
         {
             case BalootRecordingMode.Regular:
-                return new AddMashare3ToLastMoshtaraEvent(UsAbnat, ThemAbnat) { TriggeredAt = TriggeredAt };
+                BalootGameEvent regularAddMashare3 = new AddMashare3ToLastMoshtaraEvent(UsAbnat, ThemAbnat) { TriggeredAt = TriggeredAt };
+                return Result.Ok(regularAddMashare3);
             case BalootRecordingMode.Advanced:
                 var moshtaraType = AdvancedDetails!.Moshtara;
                 var sra = (AdvancedDetails!.UsData.Sra, AdvancedDetails!.ThemData.Sra);
@@ -27,10 +28,11 @@ public class AddMashare3ToLastMoshtaraEventDto : BalootGameEventDto
                 (int, int)? rob3ome2a = AdvancedDetails!.Moshtara == MoshtaraType.Sun ?
                     (AdvancedDetails!.UsData.Rob3ome2a!.Value, AdvancedDetails!.ThemData.Rob3ome2a!.Value) : null;
 
-                return new AddMashare3ToLastMoshtaraEvent(moshtaraType, sra, khamsen, me2a, baloot, rob3ome2a, SelectedMoshtaraOwner)
+                BalootGameEvent advancedAddMashare3 = new AddMashare3ToLastMoshtaraEvent(moshtaraType, sra, khamsen, me2a, baloot, rob3ome2a, SelectedMoshtaraOwner)
                 { TriggeredAt = TriggeredAt };
+                return Result.Ok(advancedAddMashare3);
             default:
-                throw new Exception("Invalid Recording Case");
+                throw new InvalidOperationException();
         }
     }
 }

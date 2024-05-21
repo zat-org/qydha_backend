@@ -6,9 +6,10 @@ public class ChangeSakkaCountPerGameEventDto : BalootGameEventDto
 {
     public int SakkaCountPerGame { get; set; }
 
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new ChangeSakkaCountPerGameEvent(SakkaCountPerGame) { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new ChangeSakkaCountPerGameEvent(SakkaCountPerGame) { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 public class ChangeSakkaCountPerGameEventDtoValidator : AbstractValidator<ChangeSakkaCountPerGameEventDto>

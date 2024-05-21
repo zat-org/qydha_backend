@@ -3,9 +3,10 @@
 [MapToEventName(nameof(PauseGameEvent))]
 public class PauseGameEventDto : BalootGameEventDto
 {
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new PauseGameEvent() { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new PauseGameEvent() { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 

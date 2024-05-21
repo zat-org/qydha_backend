@@ -208,36 +208,14 @@ public class BalootMoshtaraState
     public Result AddMashare3(int usScore, int themScore)
     {
         return CanFire(MoshtaraTrigger.AddMashare3)
-        .OnSuccess(() =>
-        {
-            try
-            {
-                MoshtaraData!.AddMashare3(usScore, themScore);
-                return Result.Ok();
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail(new InvalidBalootGameActionError(ex.Message));
-            }
-
-        }).OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
+            .OnSuccess(() => MoshtaraData!.AddMashare3(usScore, themScore))
+            .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
     }
     public Result AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
     {
         return CanFire(MoshtaraTrigger.AddMashare3)
-         .OnSuccess(() =>
-        {
-            try
-            {
-                MoshtaraData!.AddMashare3(usMashare3, themMashare3, selectedMoshtaraOwner);
-                return Result.Ok();
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail(new InvalidBalootGameActionError(ex.Message));
-            }
-        })
-        .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
+            .OnSuccess(() => MoshtaraData!.AddMashare3(usMashare3, themMashare3, selectedMoshtaraOwner))
+            .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
     }
     #endregion
 

@@ -6,9 +6,10 @@ public class StartBalootGameEventDto : BalootGameEventDto
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
 
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new StartBalootGameEvent(UsName, ThemName, SakkaCountPerGame) { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new StartBalootGameEvent(UsName, ThemName, SakkaCountPerGame) { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 public class StartBalootGameEventValidator : AbstractValidator<StartBalootGameEventDto>

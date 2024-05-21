@@ -40,9 +40,7 @@
     <ProjectReference Include="..\Qydha.Infrastructure\Qydha.Infrastructure.csproj" />
   </ItemGroup>
 
-
-  <ItemGroup>
-    <Folder Include="ServicesAccounts\" />
-  </ItemGroup>
-
+  <PropertyGroup>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
 </Project>

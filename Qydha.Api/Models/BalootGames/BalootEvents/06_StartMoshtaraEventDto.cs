@@ -4,9 +4,10 @@
 
 public class StartMoshtaraEventDto : BalootGameEventDto
 {
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new StartMoshtaraEvent() { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new StartMoshtaraEvent() { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 public class StartMoshtaraEventDtoValidator : AbstractValidator<StartMoshtaraEventDto>

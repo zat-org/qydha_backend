@@ -20,7 +20,15 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     public async Task<IActionResult> AddEventToGame([FromRoute] Guid gameId, [FromBody] List<BalootGameEventDto> eventsDtos)
     {
         User user = (User)HttpContext.Items["User"]!;
-        var events = eventsDtos.Select(dto => dto.MapToCorrespondingEvent()).ToList();
+        List<BalootGameEvent> events = [];
+        // eventsDtos.Select(dto => dto.MapToCorrespondingEvent()).ToList();
+        foreach (var eDto in eventsDtos)
+        {
+            Result<BalootGameEvent> res = eDto.MapToCorrespondingEvent();
+            if (res.IsFailed)
+                return res.Errors.First().Handle();
+            events.Add(res.Value);
+        }
         return (await _balootGamesService
             .AddEvents(user, gameId, events))
             .Resolve((game) => Ok(new { game.Id, game.State, Message = "Events Added!" }));

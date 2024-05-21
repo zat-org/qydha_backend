@@ -23,7 +23,7 @@ public class InvalidBodyInputError : ResultError
     public InvalidBodyInputError(string msg)
      : base(msg, ErrorType.InvalidBodyInput, StatusCodes.Status400BadRequest)
     { }
-
+    
     public override IActionResult ToIResult(string traceId)
     {
         return new JsonResult(new ValidationErrorResponse(ErrorCode, Message, ValidationErrors)) { StatusCode = StatusCode };

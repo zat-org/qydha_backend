@@ -3,9 +3,10 @@
 [MapToEventName(nameof(OpenRefereeChatEvent))]
 public class OpenRefereeChatEventDto : BalootGameEventDto
 {
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new OpenRefereeChatEvent() { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new OpenRefereeChatEvent() { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 

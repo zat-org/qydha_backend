@@ -5,9 +5,10 @@ public class ChangeIsSakkaMashdodaEventDto : BalootGameEventDto
 {
     public bool IsSakkaMashdoda { get; set; }
 
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new ChangeIsSakkaMashdodaEvent(IsSakkaMashdoda) { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new ChangeIsSakkaMashdodaEvent(IsSakkaMashdoda) { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 public class ChangeIsSakkaMashdodaEventDtoValidator : AbstractValidator<ChangeIsSakkaMashdodaEventDto>

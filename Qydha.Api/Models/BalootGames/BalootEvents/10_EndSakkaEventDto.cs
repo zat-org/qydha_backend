@@ -8,9 +8,10 @@ public class EndSakkaEventDto : BalootGameEventDto
     public BalootGameTeam Winner { get; set; }
     public BalootDrawHandler DrawHandler { get; set; } = BalootDrawHandler.None;
 
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new EndSakkaEvent(Winner, DrawHandler) { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new EndSakkaEvent(Winner, DrawHandler) { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 

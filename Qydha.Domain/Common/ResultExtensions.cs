@@ -30,6 +30,12 @@ public static class ResultExtensions
             return func(result.Value);
         return result.ToResult();
     }
+    public static Result<OutT> OnSuccess<OutT>(this Result result, Func<Result<OutT>> func)
+    {
+        if (result.IsSuccess)
+            return func();
+        return result;
+    }
 
 
     public static Result OnSuccessAsync(this Result result, Func<Task<Result>> func)

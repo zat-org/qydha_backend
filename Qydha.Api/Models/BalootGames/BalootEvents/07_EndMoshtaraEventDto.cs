@@ -7,7 +7,7 @@ public class EndMoshtaraEventDto : BalootGameEventDto
     public int UsAbnat { get; set; }
     public int ThemAbnat { get; set; }
     public AdvancedDetailsDto? AdvancedDetails { get; set; }
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
         MoshtaraData moshtaraData;
         if (RecordingMode == BalootRecordingMode.Regular)
@@ -33,11 +33,11 @@ public class EndMoshtaraEventDto : BalootGameEventDto
             (HokmMoshtaraScoresId, HokmMoshtaraScoresId)? hokmId = AdvancedDetails!.Moshtara == MoshtaraType.Hokm ?
                         (AdvancedDetails!.UsData.HokmScoreId!.Value, AdvancedDetails!.ThemData.HokmScoreId!.Value) : null;
 
-            var moshtaraDetails = new MoshtaraDetails(moshtaraType, sunId, hokmId, sra, khamsen, me2a, baloot, rob3ome2a, ekak, aklat, AdvancedDetails!.SelectedMoshtaraOwner);
-            moshtaraData = new MoshtaraData(moshtaraDetails);
+            var moshtaraDetailsCreationRes = MoshtaraDetails.CreateMoshtaraDetails(moshtaraType, sunId, hokmId, sra, khamsen, me2a, baloot, rob3ome2a, ekak, aklat, AdvancedDetails!.SelectedMoshtaraOwner);
+            moshtaraData = new MoshtaraData(moshtaraDetailsCreationRes.Value);
         }
-
-        return new EndMoshtaraEvent(moshtaraData) { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new EndMoshtaraEvent(moshtaraData) { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 
@@ -50,17 +50,19 @@ public class EndMoshtaraEventDtoValidator : AbstractValidator<EndMoshtaraEventDt
 
         RuleFor(e => e.RecordingMode).IsInEnum();
 
-        When(e => e.AdvancedDetails is null, () =>
+        When(e => e.RecordingMode == BalootRecordingMode.Regular, () =>
         {
             RuleFor(e => e.UsAbnat).GreaterThanOrEqualTo(0);
             RuleFor(e => e.ThemAbnat).GreaterThanOrEqualTo(0);
             RuleFor(e => e.ThemAbnat).GreaterThan(0).When(e => e.UsAbnat == 0);
             RuleFor(e => e.UsAbnat).GreaterThan(0).When(e => e.ThemAbnat == 0);
+            RuleFor(e => e.AdvancedDetails).Null();
         })
         .Otherwise(() =>
         {
             RuleFor(e => e.UsAbnat).Equal(0);
             RuleFor(e => e.ThemAbnat).Equal(0);
+            RuleFor(e => e.AdvancedDetails).NotNull();
 
             RuleFor(e => e.AdvancedDetails!.Moshtara).IsInEnum();
             RuleFor(e => e.AdvancedDetails!.UsData).SetValidator(new TeamAdvancedDetailsDtoValidator());

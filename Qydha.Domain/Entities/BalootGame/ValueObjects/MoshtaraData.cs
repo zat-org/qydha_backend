@@ -29,21 +29,42 @@ public class MoshtaraData
             (UsAbnat, ThemAbnat) = AdvancedDetails.CalculateAbnat();
     }
 
-    public void AddMashare3(int usScore, int themScore)
+    public Result AddMashare3(int usScore, int themScore)
     {
         if (RecordingMode != BalootRecordingMode.Regular)
-            throw new ArgumentException("To add just Scores you must use regular recording mode in the moshtara");
+        {
+            var err = new InvalidBodyInputError();
+            err.ValidationErrors.Add(nameof(RecordingMode), ["يجب ان يكون المشترى مسجل يدويا"]);
+            return Result.Fail(err);
+        }
         UsAbnat += usScore;
         ThemAbnat += themScore;
+        return Result.Ok();
     }
-    public void AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
+    public Result AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
     {
-        if (RecordingMode != BalootRecordingMode.Advanced || AdvancedDetails == null)
-            throw new ArgumentException("To add Mashare3 values you must use Advanced recording mode in the moshtara");
-        AdvancedDetails.UsData.Mashare3.AddMashare3(usMashare3);
-        AdvancedDetails.ThemData.Mashare3.AddMashare3(themMashare3);
-        CalculateAbnat();
-        (AdvancedDetails.MoshtaraOwner, AdvancedDetails.IsMoshtaraSucceeded) = AdvancedDetails.CalculateMoshtaraOwnerAndResult(selectedMoshtaraOwner);
+        return Result.Ok().OnSuccess(() =>
+        {
+            if (RecordingMode != BalootRecordingMode.Advanced || AdvancedDetails == null)
+            {
+                var err = new InvalidBodyInputError();
+                err.ValidationErrors.Add(nameof(RecordingMode), ["يجب ان يكون المشترى مسجل ياستخدام التسجيل المتقدم"]);
+                return Result.Fail(err);
+            }
+            return Result.Ok();
+        })
+        .OnSuccess(() => AdvancedDetails!.UsData.Mashare3.AddMashare3(usMashare3))
+        .OnSuccess(() => AdvancedDetails!.ThemData.Mashare3.AddMashare3(themMashare3))
+        .OnSuccess(() =>
+        {
+            CalculateAbnat();
+            return AdvancedDetails!.CalculateMoshtaraOwnerAndResult(selectedMoshtaraOwner);
+        })
+        .OnSuccess((tuple) =>
+        {
+            (AdvancedDetails!.MoshtaraOwner, AdvancedDetails.IsMoshtaraSucceeded) = tuple;
+            return Result.Ok();
+        });
     }
 }
 public class MoshtaraDetails
@@ -55,49 +76,86 @@ public class MoshtaraDetails
     public MoshtaraTeamDetails ThemData { get; set; } = null!;
 
     private MoshtaraDetails() { }
-    public MoshtaraDetails(MoshtaraType moshtaraType, (SunMoshtaraScoresId, SunMoshtaraScoresId)? sunId, (HokmMoshtaraScoresId, HokmMoshtaraScoresId)? hokmId, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a, (int, int) ekak, (int, int) aklat, BalootGameTeam? selectedMoshtaraOwner)
+
+    public static Result<MoshtaraDetails> CreateMoshtaraDetails(MoshtaraType moshtaraType, (SunMoshtaraScoresId, SunMoshtaraScoresId)? sunId, (HokmMoshtaraScoresId, HokmMoshtaraScoresId)? hokmId, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a, (int, int) ekak, (int, int) aklat, BalootGameTeam? selectedMoshtaraOwner)
     {
-        Moshtara = moshtaraType;
+        var moshtaraDetails = new MoshtaraDetails { Moshtara = moshtaraType };
         switch (moshtaraType)
         {
             case MoshtaraType.Sun:
-                if (sunId is null) throw new ArgumentNullException(nameof(sunId));
-                if (rob3ome2a is null) throw new ArgumentNullException(nameof(rob3ome2a));
-                UsData = new SunMoshtaraTeamDetails(new Mashare3Sun(sra.Item1, khamsen.Item1, me2a.Item1, rob3ome2a.Value.Item1), ekak.Item1, aklat.Item1, sunId.Value.Item1);
-                ThemData = new SunMoshtaraTeamDetails(new Mashare3Sun(sra.Item2, khamsen.Item2, me2a.Item2, rob3ome2a.Value.Item2), ekak.Item2, aklat.Item2, sunId.Value.Item2);
+                if (sunId is null)
+                {
+                    var err = new InvalidBodyInputError();
+                    err.ValidationErrors.Add(nameof(sunId),
+                    [" في حالة مشترى الصن يجب ان تكون قيمة النتيجة الاساسية صحيحة "]);
+                    return Result.Fail(err);
+                }
+                if (rob3ome2a is null)
+                {
+                    var err = new InvalidBodyInputError();
+                    err.ValidationErrors.Add(nameof(sunId),
+                    [" في حالة مشترى الصن يجب ان تكون الربعمائة بقيمة صحيحة"]);
+                    return Result.Fail(err);
+                }
+                moshtaraDetails.UsData = new SunMoshtaraTeamDetails(new Mashare3Sun(sra.Item1, khamsen.Item1, me2a.Item1, rob3ome2a.Value.Item1), ekak.Item1, aklat.Item1, sunId.Value.Item1);
+                moshtaraDetails.ThemData = new SunMoshtaraTeamDetails(new Mashare3Sun(sra.Item2, khamsen.Item2, me2a.Item2, rob3ome2a.Value.Item2), ekak.Item2, aklat.Item2, sunId.Value.Item2);
                 break;
             case MoshtaraType.Hokm:
-                if (hokmId is null) throw new ArgumentNullException(nameof(hokmId));
-                if (baloot is null) throw new ArgumentNullException(nameof(baloot));
-                UsData = new HokmMoshtaraTeamDetails(new Mashare3Hokm(baloot.Value.Item1, sra.Item1, khamsen.Item1, me2a.Item1), ekak.Item1, aklat.Item1, hokmId.Value.Item1);
-                ThemData = new HokmMoshtaraTeamDetails(new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2), ekak.Item2, aklat.Item2, hokmId.Value.Item2);
+                if (hokmId is null)
+                {
+                    var err = new InvalidBodyInputError();
+                    err.ValidationErrors.Add(nameof(hokmId),
+                    [" في حالة مشترى حكم يجب ان تكون قيمة النتيجة الاساسية صحيحة "]);
+                    return Result.Fail(err);
+                }
+                if (baloot is null)
+                {
+                    var err = new InvalidBodyInputError();
+                    err.ValidationErrors.Add(nameof(baloot),
+                    [" في حالة مشترى حكم يجب ان يكون البلوت بقيمة صحيحة"]);
+                    return Result.Fail(err);
+                }
+
+                moshtaraDetails.UsData = new HokmMoshtaraTeamDetails(new Mashare3Hokm(baloot.Value.Item1, sra.Item1, khamsen.Item1, me2a.Item1), ekak.Item1, aklat.Item1, hokmId.Value.Item1);
+                moshtaraDetails.ThemData = new HokmMoshtaraTeamDetails(new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2), ekak.Item2, aklat.Item2, hokmId.Value.Item2);
                 break;
         }
 
-        (MoshtaraOwner, IsMoshtaraSucceeded) = CalculateMoshtaraOwnerAndResult(selectedMoshtaraOwner);
+        return moshtaraDetails.CalculateMoshtaraOwnerAndResult(selectedMoshtaraOwner)
+        .OnSuccess((tuple) =>
+        {
+            (moshtaraDetails.MoshtaraOwner, moshtaraDetails.IsMoshtaraSucceeded) = tuple;
+            return Result.Ok();
+        });
     }
-    public (BalootGameTeam, bool) CalculateMoshtaraOwnerAndResult(BalootGameTeam? selectedMoshtaraOwner)
+    public Result<(BalootGameTeam, bool)> CalculateMoshtaraOwnerAndResult(BalootGameTeam? selectedMoshtaraOwner)
     {
         int usAbnat, themAbnat;
         (usAbnat, themAbnat) = CalculateAbnat();
         if ((UsData.IsScoreKhosaraOrKhosaretKaboot() && !ThemData.IsScoreDoubled()) ||
             (ThemData.IsScoreKhosaraOrKhosaretKaboot() && !UsData.IsScoreDoubled()))
         {
-            return (UsData.IsScoreKhosaraOrKhosaretKaboot() ? BalootGameTeam.Us : BalootGameTeam.Them, false);
+            return Result.Ok((UsData.IsScoreKhosaraOrKhosaretKaboot() ? BalootGameTeam.Us : BalootGameTeam.Them, false));
         }
         else if (ThemData.IsScoreDoubled() || UsData.IsScoreDoubled() || usAbnat == themAbnat)
         {
             if (selectedMoshtaraOwner is null)
             {
-                throw new ArgumentNullException(nameof(selectedMoshtaraOwner));
+                var err = new InvalidBodyInputError();
+                err.ValidationErrors.Add(nameof(selectedMoshtaraOwner),
+                    ["يجب تحديد صاحب المشترى في حالة التعادل او اللعب الدبل"]);
+                return Result.Fail(err);
             }
             if (usAbnat == themAbnat)
-                return (selectedMoshtaraOwner.Value, true);
+                return Result.Ok((selectedMoshtaraOwner.Value, true));
             else
             {
-                if (selectedMoshtaraOwner == BalootGameTeam.Us && UsData.IsScoreDoubled()) return (BalootGameTeam.Us, true);
-                else if (selectedMoshtaraOwner == BalootGameTeam.Them && ThemData.IsScoreDoubled()) return (BalootGameTeam.Them, true);
-                else return (selectedMoshtaraOwner.Value, false);
+                if (selectedMoshtaraOwner == BalootGameTeam.Us && UsData.IsScoreDoubled())
+                    return Result.Ok((BalootGameTeam.Us, true));
+                else if (selectedMoshtaraOwner == BalootGameTeam.Them && ThemData.IsScoreDoubled())
+                    return Result.Ok((BalootGameTeam.Them, true));
+                else
+                    return Result.Ok((selectedMoshtaraOwner.Value, false));
             }
         }
         else
@@ -212,7 +270,7 @@ public abstract class Mashare3
     public int Me2a { get; set; }
     public abstract int CalcValue();
     public abstract int CalcDoubledValue();
-    public abstract void AddMashare3(Mashare3 mashare3);
+    public abstract Result AddMashare3(Mashare3 mashare3);
 }
 public class Mashare3Sun : Mashare3
 {
@@ -233,7 +291,7 @@ public class Mashare3Sun : Mashare3
         Me2a * BalootConstants.Mashare3SunValues["Me2a"] +
         Rob3ome2a * BalootConstants.Mashare3SunValues["Rob3ome2a"];
 
-    public override void AddMashare3(Mashare3 mashare3)
+    public override Result AddMashare3(Mashare3 mashare3)
     {
         if (mashare3 is Mashare3Sun mashare3Sun)
         {
@@ -241,10 +299,13 @@ public class Mashare3Sun : Mashare3
             Khamsen += mashare3Sun.Khamsen;
             Me2a += mashare3Sun.Me2a;
             Rob3ome2a += mashare3Sun.Rob3ome2a;
+            return Result.Ok();
         }
         else
         {
-            throw new ArgumentException($"{nameof(mashare3)} should be a sun moshtara with sun mashare3");
+            var err = new InvalidBodyInputError();
+            err.ValidationErrors.Add(nameof(mashare3), ["يجب ان تكون المشاريع من نوع صن"]);
+            return Result.Fail(err);
         }
     }
 }
@@ -266,7 +327,7 @@ public class Mashare3Hokm : Mashare3
         Me2a * BalootConstants.Mashare3HokmValues["Me2a"] +
         Baloot * BalootConstants.Mashare3HokmValues["Baloot"];
 
-    public override void AddMashare3(Mashare3 mashare3)
+    public override Result AddMashare3(Mashare3 mashare3)
     {
         if (mashare3 is Mashare3Hokm mashare3Sun)
         {
@@ -274,10 +335,13 @@ public class Mashare3Hokm : Mashare3
             Khamsen += mashare3Sun.Khamsen;
             Me2a += mashare3Sun.Me2a;
             Baloot += mashare3Sun.Baloot;
+            return Result.Ok();
         }
         else
         {
-            throw new ArgumentException($"{nameof(mashare3)} should be a Hokm moshtara with Hokm mashare3");
+            var err = new InvalidBodyInputError();
+            err.ValidationErrors.Add(nameof(mashare3), ["يجب ان تكون المشاريع من نوع حكم"]);
+            return Result.Fail(err);
         }
     }
 }

@@ -4,9 +4,10 @@
 
 public class OpenBalootBookEventDto : BalootGameEventDto
 {
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new OpenBalootBookEvent() { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new OpenBalootBookEvent() { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 

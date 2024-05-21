@@ -4,9 +4,10 @@ public class ChangeTeamsNamesEventDto : BalootGameEventDto
 {
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new ChangeTeamsNamesEvent(UsName, ThemName) { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new ChangeTeamsNamesEvent(UsName, ThemName) { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 public class ChangeTeamsNamesEventDtoValidator : AbstractValidator<ChangeTeamsNamesEventDto>

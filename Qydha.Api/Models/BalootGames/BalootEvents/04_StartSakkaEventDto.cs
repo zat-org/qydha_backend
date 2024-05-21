@@ -6,9 +6,10 @@ public class StartSakkaEventDto : BalootGameEventDto
 {
     public bool IsSakkaMashdoda { get; set; }
 
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new StartSakkaEvent(IsSakkaMashdoda) { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new StartSakkaEvent(IsSakkaMashdoda) { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 public class StartSakkaEventDtoValidator : AbstractValidator<StartSakkaEventDto>

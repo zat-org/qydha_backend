@@ -1,13 +1,13 @@
 ﻿namespace Qydha.API.Extensions;
 
-public static class CorsConfigrations
+public static class CorsConfigurations
 {
-    public static string ConfigureCORS(this WebApplicationBuilder builder)
+    public static string ConfigureCORS(this IServiceCollection services)
     {
         #region Add Cors
         string MyAllowSpecificOrigins = "_MyAllowSpecificOrigins";
 
-        builder.Services.AddCors(options =>
+        services.AddCors(options =>
         {
             options.AddPolicy(name: MyAllowSpecificOrigins, builder =>
             {

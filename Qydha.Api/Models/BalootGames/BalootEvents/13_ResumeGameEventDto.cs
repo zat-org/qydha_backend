@@ -3,9 +3,10 @@
 [MapToEventName(nameof(ResumeGameEvent))]
 public class ResumeGameEventDto : BalootGameEventDto
 {
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new ResumeGameEvent() { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new ResumeGameEvent() { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 

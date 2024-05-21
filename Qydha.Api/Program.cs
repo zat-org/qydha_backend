@@ -5,11 +5,11 @@ FirebaseApp.Create(new AppOptions()
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.ReadConfigurationFile();
-builder.AddLoggerService();
-builder.ConfigureDb();
-string MyAllowSpecificOrigins = builder.ConfigureCORS();
-// builder.Configuration
+ReadingConfigurationFile.ReadConfigurationFile(builder.Configuration, builder.Environment);
+string MyAllowSpecificOrigins = builder.Services.ConfigureCORS();
+LoggerServiceExtension.AddLoggerConfiguration(builder.Configuration, builder.Environment);
+builder.Host.UseSerilog();
+builder.Services.DbConfiguration(builder.Configuration);
 builder.Services.RegisterServices(builder.Configuration);
 builder.Services.RegisterRepos();
 builder.Services.ConfigureControllers();

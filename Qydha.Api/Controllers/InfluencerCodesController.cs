@@ -43,24 +43,4 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
         });
     }
 
-    // [HttpGet]
-    // [Auth(SystemUserRoles.Admin)]
-    // public async Task<IActionResult> GetInfluencerCodes()
-    // {
-    //     throw new Exception();
-    // }
-
-    // [HttpPatch]
-    // [Auth(SystemUserRoles.Admin)]
-    // public async Task<IActionResult> PatchInfluencerCode(AddInfluencerCodeDto dto)
-    // {
-    //     throw new Exception();
-    // }
-
-    // [HttpDelete]
-    // [Auth(SystemUserRoles.Admin)]
-    // public async Task<IActionResult> DeleteInfluencerCode(AddInfluencerCodeDto dto)
-    // {
-    //     throw new Exception();
-    // }
 }

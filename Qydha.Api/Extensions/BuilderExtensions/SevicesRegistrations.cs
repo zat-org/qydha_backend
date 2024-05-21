@@ -10,7 +10,7 @@ public static class SevicesRegistrations
         services.AddSingleton<OtpManager>();
         services.AddSingleton<WaApiInstancesTracker>();
 
-        services.AddSingleton(new GoogleStorageService(configuration.GetSection("GoogleStorage")["JsonKeyPath"]
+        services.AddSingleton(new GoogleStorageService(configuration.GetSection("GoogleStorage").Get<GoogleStorageSettings>()?.JsonKeyPath
            ?? throw new ArgumentNullException("can't get storage service key.")));
 
         services.AddHttpClient();

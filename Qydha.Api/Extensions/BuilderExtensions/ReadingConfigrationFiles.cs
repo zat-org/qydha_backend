@@ -2,14 +2,14 @@
 
 public static class ReadingConfigurationFile
 {
-    public static void ReadConfigurationFile(this WebApplicationBuilder builder)
+    public static void ReadConfigurationFile(ConfigurationManager configuration, IWebHostEnvironment environment)
     {
 
-        builder.Configuration.AddJsonFile("app_keys.json");
-        if (builder.Environment.IsDevelopment())
-            builder.Configuration.AddJsonFile("app_keys.Development.json");
-        else if (builder.Environment.IsStaging())
-            builder.Configuration.AddJsonFile("app_keys.Staging.json");
+        configuration.AddJsonFile("app_keys.json");
+        if (environment.IsDevelopment())
+            configuration.AddJsonFile("app_keys.Development.json");
+        else if (environment.IsStaging())
+            configuration.AddJsonFile("app_keys.Staging.json");
     }
 }
 // TODO

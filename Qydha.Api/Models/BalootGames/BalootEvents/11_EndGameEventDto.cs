@@ -5,9 +5,10 @@ public class EndGameEventDto : BalootGameEventDto
 {
     public BalootGameTeam Winner { get; set; }
 
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new EndGameEvent(Winner) { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new EndGameEvent(Winner) { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 

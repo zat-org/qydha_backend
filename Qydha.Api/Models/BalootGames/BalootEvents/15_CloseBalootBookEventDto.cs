@@ -3,9 +3,10 @@
 [MapToEventName(nameof(CloseBalootBookEvent))]
 public class CloseBalootBookEventDto : BalootGameEventDto
 {
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new CloseBalootBookEvent() { TriggeredAt = this.TriggeredAt };
+        BalootGameEvent e = new CloseBalootBookEvent() { TriggeredAt = this.TriggeredAt };
+        return Result.Ok(e);
     }
 }
 

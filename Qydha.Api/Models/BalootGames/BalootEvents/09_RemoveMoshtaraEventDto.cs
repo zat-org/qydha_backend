@@ -3,9 +3,10 @@
 [MapToEventName(nameof(RemoveMoshtaraEvent))]
 public class RemoveMoshtaraEventDto : BalootGameEventDto
 {
-    public override BalootGameEvent MapToCorrespondingEvent()
+    public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        return new RemoveMoshtaraEvent() { TriggeredAt = TriggeredAt };
+        BalootGameEvent e = new RemoveMoshtaraEvent() { TriggeredAt = TriggeredAt };
+        return Result.Ok(e);
     }
 }
 public class RemoveMoshtaraEventDtoValidator : AbstractValidator<RemoveMoshtaraEventDto>
