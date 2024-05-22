@@ -9,9 +9,11 @@ public class EndMoshtaraEventDto : BalootGameEventDto
     public AdvancedDetailsDto? AdvancedDetails { get; set; }
     public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {
-        MoshtaraData moshtaraData;
         if (RecordingMode == BalootRecordingMode.Regular)
-            moshtaraData = new MoshtaraData(UsAbnat, ThemAbnat);
+        {
+            BalootGameEvent e = new EndMoshtaraEvent(new MoshtaraData(UsAbnat, ThemAbnat)) { TriggeredAt = this.TriggeredAt };
+            return Result.Ok(e);
+        }
         else
         {
             var moshtaraType = AdvancedDetails!.Moshtara;
@@ -33,11 +35,13 @@ public class EndMoshtaraEventDto : BalootGameEventDto
             (HokmMoshtaraScoresId, HokmMoshtaraScoresId)? hokmId = AdvancedDetails!.Moshtara == MoshtaraType.Hokm ?
                         (AdvancedDetails!.UsData.HokmScoreId!.Value, AdvancedDetails!.ThemData.HokmScoreId!.Value) : null;
 
-            var moshtaraDetailsCreationRes = MoshtaraDetails.CreateMoshtaraDetails(moshtaraType, sunId, hokmId, sra, khamsen, me2a, baloot, rob3ome2a, ekak, aklat, AdvancedDetails!.SelectedMoshtaraOwner);
-            moshtaraData = new MoshtaraData(moshtaraDetailsCreationRes.Value);
+            return MoshtaraDetails.CreateMoshtaraDetails(moshtaraType, sunId, hokmId, sra, khamsen, me2a, baloot, rob3ome2a, ekak, aklat, AdvancedDetails!.SelectedMoshtaraOwner)
+                .OnSuccess((moshtaraDetails) =>
+                {
+                    BalootGameEvent e = new EndMoshtaraEvent(new MoshtaraData(moshtaraDetails)) { TriggeredAt = this.TriggeredAt };
+                    return Result.Ok(e);
+                });
         }
-        BalootGameEvent e = new EndMoshtaraEvent(moshtaraData) { TriggeredAt = this.TriggeredAt };
-        return Result.Ok(e);
     }
 }
 
