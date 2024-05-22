@@ -173,7 +173,7 @@ public class BalootGameState
                 blocks.Add(new(
                     moshtaraIndex == sakka.Moshtaras.Count - 1 ?
                             TimeLineBlockType.ScoreWithWinner : TimeLineBlockType.ScoreWithoutWinner,
-                    triggerAfter,
+                    triggerAfter.TotalSeconds,
                     new(UsName, usGameScore, usSakkaScore, [.. usSakkaScores]),
                     new(ThemName, themGameScore, themSakkaScore, [.. themSakkaScores])
                 ));
@@ -193,7 +193,7 @@ public class BalootGameState
             themCurrentSakkaScores.Add(currentMoshtara.ThemScore);
             blocks.Add(new(
                 TimeLineBlockType.ScoreWithoutWinner,
-                triggerAfter,
+                triggerAfter.TotalSeconds,
                 new(UsName, usGameScore, usCurrentSakkaScores.Sum(), [.. usCurrentSakkaScores]),
                 new(ThemName, themGameScore, themCurrentSakkaScores.Sum(), [.. themCurrentSakkaScores])
             ));

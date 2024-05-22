@@ -1,9 +1,9 @@
 namespace Qydha.Domain.Entities;
 
-public class BalootGameTimeLineBlock(TimeLineBlockType type, TimeSpan triggeredAfter, BalootGameTimeLineBlockTeamData usData, BalootGameTimeLineBlockTeamData themData)
+public class BalootGameTimeLineBlock(TimeLineBlockType type, double triggeredAfterInSec, BalootGameTimeLineBlockTeamData usData, BalootGameTimeLineBlockTeamData themData)
 {
     public TimeLineBlockType Type { get; set; } = type;
-    public TimeSpan TriggeredAfter { get; set; } = triggeredAfter;
+    public double TriggeredAfterInSec { get; set; } = triggeredAfterInSec;
     public BalootGameTimeLineBlockTeamData UsData { get; set; } = usData;
     public BalootGameTimeLineBlockTeamData ThemData { get; set; } = themData;
 }
