@@ -125,7 +125,7 @@ public class MoshtaraDetails
         .OnSuccess((tuple) =>
         {
             (moshtaraDetails.MoshtaraOwner, moshtaraDetails.IsMoshtaraSucceeded) = tuple;
-            return Result.Ok();
+            return Result.Ok(moshtaraDetails);
         });
     }
     public Result<(BalootGameTeam, bool)> CalculateMoshtaraOwnerAndResult(BalootGameTeam? selectedMoshtaraOwner)

@@ -138,7 +138,6 @@ public class AdvancedDetailsDto
     public TeamAdvancedDetailsDto UsData { get; set; } = null!;
     public TeamAdvancedDetailsDto ThemData { get; set; } = null!;
 }
-
 public class TeamAdvancedDetailsDto : TeamMashare3DataDto
 {
     public SunMoshtaraScoresId? SunScoreId { get; set; }
