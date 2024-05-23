@@ -1,8 +1,9 @@
-﻿namespace Qydha.API.Models;
+namespace Qydha.API.Models;
 
-[MapToEventName(nameof(EndMoshtaraEvent))]
-public class EndMoshtaraEventDto : BalootGameEventDto
+[MapToEventName(nameof(UpdateMoshtaraEvent))]
+public class UpdateMoshtaraEventDto : BalootGameEventDto
 {
+    public int MoshtaraIndex { get; set; }
     public BalootRecordingMode RecordingMode { get; set; }
     public int UsAbnat { get; set; }
     public int ThemAbnat { get; set; }
@@ -11,7 +12,8 @@ public class EndMoshtaraEventDto : BalootGameEventDto
     {
         if (RecordingMode == BalootRecordingMode.Regular)
         {
-            BalootGameEvent e = new EndMoshtaraEvent(new MoshtaraData(UsAbnat, ThemAbnat)) { TriggeredAt = this.TriggeredAt };
+            BalootGameEvent e = new UpdateMoshtaraEvent(MoshtaraIndex, new MoshtaraData(UsAbnat, ThemAbnat))
+            { TriggeredAt = this.TriggeredAt };
             return Result.Ok(e);
         }
         else
@@ -38,19 +40,20 @@ public class EndMoshtaraEventDto : BalootGameEventDto
             return MoshtaraDetails.CreateMoshtaraDetails(moshtaraType, sunId, hokmId, sra, khamsen, me2a, baloot, rob3ome2a, ekak, aklat, AdvancedDetails!.SelectedMoshtaraOwner)
                 .OnSuccess((moshtaraDetails) =>
                 {
-                    BalootGameEvent e = new EndMoshtaraEvent(new MoshtaraData(moshtaraDetails)) { TriggeredAt = this.TriggeredAt };
+                    BalootGameEvent e = new UpdateMoshtaraEvent(MoshtaraIndex, new MoshtaraData(moshtaraDetails)) { TriggeredAt = this.TriggeredAt };
                     return Result.Ok(e);
                 });
         }
     }
 }
 
-public class EndMoshtaraEventDtoValidator : AbstractValidator<EndMoshtaraEventDto>
+public class UpdateMoshtaraEventDtoValidator : AbstractValidator<UpdateMoshtaraEventDto>
 {
-    public EndMoshtaraEventDtoValidator()
+    public UpdateMoshtaraEventDtoValidator()
     {
-        RuleFor(e => e.EventName).NotEmpty().Equal(nameof(EndMoshtaraEvent));
+        RuleFor(e => e.EventName).NotEmpty().Equal(nameof(UpdateMoshtaraEvent));
         RuleFor(e => e.TriggeredAt).NotEmpty();
+        RuleFor(e => e.MoshtaraIndex).GreaterThanOrEqualTo(0);
 
         RuleFor(e => e.RecordingMode).IsInEnum();
 
@@ -132,59 +135,6 @@ public class EndMoshtaraEventDtoValidator : AbstractValidator<EndMoshtaraEventDt
                 }
             });
 
-        });
-    }
-}
-public class AdvancedDetailsDto
-{
-    public MoshtaraType Moshtara { get; set; }
-    public BalootGameTeam? SelectedMoshtaraOwner { get; set; }
-    public TeamAdvancedDetailsDto UsData { get; set; } = null!;
-    public TeamAdvancedDetailsDto ThemData { get; set; } = null!;
-}
-
-public class TeamMashare3DataDto
-{
-    public int Sra { get; set; } //  >= 0 
-    public int Khamsen { get; set; } // >= 0 
-    public int Me2a { get; set; } // >= 0  
-    public int? Rob3ome2a { get; set; }
-    public int? Baloot { get; set; }
-}
-public class TeamAdvancedDetailsDto : TeamMashare3DataDto
-{
-    public SunMoshtaraScoresId? SunScoreId { get; set; }
-    public HokmMoshtaraScoresId? HokmScoreId { get; set; }
-    public int Ekak { get; set; }  // 0-4
-    public int Aklat { get; set; } // 0-8
-
-}
-public class TeamAdvancedDetailsDtoValidator : AbstractValidator<TeamAdvancedDetailsDto>
-{
-    public TeamAdvancedDetailsDtoValidator()
-    {
-        RuleFor(d => d.Sra).GreaterThanOrEqualTo(0);
-        RuleFor(d => d.Khamsen).GreaterThanOrEqualTo(0);
-        RuleFor(d => d.Me2a).GreaterThanOrEqualTo(0);
-        RuleFor(d => d.Ekak).GreaterThanOrEqualTo(0).LessThanOrEqualTo(4);
-        RuleFor(d => d.Aklat).GreaterThanOrEqualTo(0).LessThanOrEqualTo(8);
-        When(d => d.Rob3ome2a != null, () =>
-        {
-            RuleFor(d => d.Rob3ome2a).GreaterThanOrEqualTo(0);
-        });
-        When(d => d.Baloot != null, () =>
-        {
-            RuleFor(d => d.Baloot).GreaterThanOrEqualTo(0);
-        });
-
-        When(d => d.SunScoreId != null, () =>
-        {
-            RuleFor(d => d.SunScoreId).NotEmpty().IsInEnum();
-        });
-
-        When(d => d.HokmScoreId != null, () =>
-        {
-            RuleFor(d => d.HokmScoreId).NotEmpty().IsInEnum();
         });
     }
 }

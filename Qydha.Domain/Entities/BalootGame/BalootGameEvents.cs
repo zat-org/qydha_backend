@@ -49,7 +49,7 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
     public BalootRecordingMode RecordingMode { get; set; }
     public int UsAbnat { get; set; }
     public int ThemAbnat { get; set; }
-    public AddMashare3Details? AdvancedDetails { get; set; }
+    // public AddMashare3Details? AdvancedDetails { get; set; }
 
     private AddMashare3ToLastMoshtaraEvent() : base(nameof(AddMashare3ToLastMoshtaraEvent)) { }
     public AddMashare3ToLastMoshtaraEvent(int usScore, int themScore) : base(nameof(AddMashare3ToLastMoshtaraEvent))
@@ -57,51 +57,52 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
         UsAbnat = usScore;
         ThemAbnat = themScore;
         RecordingMode = BalootRecordingMode.Regular;
-        AdvancedDetails = null;
+        // AdvancedDetails = null;
     }
-    public AddMashare3ToLastMoshtaraEvent(MoshtaraType moshtaraType, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a, BalootGameTeam? selectedMoshtaraOwner)
-        : base(nameof(AddMashare3ToLastMoshtaraEvent))
-    {
-        RecordingMode = BalootRecordingMode.Advanced;
-        UsAbnat = 0;
-        ThemAbnat = 0;
-        switch (moshtaraType)
-        {
-            case MoshtaraType.Sun:
-                if (rob3ome2a is null) throw new ArgumentNullException(nameof(rob3ome2a));
-                AdvancedDetails = new AddMashare3Details(
-                    MoshtaraType.Sun,
-                    new Mashare3Sun(sra.Item1, khamsen.Item1, me2a.Item1, rob3ome2a.Value.Item1),
-                    new Mashare3Sun(sra.Item2, khamsen.Item2, me2a.Item2, rob3ome2a.Value.Item2),
-                    selectedMoshtaraOwner
-                );
-                break;
-            case MoshtaraType.Hokm:
-                if (baloot is null) throw new ArgumentNullException(nameof(baloot));
-                AdvancedDetails = new AddMashare3Details(
-                   MoshtaraType.Sun,
-                   new Mashare3Hokm(baloot.Value.Item1, sra.Item1, khamsen.Item1, me2a.Item1),
-                   new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2),
-                   selectedMoshtaraOwner
-               );
-                break;
-        }
-    }
+    // public AddMashare3ToLastMoshtaraEvent(MoshtaraType moshtaraType, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a, BalootGameTeam? selectedMoshtaraOwner)
+    //     : base(nameof(AddMashare3ToLastMoshtaraEvent))
+    // {
+    //     RecordingMode = BalootRecordingMode.Advanced;
+    //     UsAbnat = 0;
+    //     ThemAbnat = 0;
+    //     switch (moshtaraType)
+    //     {
+    //         case MoshtaraType.Sun:
+    //             if (rob3ome2a is null) throw new ArgumentNullException(nameof(rob3ome2a));
+    //             AdvancedDetails = new AddMashare3Details(
+    //                 MoshtaraType.Sun,
+    //                 new Mashare3Sun(sra.Item1, khamsen.Item1, me2a.Item1, rob3ome2a.Value.Item1),
+    //                 new Mashare3Sun(sra.Item2, khamsen.Item2, me2a.Item2, rob3ome2a.Value.Item2),
+    //                 selectedMoshtaraOwner
+    //             );
+    //             break;
+    //         case MoshtaraType.Hokm:
+    //             if (baloot is null) throw new ArgumentNullException(nameof(baloot));
+    //             AdvancedDetails = new AddMashare3Details(
+    //                MoshtaraType.Sun,
+    //                new Mashare3Hokm(baloot.Value.Item1, sra.Item1, khamsen.Item1, me2a.Item1),
+    //                new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2),
+    //                selectedMoshtaraOwner
+    //            );
+    //             break;
+    //     }
+    // }
     public override Result ApplyToState(BalootGameState state)
     {
-        if (RecordingMode == BalootRecordingMode.Advanced && AdvancedDetails is not null)
-            return state.AddMashare3ToLastMoshtara(AdvancedDetails.UsMashare3, AdvancedDetails.ThemMashare3, AdvancedDetails.SelectedMoshtaraOwner);
-        else
-            return state.AddMashare3ToLastMoshtara(UsAbnat, ThemAbnat);
+        if (RecordingMode != BalootRecordingMode.Regular) //&& AdvancedDetails is not null)
+            return Result.Fail(new InvalidBalootGameActionError("Mashare3 can only be added during regular Recoding"));
+        // return state.AddMashare3ToLastMoshtara(AdvancedDetails.UsMashare3, AdvancedDetails.ThemMashare3, AdvancedDetails.SelectedMoshtaraOwner);
+        // else
+        return state.AddMashare3ToLastMoshtara(UsAbnat, ThemAbnat);
     }
 
-    public class AddMashare3Details(MoshtaraType moshtara, Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
-    {
-        public MoshtaraType Moshtara { get; set; } = moshtara;
-        public BalootGameTeam? SelectedMoshtaraOwner { get; set; } = selectedMoshtaraOwner;
-        public Mashare3 UsMashare3 { get; set; } = usMashare3;
-        public Mashare3 ThemMashare3 { get; set; } = themMashare3;
-    }
+    // public class AddMashare3Details(MoshtaraType moshtara, Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
+    // {
+    //     public MoshtaraType Moshtara { get; set; } = moshtara;
+    //     public BalootGameTeam? SelectedMoshtaraOwner { get; set; } = selectedMoshtaraOwner;
+    //     public Mashare3 UsMashare3 { get; set; } = usMashare3;
+    //     public Mashare3 ThemMashare3 { get; set; } = themMashare3;
+    // }
 }
 
 #endregion
@@ -148,6 +149,20 @@ public sealed class EndMoshtaraEvent : BalootGameEvent
 
     public override Result ApplyToState(BalootGameState state) =>
         state.EndMoshtara(MoshtaraData, TriggeredAt);
+}
+public sealed class UpdateMoshtaraEvent : BalootGameEvent
+{
+    private UpdateMoshtaraEvent() : base(nameof(UpdateMoshtaraEvent)) { }
+    public UpdateMoshtaraEvent(int moshtaraIndex, MoshtaraData data) : base(nameof(UpdateMoshtaraEvent))
+    {
+        MoshtaraData = data;
+        MoshtaraIndex = moshtaraIndex;
+    }
+    public int MoshtaraIndex { get; set; }
+    public MoshtaraData MoshtaraData { get; set; } = null!;
+
+    public override Result ApplyToState(BalootGameState state) =>
+        state.UpdateMoshtara(MoshtaraIndex, MoshtaraData, TriggeredAt);
 }
 public sealed class RemoveMoshtaraEvent() : BalootGameEvent(nameof(RemoveMoshtaraEvent))
 {

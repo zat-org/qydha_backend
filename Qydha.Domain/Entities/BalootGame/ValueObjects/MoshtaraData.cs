@@ -41,31 +41,31 @@ public class MoshtaraData
         ThemAbnat += themScore;
         return Result.Ok();
     }
-    public Result AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
-    {
-        return Result.Ok().OnSuccess(() =>
-        {
-            if (RecordingMode != BalootRecordingMode.Advanced || AdvancedDetails == null)
-            {
-                var err = new InvalidBodyInputError();
-                err.ValidationErrors.Add(nameof(RecordingMode), ["يجب ان يكون المشترى مسجل ياستخدام التسجيل المتقدم"]);
-                return Result.Fail(err);
-            }
-            return Result.Ok();
-        })
-        .OnSuccess(() => AdvancedDetails!.UsData.Mashare3.AddMashare3(usMashare3))
-        .OnSuccess(() => AdvancedDetails!.ThemData.Mashare3.AddMashare3(themMashare3))
-        .OnSuccess(() =>
-        {
-            CalculateAbnat();
-            return AdvancedDetails!.CalculateMoshtaraOwnerAndResult(selectedMoshtaraOwner);
-        })
-        .OnSuccess((tuple) =>
-        {
-            (AdvancedDetails!.MoshtaraOwner, AdvancedDetails.IsMoshtaraSucceeded) = tuple;
-            return Result.Ok();
-        });
-    }
+    // public Result AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
+    // {
+    //     return Result.Ok().OnSuccess(() =>
+    //     {
+    //         if (RecordingMode != BalootRecordingMode.Advanced || AdvancedDetails == null)
+    //         {
+    //             var err = new InvalidBodyInputError();
+    //             err.ValidationErrors.Add(nameof(RecordingMode), ["يجب ان يكون المشترى مسجل ياستخدام التسجيل المتقدم"]);
+    //             return Result.Fail(err);
+    //         }
+    //         return Result.Ok();
+    //     })
+    //     .OnSuccess(() => AdvancedDetails!.UsData.Mashare3.AddMashare3(usMashare3))
+    //     .OnSuccess(() => AdvancedDetails!.ThemData.Mashare3.AddMashare3(themMashare3))
+    //     .OnSuccess(() =>
+    //     {
+    //         CalculateAbnat();
+    //         return AdvancedDetails!.CalculateMoshtaraOwnerAndResult(selectedMoshtaraOwner);
+    //     })
+    //     .OnSuccess((tuple) =>
+    //     {
+    //         (AdvancedDetails!.MoshtaraOwner, AdvancedDetails.IsMoshtaraSucceeded) = tuple;
+    //         return Result.Ok();
+    //     });
+    // }
 }
 public class MoshtaraDetails
 {
@@ -255,7 +255,6 @@ public class HokmMoshtaraTeamDetails :
         RoundScoreId == HokmMoshtaraScoresId.khosaretKaboot || RoundScoreId == HokmMoshtaraScoresId.khosara;
 
 }
-
 public abstract class Mashare3
 {
     protected Mashare3() { }
@@ -270,7 +269,7 @@ public abstract class Mashare3
     public int Me2a { get; set; }
     public abstract int CalcValue();
     public abstract int CalcDoubledValue();
-    public abstract Result AddMashare3(Mashare3 mashare3);
+    // public abstract Result AddMashare3(Mashare3 mashare3);
 }
 public class Mashare3Sun : Mashare3
 {
@@ -291,23 +290,23 @@ public class Mashare3Sun : Mashare3
         Me2a * BalootConstants.Mashare3SunValues["Me2a"] +
         Rob3ome2a * BalootConstants.Mashare3SunValues["Rob3ome2a"];
 
-    public override Result AddMashare3(Mashare3 mashare3)
-    {
-        if (mashare3 is Mashare3Sun mashare3Sun)
-        {
-            Sra += mashare3Sun.Sra;
-            Khamsen += mashare3Sun.Khamsen;
-            Me2a += mashare3Sun.Me2a;
-            Rob3ome2a += mashare3Sun.Rob3ome2a;
-            return Result.Ok();
-        }
-        else
-        {
-            var err = new InvalidBodyInputError();
-            err.ValidationErrors.Add(nameof(mashare3), ["يجب ان تكون المشاريع من نوع صن"]);
-            return Result.Fail(err);
-        }
-    }
+    // public override Result AddMashare3(Mashare3 mashare3)
+    // {
+    //     if (mashare3 is Mashare3Sun mashare3Sun)
+    //     {
+    //         Sra += mashare3Sun.Sra;
+    //         Khamsen += mashare3Sun.Khamsen;
+    //         Me2a += mashare3Sun.Me2a;
+    //         Rob3ome2a += mashare3Sun.Rob3ome2a;
+    //         return Result.Ok();
+    //     }
+    //     else
+    //     {
+    //         var err = new InvalidBodyInputError();
+    //         err.ValidationErrors.Add(nameof(mashare3), ["يجب ان تكون المشاريع من نوع صن"]);
+    //         return Result.Fail(err);
+    //     }
+    // }
 }
 public class Mashare3Hokm : Mashare3
 {
@@ -327,23 +326,23 @@ public class Mashare3Hokm : Mashare3
         Me2a * BalootConstants.Mashare3HokmValues["Me2a"] +
         Baloot * BalootConstants.Mashare3HokmValues["Baloot"];
 
-    public override Result AddMashare3(Mashare3 mashare3)
-    {
-        if (mashare3 is Mashare3Hokm mashare3Sun)
-        {
-            Sra += mashare3Sun.Sra;
-            Khamsen += mashare3Sun.Khamsen;
-            Me2a += mashare3Sun.Me2a;
-            Baloot += mashare3Sun.Baloot;
-            return Result.Ok();
-        }
-        else
-        {
-            var err = new InvalidBodyInputError();
-            err.ValidationErrors.Add(nameof(mashare3), ["يجب ان تكون المشاريع من نوع حكم"]);
-            return Result.Fail(err);
-        }
-    }
+    // public override Result AddMashare3(Mashare3 mashare3)
+    // {
+    //     if (mashare3 is Mashare3Hokm mashare3Sun)
+    //     {
+    //         Sra += mashare3Sun.Sra;
+    //         Khamsen += mashare3Sun.Khamsen;
+    //         Me2a += mashare3Sun.Me2a;
+    //         Baloot += mashare3Sun.Baloot;
+    //         return Result.Ok();
+    //     }
+    //     else
+    //     {
+    //         var err = new InvalidBodyInputError();
+    //         err.ValidationErrors.Add(nameof(mashare3), ["يجب ان تكون المشاريع من نوع حكم"]);
+    //         return Result.Fail(err);
+    //     }
+    // }
 }
 public abstract class MoshtaraScore
 {
@@ -363,7 +362,6 @@ public class SunMoshtaraScore : MoshtaraScore
 {
     public SunMoshtaraScoresId[] GoesToIds { get; set; } = null!;
 }
-
 public class HokmMoshtaraScore : MoshtaraScore
 {
     public HokmMoshtaraScoresId[] GoesToIds { get; set; } = null!;

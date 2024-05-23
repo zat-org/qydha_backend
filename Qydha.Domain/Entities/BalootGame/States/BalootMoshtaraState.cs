@@ -19,7 +19,8 @@ public class BalootMoshtaraState
         PauseMoshtara,
         ResumeMoshtara,
         Back,
-        AddMashare3
+        AddMashare3,
+        UpdateMoshtara,
     }
     #endregion
 
@@ -142,6 +143,7 @@ public class BalootMoshtaraState
 
         _stateMachine.Configure(MoshtaraState.Ended)
             .PermitReentry(MoshtaraTrigger.AddMashare3)
+            .PermitReentry(MoshtaraTrigger.UpdateMoshtara)
             .Permit(MoshtaraTrigger.Back, MoshtaraState.Running);
     }
     #endregion
@@ -205,18 +207,25 @@ public class BalootMoshtaraState
             _stateMachine.Fire(MoshtaraTrigger.Back);
         });
     }
+    public Result UpdateMoshtara(MoshtaraData moshtaraData)
+    {
+        return CanFire(MoshtaraTrigger.UpdateMoshtara)
+            .OnSuccess(() => MoshtaraData = moshtaraData)
+            .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.UpdateMoshtara));
+    }
     public Result AddMashare3(int usScore, int themScore)
     {
         return CanFire(MoshtaraTrigger.AddMashare3)
             .OnSuccess(() => MoshtaraData!.AddMashare3(usScore, themScore))
             .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
     }
-    public Result AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
-    {
-        return CanFire(MoshtaraTrigger.AddMashare3)
-            .OnSuccess(() => MoshtaraData!.AddMashare3(usMashare3, themMashare3, selectedMoshtaraOwner))
-            .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
-    }
+
+    // public Result AddMashare3(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
+    // {
+    //     return CanFire(MoshtaraTrigger.AddMashare3)
+    //         .OnSuccess(() => MoshtaraData!.AddMashare3(usMashare3, themMashare3, selectedMoshtaraOwner))
+    //         .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.AddMashare3));
+    // }
     #endregion
 
     public string ToJson()

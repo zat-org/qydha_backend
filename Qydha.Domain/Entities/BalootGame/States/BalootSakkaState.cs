@@ -23,8 +23,10 @@ public class BalootSakkaState
         Back,
         AddMashare3,
         StartMoshtara,
+        UpdateMoshtara,
         EndMoshtara,
         ChangeIsSakkaMashdoda
+
     }
     #endregion
 
@@ -133,13 +135,13 @@ public class BalootSakkaState
             .SubstateOf(SakkaState.Running)
             .PermitReentry(SakkaTrigger.StartMoshtara)
             .PermitReentryIf(SakkaTrigger.EndMoshtara, () => CheckWinner(BalootDrawHandler.None, BalootGameTeam.Us) == null)
-            // TODO
             .PermitReentryIf(SakkaTrigger.Back, () => Moshtaras.Count > 0)
             .PermitIf(SakkaTrigger.Back, SakkaState.RunningWithoutMoshtaras, () => Moshtaras.Count == 0)
             .Permit(SakkaTrigger.EndSakka, SakkaState.Ended)
             .Permit(SakkaTrigger.PauseSakka, SakkaState.Paused)
             .PermitReentry(SakkaTrigger.ChangeIsSakkaMashdoda)
-            .PermitReentry(SakkaTrigger.AddMashare3);
+            .PermitReentry(SakkaTrigger.AddMashare3)
+            .PermitReentry(SakkaTrigger.UpdateMoshtara);
 
         _stateMachine.Configure(SakkaState.Paused)
             .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithoutMoshtaras, () => this.Moshtaras.Count == 0)
@@ -235,18 +237,34 @@ public class BalootSakkaState
             CurrentMoshtara = new();
         });
     }
+    public Result UpdateMoshtara(int moshtaraIndex, MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    {
+        return CanFire(SakkaTrigger.UpdateMoshtara)
+        .OnSuccess(() =>
+        {
+            var moshtara = Moshtaras.ElementAtOrDefault(moshtaraIndex);
+            if (moshtara == null)
+            {
+                var err = new InvalidBodyInputError($"provided moshtara index : {moshtaraIndex} out of range : 0 ~ {Moshtaras.Count - 1}");
+                err.ValidationErrors.Add(nameof(moshtaraIndex), ["index out of range"]);
+                return Result.Fail(err);
+            }
+            return moshtara.UpdateMoshtara(moshtaraData);
+        })
+        .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.UpdateMoshtara));
+    }
     public Result AddMashare3ToLastMoshtara(int usScore, int themScore)
     {
         return CanFire(SakkaTrigger.AddMashare3)
         .OnSuccess(() => Moshtaras.Last().AddMashare3(usScore, themScore))
         .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
     }
-    public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
-    {
-        return CanFire(SakkaTrigger.AddMashare3)
-        .OnSuccess(() => Moshtaras.Last().AddMashare3(usMashare3, themMashare3, selectedMoshtaraOwner))
-        .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
-    }
+    // public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
+    // {
+    //     return CanFire(SakkaTrigger.AddMashare3)
+    //     .OnSuccess(() => Moshtaras.Last().AddMashare3(usMashare3, themMashare3, selectedMoshtaraOwner))
+    //     .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
+    // }
     public Result Back()
     {
         return CanFire(SakkaTrigger.Back)
