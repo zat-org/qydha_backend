@@ -16,6 +16,6 @@ public class ValidatorResultFactory : IFluentValidationAutoValidationResultFacto
                         return e;
                     }).ToList());
         };
-        return bodyError.Handle();
+        return bodyError.Handle(context.HttpContext.TraceIdentifier);
     }
 }

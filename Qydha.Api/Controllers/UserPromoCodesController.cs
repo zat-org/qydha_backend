@@ -24,7 +24,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
                 numberOfDays = promo.NumberOfDays
             },
             message = "Promo Code Added Successfully."
-        }));
+        }), HttpContext.TraceIdentifier);
     }
 
     [HttpGet]
@@ -42,7 +42,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
                 Data = new { promoCodes = promoCodes.Select(promo => mapper.PromoCodeToGetPromoCodeDto(promo)) },
                 message = "Promo Code Fetched Successfully."
             });
-        });
+        }, HttpContext.TraceIdentifier);
     }
 
     [HttpPost("use")]
@@ -63,7 +63,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
                 ,
                 message = "Promo Code Used Successfully."
             });
-        });
+        }, HttpContext.TraceIdentifier);
     }
 
 }

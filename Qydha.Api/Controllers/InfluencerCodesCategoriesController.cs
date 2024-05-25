@@ -16,7 +16,7 @@ public class InfluencerCodesCategoriesController(IInfluencerCodeCategoryService 
         {
             Data = infCodeCategory,
             message = "Influencer Code Category Added Successfully."
-        }));
+        }), HttpContext.TraceIdentifier);
     }
 
     [HttpGet]
@@ -27,7 +27,7 @@ public class InfluencerCodesCategoriesController(IInfluencerCodeCategoryService 
         {
             Data = infCodeCategories,
             message = "Influencer Code Categories Fetched Successfully."
-        }));
+        }), HttpContext.TraceIdentifier);
     }
 
     [HttpDelete("{categoryId}")]
@@ -38,7 +38,7 @@ public class InfluencerCodesCategoriesController(IInfluencerCodeCategoryService 
         {
             Data = new { },
             message = "Influencer Code Category Deleted Successfully."
-        }));
+        }), HttpContext.TraceIdentifier);
     }
     [HttpPut("{categoryId}")]
     public async Task<IActionResult> UpdateCategory([FromRoute] int categoryId, [FromBody] InfluencerCodeCategoryDto dto)
@@ -51,6 +51,6 @@ public class InfluencerCodesCategoriesController(IInfluencerCodeCategoryService 
         {
             Data = infCodeCategory,
             message = "Influencer Code Categories Updated Successfully."
-        }));
+        }), HttpContext.TraceIdentifier);
     }
 }

@@ -9,7 +9,6 @@ global using Qydha.Domain.Settings;
 global using Qydha.Domain.Constants;
 global using Qydha.Domain.Exceptions;
 
-
 global using Qydha.Infrastructure;
 global using Qydha.Infrastructure.Services;
 global using Qydha.Infrastructure.Repositories;
@@ -21,6 +20,7 @@ global using Qydha.API.Validators;
 global using Qydha.API.Attributes;
 global using Qydha.API.Extensions;
 global using Qydha.API.Binders;
+global using Qydha.API.Middlewares;
 
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.Filters;

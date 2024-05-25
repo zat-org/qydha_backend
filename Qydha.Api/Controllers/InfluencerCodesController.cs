@@ -21,7 +21,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
                 categoryId = infCode.CategoryId
             },
             message = "Influencer Code Added Successfully."
-        }));
+        }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("use")]
@@ -40,7 +40,7 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
                 Data = new { user = mapper.UserToUserDto(user) },
                 message = "Influencer Code Used Successfully."
             });
-        });
+        }, HttpContext.TraceIdentifier);
     }
 
 }

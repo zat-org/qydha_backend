@@ -12,10 +12,10 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
     public async Task<IActionResult> IApHubWebHook([FromBody] WebHookDto webHookDto)
     {
         if (!Request.Headers.TryGetValue("x-auth-token", out var authToken))
-            return new ForbiddenError().Handle();
+            return new ForbiddenError().Handle(HttpContext.TraceIdentifier);
         string tokenValue = authToken.ToString();
         if (tokenValue != _iAPHubSettings.XAuthToken)
-            return new ForbiddenError().Handle();
+            return new ForbiddenError().Handle(HttpContext.TraceIdentifier);
 
         switch (webHookDto.Type)
         {
@@ -26,7 +26,7 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
                     {
                         var mapper = new UserMapper();
                         return Ok(new { Data = new { }, message = "Purchase Added Successfully." });
-                    });
+                    }, HttpContext.TraceIdentifier);
             default:
                 _logger.LogWarning("Unhandled IAPHUB Action Type : {type} , Data => {data}", webHookDto.Type, webHookDto);
                 return BadRequest();

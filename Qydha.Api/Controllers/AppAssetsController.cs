@@ -20,7 +20,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
                     data = new { book = bookAsset },
                     message = "Baloot Book updated successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.Admin | SystemUserRoles.RegularUser)]
@@ -35,7 +35,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
                     data = new { bookAsset.Url, bookAsset.LastUpdateAt },
                     message = "Baloot Book Fetched successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.Admin)]
@@ -67,7 +67,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
                 data = mapper.PopUpAssetToGetPopupDto(popupAsset),
                 message = "Popup updated successfully."
             });
-        });
+        }, HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.Admin)]
@@ -84,7 +84,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
                     data = mapper.PopUpAssetToGetPopupDto(popupAsset),
                     message = "popup image updated successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
 
@@ -101,6 +101,6 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
                     data = mapper.PopUpAssetToGetPopupDto(popupAsset),
                     message = "Popup Fetched successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 }

@@ -20,7 +20,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     },
                     Message = "otp sent successfully."
                 }
-            ));
+            ), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("login/")]
@@ -40,7 +40,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     },
                     message = "Logged In successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
     [HttpPost("confirm-registration-with-phone/")]
@@ -56,7 +56,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     data = new { user = mapper.UserToUserDto(tuple.user), token = tuple.jwtToken },
                     message = "Register in successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
 
@@ -64,7 +64,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordDto dto)
     {
         return (await _authService.RequestPhoneAuthentication(dto.Phone!))
-        .Resolve((request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." }));
+        .Resolve((request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("confirm-forget-password")]
@@ -84,7 +84,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     },
                     message = "user logged in successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
 
@@ -92,7 +92,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> LoginWithPhone([FromBody] LoginWithPhoneDto dto)
     {
         return (await _authService.RequestPhoneAuthentication(dto.Phone!))
-        .Resolve((request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." }));
+        .Resolve((request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("confirm-login-with-phone")]
@@ -113,7 +113,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     },
                     message = "user logged in successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
 
@@ -125,7 +125,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         return (await _authService.Logout(user.Id))
         .Resolve(
             () => Ok(new { data = new { }, message = "User logged out successfully." })
-        );
+        , HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.Admin)]
@@ -146,7 +146,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     },
                     message = "otp sent successfully to the user."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.Admin)]
@@ -169,7 +169,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     },
                     message = "user logged in successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 }
 

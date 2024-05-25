@@ -98,20 +98,8 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
                 return Result.Ok(tuple);
         })
         .Handle(
-            (tuple) =>
-            {
-                ctx.HttpContext.User = tuple.principal;
-            },
-            (errors) =>
-            {
-                ctx.Result = errors.First().Handle();
-                // [0].Metadata["StatusCode"] switch
-                // {
-                //     ErrorType.InvalidAuthToken => new UnauthorizedObjectResult(err),
-                //     ErrorType.InvalidActionOrForbidden => new ObjectResult(err) { StatusCode = 403 },
-                //     _ => new ObjectResult(err) { StatusCode = 400 },
-                // };
-            }
+            (tuple) => ctx.HttpContext.User = tuple.principal,
+            (errors) => ctx.Result = errors.First().Handle(ctx.HttpContext.TraceIdentifier)
         );
 
     }

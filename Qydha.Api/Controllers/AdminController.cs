@@ -20,7 +20,7 @@ public class AdminController(IAdminUserService adminUserService) : ControllerBas
                     message = "Logged in successfully."
                 });
             }
-        );
+        , HttpContext.TraceIdentifier);
     }
 
 
@@ -39,6 +39,6 @@ public class AdminController(IAdminUserService adminUserService) : ControllerBas
                     data = new { adminUser = mapper.AdminUserToAdminUserDto(adminUser) },
                     message = "Password updated successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 }

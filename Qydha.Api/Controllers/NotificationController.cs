@@ -22,7 +22,7 @@ public class NotificationController(INotificationService notificationService) : 
                     Data = new NotificationMapper().PageListToNotificationPageDto(notifications),
                     Message = "Notifications Fetched successfully."
                 });
-            });
+            }, HttpContext.TraceIdentifier);
     }
 
     [HttpPatch("click/{notificationId}")]
@@ -36,7 +36,7 @@ public class NotificationController(INotificationService notificationService) : 
                     {
                         data = new { },
                         message = "Notification Clicked successfully."
-                    }));
+                    }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("send-to-user/")]
@@ -64,7 +64,7 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             }, templateValues: []);
         })
-        .Resolve((user) => Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" }));
+        .Resolve((user) => Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" }), HttpContext.TraceIdentifier);
     }
 
 
@@ -93,7 +93,7 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             }, templateValues: []);
         })
-        .Resolve((usersCount) => Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" }));
+        .Resolve((usersCount) => Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("send-to-anonymous-users/")]
@@ -121,6 +121,6 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             });
         })
-        .Resolve((notification) => Ok(new { message = $"Notification sent to the Anonymous users" }));
+        .Resolve((notification) => Ok(new { message = $"Notification sent to the Anonymous users" }), HttpContext.TraceIdentifier);
     }
 }

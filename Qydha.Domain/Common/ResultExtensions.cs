@@ -104,33 +104,31 @@ public static class ResultExtensions
 }
 public static class ResultResolver
 {
-    public static IActionResult Resolve(this Result result, Func<IActionResult> success) =>
+    public static IActionResult Resolve(this Result result, Func<IActionResult> success, string traceId) =>
         result switch
         {
             { IsSuccess: true } => success(),
-            { IsFailed: true } => result.Errors.First().Handle(),
+            { IsFailed: true } => result.Errors.First().Handle(traceId),
             _ => throw new InvalidOperationException()
         };
 
     public static IActionResult Resolve<T>(this Result<T> result,
-        Func<T, IActionResult> success) =>
+        Func<T, IActionResult> success, string traceId) =>
         result switch
         {
             { IsSuccess: true } => success(result.Value),
-            { IsFailed: true } => result.Errors.First().Handle(),
+            { IsFailed: true } => result.Errors.First().Handle(traceId),
             _ => throw new InvalidOperationException()
         };
 }
 public static class ErrorHandler
 {
-    private static HttpContext HttpContext => new HttpContextAccessor().HttpContext!;
-
-    public static IActionResult Handle(this IError error)
+    public static IActionResult Handle(this IError error, string traceId)
     {
         if (error is ResultError resultError)
-            return resultError.ToIResult("Just Trace ID");
+            return resultError.ToIResult(traceId);
         else
-            return new JsonResult(new ErrorResponse(ErrorType.InternalServerError, error.Message, "Just Trace ID"))
+            return new JsonResult(new ErrorResponse(ErrorType.InternalServerError, error.Message, traceId))
             {
                 StatusCode = StatusCodes.Status500InternalServerError
             };
