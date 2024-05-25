@@ -65,8 +65,7 @@ public class BalootSakkaState
         get => IsMashdoda ? 100 : 152;
     }
     public BalootGameTeam? Winner { get; set; }
-    public BalootDrawHandler DrawHandler { get; set; }
-
+    public BalootDrawHandler DrawHandler { get; set; } = BalootDrawHandler.ExtraMoshtara;
     public BalootGameTeam? CheckWinner(BalootDrawHandler handler, BalootGameTeam selectedWinner)
     {
         if (UsScore >= WinningScore && UsScore > ThemScore)
@@ -127,14 +126,16 @@ public class BalootSakkaState
         _stateMachine.Configure(SakkaState.RunningWithoutMoshtaras)
             .SubstateOf(SakkaState.Running)
             .PermitReentry(SakkaTrigger.StartMoshtara)
-            .PermitIf(SakkaTrigger.EndMoshtara, SakkaState.RunningWithMoshtaras, () => CheckWinner(BalootDrawHandler.None, BalootGameTeam.Us) == null)
+            .PermitIf(SakkaTrigger.EndMoshtara, SakkaState.RunningWithMoshtaras,
+                () => CheckWinner(BalootDrawHandler.ExtraMoshtara, BalootGameTeam.Us) == null)
             .Permit(SakkaTrigger.PauseSakka, SakkaState.Paused)
             .PermitReentry(SakkaTrigger.ChangeIsSakkaMashdoda);
 
         _stateMachine.Configure(SakkaState.RunningWithMoshtaras)
             .SubstateOf(SakkaState.Running)
             .PermitReentry(SakkaTrigger.StartMoshtara)
-            .PermitReentryIf(SakkaTrigger.EndMoshtara, () => CheckWinner(BalootDrawHandler.None, BalootGameTeam.Us) == null)
+            .PermitReentryIf(SakkaTrigger.EndMoshtara,
+                () => CheckWinner(BalootDrawHandler.ExtraMoshtara, BalootGameTeam.Us) == null)
             .PermitReentryIf(SakkaTrigger.Back, () => Moshtaras.Count > 0)
             .PermitIf(SakkaTrigger.Back, SakkaState.RunningWithoutMoshtaras, () => Moshtaras.Count == 0)
             .Permit(SakkaTrigger.EndSakka, SakkaState.Ended)
@@ -277,7 +278,7 @@ public class BalootSakkaState
             if (_stateMachine.IsInState(SakkaState.Ended))
             {
                 Winner = null;
-                DrawHandler = BalootDrawHandler.None;
+                DrawHandler = BalootDrawHandler.ExtraMoshtara;
                 EndedAt = null;
             }
             return CurrentMoshtara.Back();

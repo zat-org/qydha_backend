@@ -171,13 +171,13 @@ public sealed class RemoveMoshtaraEvent() : BalootGameEvent(nameof(RemoveMoshtar
 public sealed class EndSakkaEvent : BalootGameEvent
 {
     private EndSakkaEvent() : base(nameof(EndSakkaEvent)) { }
-    public EndSakkaEvent(BalootGameTeam winnerTeam, BalootDrawHandler drawHandler = BalootDrawHandler.None) : base(nameof(EndSakkaEvent))
+    public EndSakkaEvent(BalootGameTeam winnerTeam, BalootDrawHandler drawHandler = BalootDrawHandler.ExtraMoshtara) : base(nameof(EndSakkaEvent))
     {
         Winner = winnerTeam;
         DrawHandler = drawHandler;
     }
     public BalootGameTeam Winner { get; set; }
-    public BalootDrawHandler DrawHandler { get; set; }
+    public BalootDrawHandler DrawHandler { get; set; } =  BalootDrawHandler.ExtraMoshtara ;
     public override Result ApplyToState(BalootGameState state) => state.EndSakka(Winner, DrawHandler, TriggeredAt);
 }
 public sealed class EndGameEvent : BalootGameEvent

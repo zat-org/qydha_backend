@@ -6,7 +6,7 @@
 public class EndSakkaEventDto : BalootGameEventDto
 {
     public BalootGameTeam Winner { get; set; }
-    public BalootDrawHandler DrawHandler { get; set; } = BalootDrawHandler.None;
+    public BalootDrawHandler DrawHandler { get; set; } = BalootDrawHandler.ExtraMoshtara;
 
     public override Result<BalootGameEvent> MapToCorrespondingEvent()
     {

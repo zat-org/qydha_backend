@@ -23,7 +23,6 @@ public enum BalootGameTeam
 }
 public enum BalootDrawHandler
 {
-    None,
     ExtraMoshtara,
     SelectMoshtaraOwner
 }
