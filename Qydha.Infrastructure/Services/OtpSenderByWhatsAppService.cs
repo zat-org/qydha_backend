@@ -17,10 +17,15 @@ public class OtpSenderByWhatsAppService(WaApiService waApiService, WaApiInstance
 
         var sendingRes = await _waApiService.SendOtpAsync(phoneNum, username, otp, instance.InstanceId);
         if (sendingRes.IsSuccess)
+        {
             _instancesTracker.EnqueueInstance(instance);
+            return sendingRes;
+        }
         else
+        {
             _logger.LogCritical("WaApi Instance is out of Service with Instance id :=> {id}", instance.InstanceId);
-        return sendingRes;
+            return Result.Fail(new OtpPhoneSendingError("WhatsApp"));
+        }
     }
 }
 
