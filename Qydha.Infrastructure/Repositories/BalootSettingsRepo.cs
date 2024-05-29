@@ -25,6 +25,7 @@ public class UserBalootSettingsRepo(QydhaContext dbContext, ILogger<UserBalootSe
                 .SetProperty(settingsRow => settingsRow.IsNumbersSoundEnabled, settings.IsNumbersSoundEnabled)
                 .SetProperty(settingsRow => settingsRow.IsCommentsSoundEnabled, settings.IsCommentsSoundEnabled)
                 .SetProperty(settingsRow => settingsRow.IsEkakAklatShown, settings.IsEkakAklatShown)
+                .SetProperty(settingsRow => settingsRow.SakkasCount, settings.SakkasCount)
         );
         return affected == 1 ?
             Result.Ok(settings) :

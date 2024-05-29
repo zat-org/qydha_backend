@@ -351,6 +351,9 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
             entity.Property(e => e.IsEkakAklatShown)
                 .HasDefaultValue(false)
                 .HasColumnName("is_ekak_aklat_shown");
+            entity.Property(e => e.SakkasCount)
+                .HasDefaultValue(1)
+                .HasColumnName("sakkas_count");
 
             entity.HasOne(d => d.User).WithOne(p => p.UserBalootSettings)
                 .HasForeignKey<UserBalootSettings>(d => d.UserId)

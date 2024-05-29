@@ -9,4 +9,5 @@ public class UserBalootSettingsDto
     public bool IsNumbersSoundEnabled { get; set; } = false;
     public bool IsCommentsSoundEnabled { get; set; } = false;
     public bool IsEkakAklatShown { get; set; } = false;
+    public int SakkasCount { get; set; } = 1;
 }

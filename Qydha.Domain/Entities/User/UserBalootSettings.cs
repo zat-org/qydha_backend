@@ -18,6 +18,9 @@ public class UserBalootSettings
 
     public bool IsEkakAklatShown { get; set; } = false;
 
+    public int SakkasCount { get; set; } = 1;
+
     public virtual User User { get; set; } = null!;
+
 
 }
