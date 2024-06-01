@@ -44,17 +44,16 @@ public class BalootSakkaState
         get => _stateMachine.IsInState(SakkaState.Created);
     }
     [JsonIgnore]
+    public bool IsEnded
+    {
+        get => _stateMachine.IsInState(SakkaState.Ended);
+    }
+    [JsonIgnore]
     public bool IsRunningWithoutMoshtaras
     {
         get => _stateMachine.IsInState(SakkaState.RunningWithoutMoshtaras);
     }
-    // public TimeSpan SakkaInterval
-    // {
-    //     get
-    //     {
-    //         return Moshtaras.Aggregate(TimeSpan.Zero, (totalInterval, moshtara) => totalInterval + moshtara.MoshtaraInterval);
-    //     }
-    // }
+
     public BalootMoshtaraState CurrentMoshtara { get; set; } = new();
     public List<BalootMoshtaraState> Moshtaras { get; set; } = [];
     public bool IsMashdoda { get; set; }
@@ -119,7 +118,8 @@ public class BalootSakkaState
     private void ConfigureStateMachine()
     {
         _stateMachine.Configure(SakkaState.Created)
-            .Permit(SakkaTrigger.StartSakka, SakkaState.RunningWithoutMoshtaras);
+            .Permit(SakkaTrigger.StartSakka, SakkaState.RunningWithoutMoshtaras)
+            .PermitReentry(SakkaTrigger.ChangeIsSakkaMashdoda);
 
         _stateMachine.Configure(SakkaState.Running);
 
@@ -146,7 +146,8 @@ public class BalootSakkaState
 
         _stateMachine.Configure(SakkaState.Paused)
             .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithoutMoshtaras, () => this.Moshtaras.Count == 0)
-            .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithMoshtaras, () => this.Moshtaras.Count > 0);
+            .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithMoshtaras, () => this.Moshtaras.Count > 0)
+            .PermitReentry(SakkaTrigger.ChangeIsSakkaMashdoda);
 
         _stateMachine.Configure(SakkaState.Ended)
             .Permit(SakkaTrigger.Back, SakkaState.RunningWithMoshtaras);
@@ -260,12 +261,7 @@ public class BalootSakkaState
         .OnSuccess(() => Moshtaras.Last().AddMashare3(usScore, themScore))
         .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
     }
-    // public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
-    // {
-    //     return CanFire(SakkaTrigger.AddMashare3)
-    //     .OnSuccess(() => Moshtaras.Last().AddMashare3(usMashare3, themMashare3, selectedMoshtaraOwner))
-    //     .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
-    // }
+
     public Result Back()
     {
         return CanFire(SakkaTrigger.Back)
@@ -287,11 +283,6 @@ public class BalootSakkaState
     }
 
     #endregion
-
-    public string ToJson()
-    {
-        return JsonConvert.SerializeObject(this, BalootConstants.balootEventsSerializationSettings);
-    }
 
     public BalootGameStatistics GetStatistics() =>
         Moshtaras.Aggregate(BalootGameStatistics.Zero(), (total, moshtara) => total + moshtara.GetStatistics());

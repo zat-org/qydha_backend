@@ -17,7 +17,7 @@ public class BalootGameState
     public enum GameTriggers
     {
         ChangeTeamsNames,
-        ChangeIsSakkaMashdoda,
+        ChangeIsCurrentSakkaMashdoda,
         ChangeSakkaMaxCount,
         StartGame,
         EndGame,
@@ -83,7 +83,9 @@ public class BalootGameState
     private void ConfigureStateMachine()
     {
         _stateMachine.Configure(GameStates.Created)
-            .Permit(GameTriggers.StartGame, GameStates.RunningWithoutSakkas);
+            .Permit(GameTriggers.StartGame, GameStates.RunningWithoutSakkas)
+            .PermitReentry(GameTriggers.ChangeTeamsNames)
+            .PermitReentry(GameTriggers.ChangeSakkaMaxCount);
 
         _stateMachine.Configure(GameStates.Running);
 
@@ -91,7 +93,7 @@ public class BalootGameState
             .SubstateOf(GameStates.Running)
             .PermitReentry(GameTriggers.ChangeSakkaMaxCount)
             .PermitReentry(GameTriggers.ChangeTeamsNames)
-            .PermitReentry(GameTriggers.ChangeIsSakkaMashdoda)
+            .PermitReentryIf(GameTriggers.ChangeIsCurrentSakkaMashdoda, () => !CurrentSakka.IsEnded)
             .PermitReentry(GameTriggers.StartSakka)
             .PermitReentry(GameTriggers.StartMoshtara)
             .PermitReentry(GameTriggers.EndMoshtara)
@@ -101,13 +103,11 @@ public class BalootGameState
             .PermitReentryIf(GameTriggers.AddMashare3, () => CurrentSakka.IsRunningWithMoshtaras)
             .PermitReentryIf(GameTriggers.UpdateMoshtara, () => CurrentSakka.IsRunningWithMoshtaras);
 
-
-
         _stateMachine.Configure(GameStates.RunningWithSakkas)
             .SubstateOf(GameStates.Running)
             .PermitReentry(GameTriggers.ChangeSakkaMaxCount)
             .PermitReentry(GameTriggers.ChangeTeamsNames)
-            .PermitReentry(GameTriggers.ChangeIsSakkaMashdoda)
+            .PermitReentryIf(GameTriggers.ChangeIsCurrentSakkaMashdoda, () => !CurrentSakka.IsEnded)
             .PermitReentryIf(GameTriggers.StartSakka, () => CheckWinner() == null)
             .PermitReentry(GameTriggers.StartMoshtara)
             .PermitReentry(GameTriggers.EndMoshtara)
@@ -121,25 +121,28 @@ public class BalootGameState
 
         _stateMachine.Configure(GameStates.Ended)
             .PermitIf(GameTriggers.Back, GameStates.RunningWithoutSakkas, () => Sakkas.Count == 0)
-            .PermitIf(GameTriggers.Back, GameStates.RunningWithSakkas, () => Sakkas.Count > 0);
+            .PermitIf(GameTriggers.Back, GameStates.RunningWithSakkas, () => Sakkas.Count > 0)
+            .PermitIf(GameTriggers.ChangeSakkaMaxCount, GameStates.RunningWithSakkas)
+            .PermitReentry(GameTriggers.ChangeTeamsNames);
+
 
         _stateMachine.Configure(GameStates.Paused)
             .PermitIf(GameTriggers.ResumeGame, GameStates.RunningWithoutSakkas, () => Sakkas.Count == 0)
-            .PermitIf(GameTriggers.ResumeGame, GameStates.RunningWithSakkas, () => Sakkas.Count > 0);
+            .PermitIf(GameTriggers.ResumeGame, GameStates.RunningWithSakkas, () => Sakkas.Count > 0)
+            .PermitReentry(GameTriggers.ChangeSakkaMaxCount)
+            .PermitReentryIf(GameTriggers.ChangeIsCurrentSakkaMashdoda, () => !CurrentSakka.IsEnded)
+            .PermitReentry(GameTriggers.ChangeTeamsNames);
 
     }
     #endregion
 
     #region utils
-    public string ToJson()
-    {
-        return JsonConvert.SerializeObject(this, BalootConstants.balootEventsSerializationSettings);
-    }
 
-    public static BalootGameState FromJson(string jsonString)
+    public Result CanSakkasCountPerGameChangeTo(int newSakkasCount)
     {
-        return JsonConvert.DeserializeObject<BalootGameState>(jsonString, BalootConstants.balootEventsSerializationSettings)
-        ?? throw new JsonSerializationException("can't parse the object to the target ");
+        if (newSakkasCount >= MaxSakkaPerGame || (newSakkasCount > Sakkas.Count && CheckWinner(newSakkasCount) == null))
+            return Result.Ok();
+        return Result.Fail(new InvalidBalootGameActionError("Invalid MaxSakkaCountPerGame => doesn't lead to a non winner state."));
     }
 
     #endregion
@@ -215,6 +218,7 @@ public class BalootGameState
 
     #endregion
 
+
     #region events handlers 
     public Result CanFire(GameTriggers trigger)
     {
@@ -236,23 +240,20 @@ public class BalootGameState
     public Result ChangeSakkaCount(int newSakkaCount)
     {
         return CanFire(GameTriggers.ChangeSakkaMaxCount)
+        .OnSuccess(() => CanSakkasCountPerGameChangeTo(newSakkaCount))
         .OnSuccess(() =>
         {
-            if (newSakkaCount >= MaxSakkaPerGame || (newSakkaCount > Sakkas.Count && CheckWinner(newSakkaCount) == null))
-            {
-                MaxSakkaPerGame = newSakkaCount;
-                _stateMachine.Fire(GameTriggers.ChangeSakkaMaxCount);
-                return Result.Ok();
-            }
-            return Result.Fail(new InvalidBalootGameActionError("Invalid MaxSakkaCountPerGame => doesn't lead to a non winner state."));
+            MaxSakkaPerGame = newSakkaCount;
+            _stateMachine.Fire(GameTriggers.ChangeSakkaMaxCount);
+            return Result.Ok();
         });
     }
 
-    public Result ChangeIsSakkaMashdoda(bool isSakkaMashdoda)
+    public Result ChangeIsCurrentSakkaMashdoda(bool isSakkaMashdoda)
     {
-        return CanFire(GameTriggers.ChangeIsSakkaMashdoda)
+        return CanFire(GameTriggers.ChangeIsCurrentSakkaMashdoda)
         .OnSuccess(() => CurrentSakka.ChangeIsSakkaMashdoda(isSakkaMashdoda))
-        .OnSuccess(() => _stateMachine.Fire(GameTriggers.ChangeIsSakkaMashdoda));
+        .OnSuccess(() => _stateMachine.Fire(GameTriggers.ChangeIsCurrentSakkaMashdoda));
     }
     public Result StartGame(string usName, string themName, int sakkaCount, DateTimeOffset triggeredAt)
     {
@@ -308,12 +309,7 @@ public class BalootGameState
         .OnSuccess(() => CurrentSakka.AddMashare3ToLastMoshtara(usScore, themScore))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.AddMashare3));
     }
-    // public Result AddMashare3ToLastMoshtara(Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
-    // {
-    //     return CanFire(GameTriggers.AddMashare3)
-    //     .OnSuccess(() => CurrentSakka.AddMashare3ToLastMoshtara(usMashare3, themMashare3, selectedMoshtaraOwner))
-    //     .OnSuccess(() => _stateMachine.Fire(GameTriggers.AddMashare3));
-    // }
+
     public Result Back()
     {
         return CanFire(GameTriggers.Back)
