@@ -42,7 +42,7 @@ public sealed class ChangeIsSakkaMashdodaEvent : BalootGameEvent
         IsSakkaMashdoda = isSakkaMashdoda;
     }
     public bool IsSakkaMashdoda { get; set; }
-    public override Result ApplyToState(BalootGameState state) => state.ChangeIsSakkaMashdoda(IsSakkaMashdoda);
+    public override Result ApplyToState(BalootGameState state) => state.ChangeIsCurrentSakkaMashdoda(IsSakkaMashdoda);
 }
 public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
 {
@@ -177,7 +177,7 @@ public sealed class EndSakkaEvent : BalootGameEvent
         DrawHandler = drawHandler;
     }
     public BalootGameTeam Winner { get; set; }
-    public BalootDrawHandler DrawHandler { get; set; } =  BalootDrawHandler.ExtraMoshtara ;
+    public BalootDrawHandler DrawHandler { get; set; } = BalootDrawHandler.ExtraMoshtara;
     public override Result ApplyToState(BalootGameState state) => state.EndSakka(Winner, DrawHandler, TriggeredAt);
 }
 public sealed class EndGameEvent : BalootGameEvent
