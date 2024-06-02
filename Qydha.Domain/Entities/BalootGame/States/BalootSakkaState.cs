@@ -125,7 +125,8 @@ public class BalootSakkaState
 
         _stateMachine.Configure(SakkaState.RunningWithoutMoshtaras)
             .SubstateOf(SakkaState.Running)
-            .PermitReentry(SakkaTrigger.StartMoshtara)
+            .PermitReentryIf(SakkaTrigger.StartMoshtara,
+                () => CheckWinner(BalootDrawHandler.ExtraMoshtara, BalootGameTeam.Us) == null)
             .PermitIf(SakkaTrigger.EndMoshtara, SakkaState.RunningWithMoshtaras,
                 () => CheckWinner(BalootDrawHandler.ExtraMoshtara, BalootGameTeam.Us) == null)
             .Permit(SakkaTrigger.PauseSakka, SakkaState.Paused)
@@ -133,7 +134,8 @@ public class BalootSakkaState
 
         _stateMachine.Configure(SakkaState.RunningWithMoshtaras)
             .SubstateOf(SakkaState.Running)
-            .PermitReentry(SakkaTrigger.StartMoshtara)
+            .PermitReentryIf(SakkaTrigger.StartMoshtara,
+                () => CheckWinner(BalootDrawHandler.ExtraMoshtara, BalootGameTeam.Us) == null)
             .PermitReentryIf(SakkaTrigger.EndMoshtara,
                 () => CheckWinner(BalootDrawHandler.ExtraMoshtara, BalootGameTeam.Us) == null)
             .PermitReentryIf(SakkaTrigger.Back, () => Moshtaras.Count > 0)
@@ -145,8 +147,8 @@ public class BalootSakkaState
             .PermitReentry(SakkaTrigger.UpdateMoshtara);
 
         _stateMachine.Configure(SakkaState.Paused)
-            .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithoutMoshtaras, () => this.Moshtaras.Count == 0)
-            .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithMoshtaras, () => this.Moshtaras.Count > 0)
+            .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithoutMoshtaras, () => Moshtaras.Count == 0)
+            .PermitIf(SakkaTrigger.ResumeSakka, SakkaState.RunningWithMoshtaras, () => Moshtaras.Count > 0)
             .PermitReentry(SakkaTrigger.ChangeIsSakkaMashdoda);
 
         _stateMachine.Configure(SakkaState.Ended)

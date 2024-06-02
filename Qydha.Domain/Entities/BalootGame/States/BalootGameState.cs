@@ -117,13 +117,15 @@ public class BalootGameState
             .PermitIf(GameTriggers.Back, GameStates.RunningWithoutSakkas, () => Sakkas.Count == 0)
             .PermitReentryIf(GameTriggers.Back, () => Sakkas.Count > 0)
             .PermitReentryIf(GameTriggers.AddMashare3, () => CurrentSakka.IsRunningWithMoshtaras)
-            .PermitReentryIf(GameTriggers.UpdateMoshtara, () => CurrentSakka.IsRunningWithMoshtaras);
+            .PermitReentryIf(GameTriggers.UpdateMoshtara);
 
         _stateMachine.Configure(GameStates.Ended)
             .PermitIf(GameTriggers.Back, GameStates.RunningWithoutSakkas, () => Sakkas.Count == 0)
             .PermitIf(GameTriggers.Back, GameStates.RunningWithSakkas, () => Sakkas.Count > 0)
             .PermitIf(GameTriggers.ChangeSakkaMaxCount, GameStates.RunningWithSakkas)
-            .PermitReentry(GameTriggers.ChangeTeamsNames);
+            .PermitReentry(GameTriggers.ChangeTeamsNames)
+            .PermitIf(GameTriggers.UpdateMoshtara, GameStates.RunningWithoutSakkas, () => Sakkas.Count == 0)
+            .PermitIf(GameTriggers.UpdateMoshtara, GameStates.RunningWithSakkas, () => Sakkas.Count > 0);
 
 
         _stateMachine.Configure(GameStates.Paused)
@@ -288,7 +290,35 @@ public class BalootGameState
     public Result UpdateMoshtara(int moshtaraIndex, MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
         return CanFire(GameTriggers.UpdateMoshtara)
-        .OnSuccess(() => CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt))
+        .OnSuccess(() =>
+        {
+            if (_stateMachine.IsInState(GameStates.RunningWithoutSakkas))
+                return CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt);
+
+            else if (_stateMachine.IsInState(GameStates.RunningWithSakkas))
+            {
+                if (!CurrentSakka.IsCreated)
+                    return CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt);
+                else
+                {
+                    CurrentSakka = Sakkas.Last();
+                    Sakkas.Remove(CurrentSakka);
+                    return CurrentSakka.Back(withRemoveLastMoshtara: false)
+                        .OnSuccess(() => CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt)); //  TODO check triggeredAt value 
+                }
+            }
+            else if (_stateMachine.IsInState(GameStates.Ended))
+            {
+                Winner = null;
+                EndedAt = null;
+                CurrentSakka = Sakkas.Last();
+                Sakkas.Remove(CurrentSakka);
+                return CurrentSakka.Back(withRemoveLastMoshtara: false)
+                    .OnSuccess(() => CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt));
+            }
+            else
+                return Result.Fail(new InvalidBalootGameActionError($"Invalid Trigger :: UpdateMoshtara to apply on Game state :: {State}."));
+        })
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.UpdateMoshtara));
     }
     public Result EndSakka(BalootGameTeam winner, BalootDrawHandler handler, DateTimeOffset triggeredAt)
