@@ -262,22 +262,35 @@ public class BalootSakkaState
         .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.AddMashare3));
     }
 
-    public Result Back()
+    public Result Back(bool withRemoveLastMoshtara = true)
     {
         return CanFire(SakkaTrigger.Back)
         .OnSuccess(() =>
         {
             if (Moshtaras.Count == 0)
                 throw new InvalidBalootGameEventException($"can't apply event back on sakka that has not any moshtaras , its state {State}");
-            CurrentMoshtara = Moshtaras.Last();
-            Moshtaras.Remove(CurrentMoshtara);
+
             if (_stateMachine.IsInState(SakkaState.Ended))
             {
                 Winner = null;
                 DrawHandler = BalootDrawHandler.ExtraMoshtara;
                 EndedAt = null;
+                if (withRemoveLastMoshtara)
+                {
+                    CurrentMoshtara = Moshtaras.Last();
+                    Moshtaras.Remove(CurrentMoshtara);
+                    return CurrentMoshtara.Back();
+                }
+                else
+                    return Result.Ok();
             }
-            return CurrentMoshtara.Back();
+            else
+            {
+                // current state must be running with moshtaras 
+                CurrentMoshtara = Moshtaras.Last();
+                Moshtaras.Remove(CurrentMoshtara);
+                return CurrentMoshtara.Back();
+            }
         })
         .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.Back));
     }

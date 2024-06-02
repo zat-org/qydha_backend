@@ -320,6 +320,7 @@ public class BalootGameState
                 _stateMachine.Fire(GameTriggers.Back);
                 return CurrentSakka.Back();
             }
+
             else if (_stateMachine.IsInState(GameStates.Ended))
             {
                 Winner = null;
@@ -336,8 +337,10 @@ public class BalootGameState
                     CurrentSakka = Sakkas.Last();
                     Sakkas.Remove(CurrentSakka);
                     _stateMachine.Fire(GameTriggers.Back);
+                    return CurrentSakka.Back(withRemoveLastMoshtara: false);
                 }
-                return CurrentSakka.Back();
+                else
+                    return CurrentSakka.Back();
             }
             else
                 return Result.Fail(new InvalidBalootGameActionError($"Invalid Trigger :: back to apply on Game state :: {State}."));
