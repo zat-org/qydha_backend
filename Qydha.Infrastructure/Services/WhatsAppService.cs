@@ -16,7 +16,7 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
             type = "template",
             template = new
             {
-                name = "qydha_otp",
+                name = "otp",
                 language = new
                 {
                     code = "ar"
@@ -61,8 +61,7 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
             if (!response.IsSuccessStatusCode)
             {
                 string jsonResponse = await response.Content.ReadAsStringAsync();
-                object responseObject = JsonConvert.DeserializeObject<object>(jsonResponse) ?? throw new Exception($"can't serialize the response from WhatsApp Service with body : {jsonResponse} ");
-                _logger.LogCritical("WhatsApp has Failure Status Code {statusCode} and response body : {response}", response.StatusCode, jsonResponse);
+                _logger.LogCritical("WhatsApp has Failure in sending message to => phone: {phoneNumber} and username: {username} , Status Code {statusCode} and response body : {response}", phoneNum, username, response.StatusCode, jsonResponse);
                 return Result.Fail<string>(
                     new()
                     {
