@@ -1,3 +1,0 @@
-ALTER TABLE Users 
-ADD COLUMN expire_date TIMESTAMP,
-ADD COLUMN Free_Subscription_Used  INT NOT NULL DEFAULT  0;
