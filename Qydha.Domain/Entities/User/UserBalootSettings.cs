@@ -15,11 +15,9 @@ public class UserBalootSettings
     public bool IsNumbersSoundEnabled { get; set; } = true;
 
     public bool IsCommentsSoundEnabled { get; set; } = true;
-
-    public bool IsEkakAklatShown { get; set; } = false;
-
+    public bool IsEkakShown { get; set; } = false;
+    public bool IsAklatShown { get; set; } = false;
     public int SakkasCount { get; set; } = 1;
-
     public virtual User User { get; set; } = null!;
 
 

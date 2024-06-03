@@ -24,7 +24,8 @@ public class UserBalootSettingsRepo(QydhaContext dbContext, ILogger<UserBalootSe
                 .SetProperty(settingsRow => settingsRow.ShowWhoWonDialogOnDraw, settings.ShowWhoWonDialogOnDraw)
                 .SetProperty(settingsRow => settingsRow.IsNumbersSoundEnabled, settings.IsNumbersSoundEnabled)
                 .SetProperty(settingsRow => settingsRow.IsCommentsSoundEnabled, settings.IsCommentsSoundEnabled)
-                .SetProperty(settingsRow => settingsRow.IsEkakAklatShown, settings.IsEkakAklatShown)
+                .SetProperty(settingsRow => settingsRow.IsEkakShown, settings.IsEkakShown)
+                .SetProperty(settingsRow => settingsRow.IsAklatShown, settings.IsAklatShown)
                 .SetProperty(settingsRow => settingsRow.SakkasCount, settings.SakkasCount)
         );
         return affected == 1 ?

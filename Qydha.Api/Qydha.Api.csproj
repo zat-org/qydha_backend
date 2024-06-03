@@ -31,5 +31,9 @@
     <ProjectReference Include="..\Qydha.Domain\Qydha.Domain.csproj" />
     <ProjectReference Include="..\Qydha.Infrastructure\Qydha.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
   
 </Project>

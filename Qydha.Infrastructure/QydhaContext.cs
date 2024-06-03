@@ -348,9 +348,12 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
             entity.Property(e => e.ShowWhoWonDialogOnDraw)
                 .HasDefaultValue(false)
                 .HasColumnName("show_who_won_dialog_on_draw");
-            entity.Property(e => e.IsEkakAklatShown)
+            entity.Property(e => e.IsEkakShown)
                 .HasDefaultValue(false)
-                .HasColumnName("is_ekak_aklat_shown");
+                .HasColumnName("is_ekak_shown");
+            entity.Property(e => e.IsAklatShown)
+                .HasDefaultValue(false)
+                .HasColumnName("is_aklat_shown");
             entity.Property(e => e.SakkasCount)
                 .HasDefaultValue(1)
                 .HasColumnName("sakkas_count");
