@@ -9,7 +9,7 @@ ReadingConfigurationFile.ReadConfigurationFile(builder.Configuration, builder.En
 string MyAllowSpecificOrigins = builder.Services.ConfigureCORS();
 LoggerServiceExtension.AddLoggerConfiguration(builder.Configuration, builder.Environment);
 builder.Host.UseSerilog();
-builder.WebHost.UseWebRoot("wwwroot");
+// builder.WebHost.UseWebRoot("wwwroot");
 builder.Services.DbConfiguration(builder.Configuration);
 builder.Services.RegisterServices(builder.Configuration);
 builder.Services.RegisterRepos();
@@ -34,7 +34,7 @@ app.UseRequestContextLogging();
 
 app.UseCors(MyAllowSpecificOrigins);
 
-app.UseStaticFiles();
+// app.UseStaticFiles();
 
 app.UseSerilogRequestLogging(op =>
 {

@@ -27,15 +27,9 @@
     <Content Include="Templates\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
-
   <ItemGroup>
     <ProjectReference Include="..\Qydha.Domain\Qydha.Domain.csproj" />
     <ProjectReference Include="..\Qydha.Infrastructure\Qydha.Infrastructure.csproj" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
   </ItemGroup>
   
 </Project>
