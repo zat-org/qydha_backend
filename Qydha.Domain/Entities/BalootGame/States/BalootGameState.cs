@@ -367,7 +367,7 @@ public class BalootGameState
                     CurrentSakka = Sakkas.Last();
                     Sakkas.Remove(CurrentSakka);
                     _stateMachine.Fire(GameTriggers.Back);
-                    return CurrentSakka.Back(withRemoveLastMoshtara: false);
+                    return CurrentSakka.Back(withRemoveLastMoshtara: !CurrentSakka.IsRunningWithoutMoshtaras);
                 }
                 else
                     return CurrentSakka.Back();

@@ -7,8 +7,6 @@ public class WhatsAppService(IOptions<WhatsAppSettings> whatsSettings, IHttpClie
     private readonly IHttpClientFactory _clientFactory = clientFactory;
     private readonly ILogger<WaApiService> _logger = logger;
 
-    
-
     public async Task<Result<string>> SendOtpAsync(string phoneNum, string username, string otp)
     {
         var body = new
