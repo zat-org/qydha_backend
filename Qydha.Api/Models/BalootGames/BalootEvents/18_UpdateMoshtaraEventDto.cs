@@ -12,7 +12,7 @@ public class UpdateMoshtaraEventDto : BalootGameEventDto
     {
         if (RecordingMode == BalootRecordingMode.Regular)
         {
-            BalootGameEvent e = new UpdateMoshtaraEvent(MoshtaraIndex, new MoshtaraData(UsAbnat, ThemAbnat))
+            BalootGameEvent e = new UpdateMoshtaraEvent(new MoshtaraData(UsAbnat, ThemAbnat))
             { TriggeredAt = this.TriggeredAt };
             return Result.Ok(e);
         }
@@ -40,7 +40,7 @@ public class UpdateMoshtaraEventDto : BalootGameEventDto
             return MoshtaraDetails.CreateMoshtaraDetails(moshtaraType, sunId, hokmId, sra, khamsen, me2a, baloot, rob3ome2a, ekak, aklat, AdvancedDetails!.SelectedMoshtaraOwner)
                 .OnSuccess((moshtaraDetails) =>
                 {
-                    BalootGameEvent e = new UpdateMoshtaraEvent(MoshtaraIndex, new MoshtaraData(moshtaraDetails)) { TriggeredAt = this.TriggeredAt };
+                    BalootGameEvent e = new UpdateMoshtaraEvent(new MoshtaraData(moshtaraDetails)) { TriggeredAt = this.TriggeredAt };
                     return Result.Ok(e);
                 });
         }

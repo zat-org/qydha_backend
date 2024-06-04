@@ -153,16 +153,14 @@ public sealed class EndMoshtaraEvent : BalootGameEvent
 public sealed class UpdateMoshtaraEvent : BalootGameEvent
 {
     private UpdateMoshtaraEvent() : base(nameof(UpdateMoshtaraEvent)) { }
-    public UpdateMoshtaraEvent(int moshtaraIndex, MoshtaraData data) : base(nameof(UpdateMoshtaraEvent))
+    public UpdateMoshtaraEvent(MoshtaraData data) : base(nameof(UpdateMoshtaraEvent))
     {
         MoshtaraData = data;
-        MoshtaraIndex = moshtaraIndex;
     }
-    public int MoshtaraIndex { get; set; }
     public MoshtaraData MoshtaraData { get; set; } = null!;
 
     public override Result ApplyToState(BalootGameState state) =>
-        state.UpdateMoshtara(MoshtaraIndex, MoshtaraData, TriggeredAt);
+        state.UpdateMoshtara(MoshtaraData, TriggeredAt);
 }
 public sealed class RemoveMoshtaraEvent() : BalootGameEvent(nameof(RemoveMoshtaraEvent))
 {

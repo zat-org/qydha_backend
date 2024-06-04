@@ -287,24 +287,24 @@ public class BalootGameState
         .OnSuccess(() => CurrentSakka.EndMoshtara(moshtaraData, triggeredAt))
         .OnSuccess(() => _stateMachine.Fire(GameTriggers.EndMoshtara));
     }
-    public Result UpdateMoshtara(int moshtaraIndex, MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    public Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
         return CanFire(GameTriggers.UpdateMoshtara)
         .OnSuccess(() =>
         {
             if (_stateMachine.IsInState(GameStates.RunningWithoutSakkas))
-                return CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt);
+                return CurrentSakka.UpdateMoshtara(moshtaraData, triggeredAt);
 
             else if (_stateMachine.IsInState(GameStates.RunningWithSakkas))
             {
                 if (!CurrentSakka.IsCreated)
-                    return CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt);
+                    return CurrentSakka.UpdateMoshtara(moshtaraData, triggeredAt);
                 else
                 {
                     CurrentSakka = Sakkas.Last();
                     Sakkas.Remove(CurrentSakka);
                     return CurrentSakka.Back(withRemoveLastMoshtara: false)
-                        .OnSuccess(() => CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt)); //  TODO check triggeredAt value 
+                        .OnSuccess(() => CurrentSakka.UpdateMoshtara(moshtaraData, triggeredAt));
                 }
             }
             else if (_stateMachine.IsInState(GameStates.Ended))
@@ -314,7 +314,7 @@ public class BalootGameState
                 CurrentSakka = Sakkas.Last();
                 Sakkas.Remove(CurrentSakka);
                 return CurrentSakka.Back(withRemoveLastMoshtara: false)
-                    .OnSuccess(() => CurrentSakka.UpdateMoshtara(moshtaraIndex, moshtaraData, triggeredAt));
+                    .OnSuccess(() => CurrentSakka.UpdateMoshtara(moshtaraData, triggeredAt));
             }
             else
                 return Result.Fail(new InvalidBalootGameActionError($"Invalid Trigger :: UpdateMoshtara to apply on Game state :: {State}."));

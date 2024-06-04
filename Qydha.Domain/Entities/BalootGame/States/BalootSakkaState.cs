@@ -241,20 +241,20 @@ public class BalootSakkaState
             CurrentMoshtara = new();
         });
     }
-    public Result UpdateMoshtara(int moshtaraIndex, MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    public Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
         return CanFire(SakkaTrigger.UpdateMoshtara)
         .OnSuccess(() =>
         {
-            var moshtara = Moshtaras.ElementAtOrDefault(moshtaraIndex);
+            var moshtara = Moshtaras.LastOrDefault();
             if (moshtara == null)
             {
-                var err = new InvalidBodyInputError($"provided moshtara index : {moshtaraIndex} out of range : 0 ~ {Moshtaras.Count - 1}");
-                err.ValidationErrors.Add(nameof(moshtaraIndex), ["index out of range"]);
+                var err = new InvalidBalootGameActionError($"there is no moshtara to be updated");
                 return Result.Fail(err);
             }
-            return moshtara.UpdateMoshtara(moshtaraData);
+            return moshtara.UpdateMoshtara(moshtaraData, triggeredAt);
         })
+        .OnSuccess(() => CurrentMoshtara = new())
         .OnSuccess(() => _stateMachine.Fire(SakkaTrigger.UpdateMoshtara));
     }
     public Result AddMashare3ToLastMoshtara(int usScore, int themScore)

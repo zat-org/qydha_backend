@@ -207,10 +207,14 @@ public class BalootMoshtaraState
             _stateMachine.Fire(MoshtaraTrigger.Back);
         });
     }
-    public Result UpdateMoshtara(MoshtaraData moshtaraData)
+    public Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
         return CanFire(MoshtaraTrigger.UpdateMoshtara)
-            .OnSuccess(() => MoshtaraData = moshtaraData)
+            .OnSuccess(() =>
+            {
+                MoshtaraData = moshtaraData;
+                EndedAt = triggeredAt; // TODO issue in time line if update older element with new datetime ;
+            })
             .OnSuccess(() => _stateMachine.Fire(MoshtaraTrigger.UpdateMoshtara));
     }
     public Result AddMashare3(int usScore, int themScore)

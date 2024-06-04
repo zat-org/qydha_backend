@@ -21,7 +21,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     {
         User user = (User)HttpContext.Items["User"]!;
         List<BalootGameEvent> events = [];
-        // eventsDtos.Select(dto => dto.MapToCorrespondingEvent()).ToList();
+
         foreach (var eDto in eventsDtos)
         {
             Result<BalootGameEvent> res = eDto.MapToCorrespondingEvent();
@@ -29,6 +29,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
                 return res.Errors.First().Handle(HttpContext.TraceIdentifier);
             events.Add(res.Value);
         }
+
         return (await _balootGamesService
             .AddEvents(user, gameId, events))
             .Resolve((game) => Ok(new { game.Id, game.State, Message = "Events Added!" }), HttpContext.TraceIdentifier);
