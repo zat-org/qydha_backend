@@ -10,7 +10,7 @@ string MyAllowSpecificOrigins = builder.Services.ConfigureCORS();
 LoggerServiceExtension.AddLoggerConfiguration(builder.Configuration, builder.Environment);
 builder.Host.UseSerilog();
 // builder.WebHost.UseWebRoot("wwwroot");
-builder.Services.DbConfiguration(builder.Configuration);
+builder.Services.DbConfiguration(builder.Configuration, builder.Environment);
 builder.Services.RegisterServices(builder.Configuration);
 builder.Services.RegisterRepos();
 builder.Services.ConfigureControllers();
