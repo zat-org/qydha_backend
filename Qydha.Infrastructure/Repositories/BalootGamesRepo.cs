@@ -29,13 +29,16 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     public async Task<Result> AddEvents(BalootGame game, ICollection<BalootGameEvent> events)
     {
         string eventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
-        string stateJsonString = JsonConvert.SerializeObject(game.State, BalootConstants.balootEventsSerializationSettings);
+        string stateJsonString = JsonConvert.SerializeObject(game.GameData, BalootConstants.balootEventsSerializationSettings);
         string gameId = game.Id.ToString();
         int affectedRows = await _dbCtx.Database.ExecuteSqlAsync(@$"
             UPDATE baloot_games
             SET game_events = COALESCE(game_events, '[]')::jsonb || {eventsJsonString}::jsonb,
-                game_state = {stateJsonString}::jsonb
+               game_State = {stateJsonString}::jsonb
             WHERE id = {gameId}::uuid");
+        // var affected = await _dbCtx.BalootGames.Where(game => game.Id == game.Id)
+        //     .ExecuteUpdateAsync(
+        //         setters => setters.SetProperty(gameRow => gameRow.GameData, game.GameData));
         if (affectedRows != 1)
             Result.Fail(new EntityNotFoundError<Guid>(game.Id, nameof(BalootGame)));
         return Result.Ok();

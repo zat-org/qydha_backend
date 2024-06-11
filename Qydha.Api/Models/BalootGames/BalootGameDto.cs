@@ -1,6 +1,4 @@
-﻿using static Qydha.Domain.Entities.BalootGameState;
-
-namespace Qydha.API.Models;
+﻿namespace Qydha.API.Models;
 
 public class BalootGameDto
 {
@@ -9,7 +7,7 @@ public class BalootGameDto
     public DateTimeOffset? StartedAt { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
     public BalootGameMode GameMode { get; set; }
-    public GameStates State { get; set; }
+    public string State { get; set; } = null!;
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
     public int UsGameScore { get; set; }
@@ -36,13 +34,8 @@ public class BalootMoshtaraDto
     public int UsAbnat { get; set; }
     public int ThemAbnat { get; set; }
 }
-public class BalootGamesPage : Page<BalootGameDto>
+public class BalootGamesPage(List<BalootGameDto> items, int count, int pageNumber, int pageSize, int totalWins)
+    : Page<BalootGameDto>(items, count, pageNumber, pageSize)
 {
-    public int TotalWins { get; set; }
-    public BalootGamesPage(List<BalootGameDto> items, int count, int pageNumber, int pageSize, int totalWins)
-        : base(items, count, pageNumber, pageSize)
-    {
-        TotalWins = totalWins;
-    }
-
+    public int TotalWins { get; set; } = totalWins;
 }

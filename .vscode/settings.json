@@ -32,5 +32,6 @@
     "Substate",
     "Takweesh"
   ],
-  "files.autoSave": "afterDelay"
+  "files.autoSave": "afterDelay",
+  "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "openFiles"
 }

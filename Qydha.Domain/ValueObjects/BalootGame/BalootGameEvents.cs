@@ -4,7 +4,7 @@ public abstract class BalootGameEvent(string eventName)
 {
     public readonly string EventName = eventName;
     public DateTimeOffset TriggeredAt { get; set; } = DateTimeOffset.UtcNow;
-    public abstract Result ApplyToState(BalootGameState state);
+    public abstract Result ApplyToState(BalootGameData state);
 }
 
 
@@ -19,7 +19,7 @@ public sealed class ChangeTeamsNamesEvent : BalootGameEvent
     }
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
-    public override Result ApplyToState(BalootGameState state) => state.ChangeTeamsNames(UsName, ThemName);
+    public override Result ApplyToState(BalootGameData state) => state.ChangeTeamsNames(UsName, ThemName);
 
 }
 public sealed class ChangeSakkaCountPerGameEvent : BalootGameEvent
@@ -31,7 +31,7 @@ public sealed class ChangeSakkaCountPerGameEvent : BalootGameEvent
     }
     public int SakkaPerGameCount { get; set; } = 3;
 
-    public override Result ApplyToState(BalootGameState state) => state.ChangeSakkaCount(SakkaPerGameCount);
+    public override Result ApplyToState(BalootGameData state) => state.ChangeSakkaCount(SakkaPerGameCount);
 
 }
 public sealed class ChangeIsSakkaMashdodaEvent : BalootGameEvent
@@ -42,14 +42,13 @@ public sealed class ChangeIsSakkaMashdodaEvent : BalootGameEvent
         IsSakkaMashdoda = isSakkaMashdoda;
     }
     public bool IsSakkaMashdoda { get; set; }
-    public override Result ApplyToState(BalootGameState state) => state.ChangeIsCurrentSakkaMashdoda(IsSakkaMashdoda);
+    public override Result ApplyToState(BalootGameData state) => state.ChangeIsCurrentSakkaMashdoda(IsSakkaMashdoda);
 }
 public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
 {
     public BalootRecordingMode RecordingMode { get; set; }
     public int UsAbnat { get; set; }
     public int ThemAbnat { get; set; }
-    // public AddMashare3Details? AdvancedDetails { get; set; }
 
     private AddMashare3ToLastMoshtaraEvent() : base(nameof(AddMashare3ToLastMoshtaraEvent)) { }
     public AddMashare3ToLastMoshtaraEvent(int usScore, int themScore) : base(nameof(AddMashare3ToLastMoshtaraEvent))
@@ -57,52 +56,17 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
         UsAbnat = usScore;
         ThemAbnat = themScore;
         RecordingMode = BalootRecordingMode.Regular;
-        // AdvancedDetails = null;
-    }
-    // public AddMashare3ToLastMoshtaraEvent(MoshtaraType moshtaraType, (int, int) sra, (int, int) khamsen, (int, int) me2a, (int, int)? baloot, (int, int)? rob3ome2a, BalootGameTeam? selectedMoshtaraOwner)
-    //     : base(nameof(AddMashare3ToLastMoshtaraEvent))
-    // {
-    //     RecordingMode = BalootRecordingMode.Advanced;
-    //     UsAbnat = 0;
-    //     ThemAbnat = 0;
-    //     switch (moshtaraType)
-    //     {
-    //         case MoshtaraType.Sun:
-    //             if (rob3ome2a is null) throw new ArgumentNullException(nameof(rob3ome2a));
-    //             AdvancedDetails = new AddMashare3Details(
-    //                 MoshtaraType.Sun,
-    //                 new Mashare3Sun(sra.Item1, khamsen.Item1, me2a.Item1, rob3ome2a.Value.Item1),
-    //                 new Mashare3Sun(sra.Item2, khamsen.Item2, me2a.Item2, rob3ome2a.Value.Item2),
-    //                 selectedMoshtaraOwner
-    //             );
-    //             break;
-    //         case MoshtaraType.Hokm:
-    //             if (baloot is null) throw new ArgumentNullException(nameof(baloot));
-    //             AdvancedDetails = new AddMashare3Details(
-    //                MoshtaraType.Sun,
-    //                new Mashare3Hokm(baloot.Value.Item1, sra.Item1, khamsen.Item1, me2a.Item1),
-    //                new Mashare3Hokm(baloot.Value.Item2, sra.Item2, khamsen.Item2, me2a.Item2),
-    //                selectedMoshtaraOwner
-    //            );
-    //             break;
-    //     }
-    // }
-    public override Result ApplyToState(BalootGameState state)
-    {
-        if (RecordingMode != BalootRecordingMode.Regular) //&& AdvancedDetails is not null)
-            return Result.Fail(new InvalidBalootGameActionError("Mashare3 can only be added during regular Recoding"));
-        // return state.AddMashare3ToLastMoshtara(AdvancedDetails.UsMashare3, AdvancedDetails.ThemMashare3, AdvancedDetails.SelectedMoshtaraOwner);
-        // else
-        return state.AddMashare3ToLastMoshtara(UsAbnat, ThemAbnat);
     }
 
-    // public class AddMashare3Details(MoshtaraType moshtara, Mashare3 usMashare3, Mashare3 themMashare3, BalootGameTeam? selectedMoshtaraOwner)
-    // {
-    //     public MoshtaraType Moshtara { get; set; } = moshtara;
-    //     public BalootGameTeam? SelectedMoshtaraOwner { get; set; } = selectedMoshtaraOwner;
-    //     public Mashare3 UsMashare3 { get; set; } = usMashare3;
-    //     public Mashare3 ThemMashare3 { get; set; } = themMashare3;
-    // }
+    public override Result ApplyToState(BalootGameData state)
+    {
+        if (RecordingMode != BalootRecordingMode.Regular)
+            return Result.Fail(new InvalidBalootGameActionError("Mashare3 can only be added during regular Recoding"));
+
+        return state.AddMashare3(UsAbnat, ThemAbnat);
+    }
+
+
 }
 
 #endregion
@@ -121,7 +85,7 @@ public sealed class StartBalootGameEvent : BalootGameEvent
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
 
-    public override Result ApplyToState(BalootGameState state) => state.StartGame(UsName, ThemName, SakkaCountPerGame, TriggeredAt);
+    public override Result ApplyToState(BalootGameData state) => state.StartGame(UsName, ThemName, SakkaCountPerGame, TriggeredAt);
 }
 public sealed class StartSakkaEvent : BalootGameEvent
 {
@@ -132,11 +96,11 @@ public sealed class StartSakkaEvent : BalootGameEvent
     }
     public bool IsSakkaMashdoda { get; set; }
 
-    public override Result ApplyToState(BalootGameState state) => state.StartSakka(IsSakkaMashdoda, TriggeredAt);
+    public override Result ApplyToState(BalootGameData state) => state.StartSakka(IsSakkaMashdoda, TriggeredAt);
 }
 public sealed class StartMoshtaraEvent() : BalootGameEvent(nameof(StartMoshtaraEvent))
 {
-    public override Result ApplyToState(BalootGameState state) => state.StartMoshtara(TriggeredAt);
+    public override Result ApplyToState(BalootGameData state) => state.StartMoshtara(TriggeredAt);
 }
 public sealed class EndMoshtaraEvent : BalootGameEvent
 {
@@ -147,7 +111,7 @@ public sealed class EndMoshtaraEvent : BalootGameEvent
     }
     public MoshtaraData MoshtaraData { get; set; } = null!;
 
-    public override Result ApplyToState(BalootGameState state) =>
+    public override Result ApplyToState(BalootGameData state) =>
         state.EndMoshtara(MoshtaraData, TriggeredAt);
 }
 public sealed class UpdateMoshtaraEvent : BalootGameEvent
@@ -159,12 +123,12 @@ public sealed class UpdateMoshtaraEvent : BalootGameEvent
     }
     public MoshtaraData MoshtaraData { get; set; } = null!;
 
-    public override Result ApplyToState(BalootGameState state) =>
+    public override Result ApplyToState(BalootGameData state) =>
         state.UpdateMoshtara(MoshtaraData, TriggeredAt);
 }
 public sealed class RemoveMoshtaraEvent() : BalootGameEvent(nameof(RemoveMoshtaraEvent))
 {
-    public override Result ApplyToState(BalootGameState state) => state.Back();
+    public override Result ApplyToState(BalootGameData state) => state.Back();
 }
 public sealed class EndSakkaEvent : BalootGameEvent
 {
@@ -176,7 +140,7 @@ public sealed class EndSakkaEvent : BalootGameEvent
     }
     public BalootGameTeam Winner { get; set; }
     public BalootDrawHandler DrawHandler { get; set; } = BalootDrawHandler.ExtraMoshtara;
-    public override Result ApplyToState(BalootGameState state) => state.EndSakka(Winner, DrawHandler, TriggeredAt);
+    public override Result ApplyToState(BalootGameData state) => state.EndSakka(Winner, DrawHandler, TriggeredAt);
 }
 public sealed class EndGameEvent : BalootGameEvent
 {
@@ -186,22 +150,22 @@ public sealed class EndGameEvent : BalootGameEvent
         Winner = winnerTeam;
     }
     public BalootGameTeam Winner { get; set; }
-    public override Result ApplyToState(BalootGameState state) => state.EndGame(Winner, TriggeredAt);
+    public override Result ApplyToState(BalootGameData state) => state.EndGame(Winner, TriggeredAt);
 }
 public sealed class PauseGameEvent() : BalootGameEvent(nameof(PauseGameEvent))
 {
-    public override Result ApplyToState(BalootGameState state) => state.PauseGame(TriggeredAt);
+    public override Result ApplyToState(BalootGameData state) => state.Pause(TriggeredAt);
 }
 public sealed class ResumeGameEvent() : BalootGameEvent(nameof(ResumeGameEvent))
 {
-    public override Result ApplyToState(BalootGameState state) => state.ResumeGame(TriggeredAt);
+    public override Result ApplyToState(BalootGameData state) => state.Resume(TriggeredAt);
 }
 #endregion
 
 #region  book & chat events
 public sealed class OpenBalootBookEvent() : BalootGameEvent(nameof(OpenBalootBookEvent))
 {
-    public override Result ApplyToState(BalootGameState state)
+    public override Result ApplyToState(BalootGameData state)
     {
         // ! TODO count book opens 
         return Result.Ok();
@@ -209,7 +173,7 @@ public sealed class OpenBalootBookEvent() : BalootGameEvent(nameof(OpenBalootBoo
 }
 public sealed class CloseBalootBookEvent() : BalootGameEvent(nameof(CloseBalootBookEvent))
 {
-    public override Result ApplyToState(BalootGameState state)
+    public override Result ApplyToState(BalootGameData state)
     {
         // ! TODO count book opens 
         return Result.Ok();
@@ -217,7 +181,7 @@ public sealed class CloseBalootBookEvent() : BalootGameEvent(nameof(CloseBalootB
 }
 public sealed class OpenRefereeChatEvent() : BalootGameEvent(nameof(OpenRefereeChatEvent))
 {
-    public override Result ApplyToState(BalootGameState state)
+    public override Result ApplyToState(BalootGameData state)
     {
         // ! TODO count chat opens 
         return Result.Ok();
@@ -225,7 +189,7 @@ public sealed class OpenRefereeChatEvent() : BalootGameEvent(nameof(OpenRefereeC
 }
 public sealed class CloseRefereeChatEvent() : BalootGameEvent(nameof(CloseRefereeChatEvent))
 {
-    public override Result ApplyToState(BalootGameState state)
+    public override Result ApplyToState(BalootGameData state)
     {
         // ! TODO count chat opens 
         return Result.Ok();

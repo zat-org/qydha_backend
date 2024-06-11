@@ -3,7 +3,6 @@ namespace Qydha.API.Models;
 [MapToEventName(nameof(UpdateMoshtaraEvent))]
 public class UpdateMoshtaraEventDto : BalootGameEventDto
 {
-    public int MoshtaraIndex { get; set; }
     public BalootRecordingMode RecordingMode { get; set; }
     public int UsAbnat { get; set; }
     public int ThemAbnat { get; set; }
@@ -53,7 +52,6 @@ public class UpdateMoshtaraEventDtoValidator : AbstractValidator<UpdateMoshtaraE
     {
         RuleFor(e => e.EventName).NotEmpty().Equal(nameof(UpdateMoshtaraEvent));
         RuleFor(e => e.TriggeredAt).NotEmpty();
-        RuleFor(e => e.MoshtaraIndex).GreaterThanOrEqualTo(0);
 
         RuleFor(e => e.RecordingMode).IsInEnum();
 

@@ -1,4 +1,5 @@
-﻿namespace Qydha.API.Mappers;
+﻿
+namespace Qydha.API.Mappers;
 [Mapper]
 public partial class BalootGameMapper
 {
@@ -11,16 +12,16 @@ public partial class BalootGameMapper
             totalWins);
     }
 
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.State)], [nameof(BalootGameDto.State)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.UsName)], [nameof(BalootGameDto.UsName)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.ThemName)], [nameof(BalootGameDto.ThemName)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.UsGameScore)], [nameof(BalootGameDto.UsGameScore)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.ThemGameScore)], [nameof(BalootGameDto.ThemGameScore)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.Winner)], [nameof(BalootGameDto.Winner)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.GameInterval)], [nameof(BalootGameDto.GameInterval)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.StartedAt)], [nameof(BalootGameDto.StartedAt)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.EndedAt)], [nameof(BalootGameDto.EndedAt)])]
-    [MapProperty([nameof(BalootGame.State), nameof(BalootGame.State.Sakkas)], [nameof(BalootGameDto.Sakkas)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.StateName)], [nameof(BalootGameDto.State)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.UsName)], [nameof(BalootGameDto.UsName)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.ThemName)], [nameof(BalootGameDto.ThemName)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.UsGameScore)], [nameof(BalootGameDto.UsGameScore)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.ThemGameScore)], [nameof(BalootGameDto.ThemGameScore)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.Winner)], [nameof(BalootGameDto.Winner)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.GameInterval)], [nameof(BalootGameDto.GameInterval)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.StartedAt)], [nameof(BalootGameDto.StartedAt)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.EndedAt)], [nameof(BalootGameDto.EndedAt)])]
+    [MapProperty([nameof(BalootGame.GameData), nameof(BalootGame.GameData.Sakkas)], [nameof(BalootGameDto.Sakkas)])]
     [MapperIgnoreSource(nameof(BalootGame.EventsJsonString))]
     [MapperIgnoreSource(nameof(BalootGame.ModeratorId))]
     [MapperIgnoreSource(nameof(BalootGame.Moderator))]
@@ -34,43 +35,42 @@ public partial class BalootGameMapper
         // custom before map code...
         var dto = BalootGameToBalootGameDto(game);
         // custom after map code...
-        if (game.State.CurrentSakka.Moshtaras.Count > 0)
+        if (game.GameData.CurrentSakka.Moshtaras.Count > 0)
         {
-            var currentSakkaDto = BalootSakkaStateToSakkaDto(game.State.CurrentSakka);
+            var currentSakkaDto = BalootSakkaStateToSakkaDto(game.GameData.CurrentSakka);
             dto.Sakkas.Add(currentSakkaDto);
         }
         return dto;
     }
 
 
-    [MapProperty(nameof(BalootSakkaState.Winner), nameof(BalootSakkaDto.Winner))]
-    [MapProperty(nameof(BalootSakkaState.IsMashdoda), nameof(BalootSakkaDto.IsMashdoda))]
-    [MapProperty(nameof(BalootSakkaState.Moshtaras), nameof(BalootSakkaDto.Moshtaras))]
-    [MapProperty(nameof(BalootSakkaState.UsScore), nameof(BalootSakkaDto.UsSakkaScore))]
-    [MapProperty(nameof(BalootSakkaState.ThemScore), nameof(BalootSakkaDto.ThemSakkaScore))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.State))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.IsRunningWithMoshtaras))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.IsCreated))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.IsRunningWithoutMoshtaras))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.CurrentMoshtara))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.WinningScore))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.DrawHandler))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.StartedAt))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.EndedAt))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.PausingIntervals))]
-    [MapperIgnoreSource(nameof(BalootSakkaState.SakkaInterval))]
-    public partial BalootSakkaDto BalootSakkaStateToSakkaDto(BalootSakkaState sakka);
+    [MapProperty(nameof(BalootSakka.Winner), nameof(BalootSakkaDto.Winner))]
+    [MapProperty(nameof(BalootSakka.IsMashdoda), nameof(BalootSakkaDto.IsMashdoda))]
+    [MapProperty(nameof(BalootSakka.Moshtaras), nameof(BalootSakkaDto.Moshtaras))]
+    [MapProperty(nameof(BalootSakka.UsScore), nameof(BalootSakkaDto.UsSakkaScore))]
+    [MapProperty(nameof(BalootSakka.ThemScore), nameof(BalootSakkaDto.ThemSakkaScore))]
+    [MapperIgnoreSource(nameof(BalootSakka.StateName))]
+    [MapperIgnoreSource(nameof(BalootSakka.IsRunningWithMoshtaras))]
+    [MapperIgnoreSource(nameof(BalootSakka.IsCreated))]
+    [MapperIgnoreSource(nameof(BalootSakka.IsRunningWithoutMoshtaras))]
+    [MapperIgnoreSource(nameof(BalootSakka.CurrentMoshtara))]
+    [MapperIgnoreSource(nameof(BalootSakka.WinningScore))]
+    [MapperIgnoreSource(nameof(BalootSakka.DrawHandler))]
+    [MapperIgnoreSource(nameof(BalootSakka.StartedAt))]
+    [MapperIgnoreSource(nameof(BalootSakka.EndedAt))]
+    [MapperIgnoreSource(nameof(BalootSakka.PausingIntervals))]
+    [MapperIgnoreSource(nameof(BalootSakka.SakkaInterval))]
+    public partial BalootSakkaDto BalootSakkaStateToSakkaDto(BalootSakka sakka);
 
 
-    [MapProperty(nameof(BalootMoshtaraState.UsScore), nameof(BalootMoshtaraDto.UsAbnat))]
-    [MapProperty(nameof(BalootMoshtaraState.ThemScore), nameof(BalootMoshtaraDto.ThemAbnat))]
-    [MapperIgnoreSource(nameof(BalootMoshtaraState.MoshtaraData))]
-    [MapperIgnoreSource(nameof(BalootMoshtaraState.MoshtaraInterval))]
-    [MapperIgnoreSource(nameof(BalootMoshtaraState.State))]
-    [MapperIgnoreSource(nameof(BalootMoshtaraState.StartedAt))]
-    [MapperIgnoreSource(nameof(BalootMoshtaraState.EndedAt))]
-    [MapperIgnoreSource(nameof(BalootMoshtaraState.PausingIntervals))]
-    public partial BalootMoshtaraDto BalootMoshtaraStateToMoshtaraDto(BalootMoshtaraState moshtara);
+    [MapProperty(nameof(BalootMoshtara.UsScore), nameof(BalootMoshtaraDto.UsAbnat))]
+    [MapProperty(nameof(BalootMoshtara.ThemScore), nameof(BalootMoshtaraDto.ThemAbnat))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.MoshtaraInterval))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.StateName))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.StartedAt))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.EndedAt))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.PausingIntervals))]
+    public partial BalootMoshtaraDto BalootMoshtaraStateToMoshtaraDto(BalootMoshtara moshtara);
 
     private int TimeSpanToSeconds(TimeSpan t) => t.Seconds;
 }

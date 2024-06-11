@@ -11,7 +11,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService.CreateSingleBalootGame(user))
-            .Resolve((game) => Ok(new { game.CreatedAt, game.Id, game.State }), HttpContext.TraceIdentifier);
+            .Resolve((game) => Ok(new { game.CreatedAt, game.Id, State = game.GameData }), HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -32,7 +32,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
 
         return (await _balootGamesService
             .AddEvents(user, gameId, events))
-            .Resolve((game) => Ok(new { game.Id, game.State, Message = "Events Added!" }), HttpContext.TraceIdentifier);
+            .Resolve((game) => Ok(new { game.Id, state=game.GameData, Message = "Events Added!" }), HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -42,7 +42,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService
             .GetGameById(user, gameId))
-            .Resolve((game) => Ok(new { game.Id, game.State }), HttpContext.TraceIdentifier);
+            .Resolve((game) => Ok(new { game.Id, state=game.GameData }), HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.Admin)]

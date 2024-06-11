@@ -1,7 +1,4 @@
-﻿// using Microsoft.AspNetCore.Mvc;
-
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
+﻿using Microsoft.AspNetCore.Mvc;
 namespace Qydha.Domain.Common;
 
 public static class ResultExtensions

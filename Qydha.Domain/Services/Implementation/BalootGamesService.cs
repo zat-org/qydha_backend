@@ -19,7 +19,7 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
 
                 foreach (var e in events)
                 {
-                    Result res = e.ApplyToState(game.State);
+                    Result res = e.ApplyToState(game.GameData);
                     if (res.IsFailed) return res;
                 }
                 return (await _balootGamesRepo.AddEvents(game, events)).ToResult(game);
@@ -49,12 +49,12 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
     public async Task<Result<List<BalootGameTimeLineBlock>>> GetGameTimeLineById(Guid gameId)
     {
         return (await _balootGamesRepo.GetById(gameId))
-            .OnSuccess((game) => Result.Ok(game.State.GetGameTimelineForEditing()));
+            .OnSuccess((game) => Result.Ok(game.GameData.GetGameTimelineForEditing()));
     }
 
     public async Task<Result<BalootGameStatistics>> GetGameStatisticsById(Guid gameId)
     {
         return (await _balootGamesRepo.GetById(gameId))
-            .OnSuccess((game) => Result.Ok(game.State.GetStatistics()));
+            .OnSuccess((game) => Result.Ok(game.GameData.GetStatistics()));
     }
 }

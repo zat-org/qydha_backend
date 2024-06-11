@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Qydha.Domain.Constants;
+using Qydha.Domain.ValueObjects;
 
 namespace Qydha.Infrastructure.DbSchemaConfiguration;
 public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
@@ -38,13 +40,43 @@ public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
             .HasColumnType("jsonb")
             .HasColumnName("game_events");
 
-        entity.Property(e => e.State)
+        entity.Property(e => e.GameData)
             .HasDefaultValueSql("'{}'::jsonb")
             .HasColumnType("jsonb")
             .HasColumnName("game_state")
             .HasConversion(
                 v => JsonConvert.SerializeObject(v, BalootConstants.balootEventsSerializationSettings),
-                v => JsonConvert.DeserializeObject<BalootGameState>(v, BalootConstants.balootEventsSerializationSettings) ?? new()
+                v => JsonConvert.DeserializeObject<BalootGameData>(v, BalootConstants.balootEventsSerializationSettings) ?? new()
             );
+
+        // static void moshtaraBuilder(OwnedNavigationBuilder<BalootSakka, BalootMoshtara> builder)
+        // {
+        //     builder.OwnsMany(moshtara => moshtara.PausingIntervals);
+        //     // builder.OwnsOne(moshtara => moshtara.Data);
+        //     builder.Property(moshtara => moshtara.Data).HasConversion(
+        //         v => JsonConvert.SerializeObject(v!.ToDto(), BalootConstants.balootEventsSerializationSettings),
+        //         v => MoshtaraData.FromDto(
+        //                 JsonConvert.DeserializeObject<MoshtaraDataDto>(v, BalootConstants.balootEventsSerializationSettings)
+        //                     ?? new(BalootRecordingMode.Regular, 0, 0, null))
+        //     );
+        // }
+
+        // static void SakkaBuilder(OwnedNavigationBuilder<BalootGameData, BalootSakka> builder)
+        // {
+        //     builder.OwnsOne(sakka => sakka.PausingIntervals);
+        //     builder.OwnsMany(sakka => sakka.Moshtaras, moshtaraBuilder);
+        //     builder.OwnsOne(sakka => sakka.CurrentMoshtara, moshtaraBuilder);
+        // }
+
+        // entity.OwnsOne(g => g.GameData, builder =>
+        //     {
+        //         // builder.Property(g => g).HasColumnName("game_State");
+        //         builder.ToJson();
+        //         builder.OwnsMany(data => data.PausingIntervals);
+        //         builder.OwnsMany(data => data.Sakkas, SakkaBuilder);
+        //         builder.OwnsOne(data => data.CurrentSakka, SakkaBuilder);
+        //     });
+
+
     }
 }

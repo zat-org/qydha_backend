@@ -143,20 +143,17 @@ public class AdvancedDetailsDto
     public TeamAdvancedDetailsDto ThemData { get; set; } = null!;
 }
 
-public class TeamMashare3DataDto
-{
-    public int Sra { get; set; } //  >= 0 
-    public int Khamsen { get; set; } // >= 0 
-    public int Me2a { get; set; } // >= 0  
-    public int? Rob3ome2a { get; set; }
-    public int? Baloot { get; set; }
-}
-public class TeamAdvancedDetailsDto : TeamMashare3DataDto
+public class TeamAdvancedDetailsDto
 {
     public SunMoshtaraScoresId? SunScoreId { get; set; }
     public HokmMoshtaraScoresId? HokmScoreId { get; set; }
     public int Ekak { get; set; }  // 0-4
     public int Aklat { get; set; } // 0-8
+    public int Sra { get; set; } //  >= 0 
+    public int Khamsen { get; set; } // >= 0 
+    public int Me2a { get; set; } // >= 0  
+    public int? Rob3ome2a { get; set; }
+    public int? Baloot { get; set; }
 
 }
 public class TeamAdvancedDetailsDtoValidator : AbstractValidator<TeamAdvancedDetailsDto>
