@@ -8,20 +8,18 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     private readonly QydhaContext _dbCtx = qydhaContext;
     public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid ownerId)
     {
-        BalootGame balootGame = new()
-        {
-            OwnerId = ownerId,
-            ModeratorId = ownerId,
-            GameMode = BalootGameMode.SinglePlayer,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
+        BalootGame balootGame = BalootGame.CreateSinglePlayerGame(ownerId);
         _dbCtx.BalootGames.Add(balootGame);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(balootGame);
     }
     public async Task<Result<BalootGame>> GetById(Guid gameId)
     {
-        var game = await _dbCtx.BalootGames.FirstOrDefaultAsync((g) => g.Id == gameId);
+        var game = await _dbCtx.BalootGames
+            .AsTracking(QueryTrackingBehavior.TrackAll)
+            .AsSplitQuery()
+            .Include(g => g.Sakkas).ThenInclude(s => s.Moshtaras)
+            .FirstOrDefaultAsync((g) => g.Id == gameId);
         if (game == null) return Result.Fail(new EntityNotFoundError<Guid>(gameId, nameof(BalootGame)));
         return Result.Ok(game);
     }
@@ -29,16 +27,12 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     public async Task<Result> AddEvents(BalootGame game, ICollection<BalootGameEvent> events)
     {
         string eventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
-        string stateJsonString = JsonConvert.SerializeObject(game.GameData, BalootConstants.balootEventsSerializationSettings);
         string gameId = game.Id.ToString();
         int affectedRows = await _dbCtx.Database.ExecuteSqlAsync(@$"
             UPDATE baloot_games
-            SET game_events = COALESCE(game_events, '[]')::jsonb || {eventsJsonString}::jsonb,
-               game_State = {stateJsonString}::jsonb
+            SET game_events = COALESCE(game_events, '[]')::jsonb || {eventsJsonString}::jsonb
             WHERE id = {gameId}::uuid");
-        // var affected = await _dbCtx.BalootGames.Where(game => game.Id == game.Id)
-        //     .ExecuteUpdateAsync(
-        //         setters => setters.SetProperty(gameRow => gameRow.GameData, game.GameData));
+        await _dbCtx.SaveChangesAsync();
         if (affectedRows != 1)
             Result.Fail(new EntityNotFoundError<Guid>(game.Id, nameof(BalootGame)));
         return Result.Ok();
@@ -52,8 +46,9 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     }
     public async Task<Result<int>> GetUserBalootGamesWinsCount(User user)
     {
-        int winsCount = await _dbCtx.Database.SqlQuery<string>
-            ($"select id from baloot_games where owner_id = {user.Id} and game_state ->> 'winner' = 'Us'").CountAsync();
+        int winsCount = await _dbCtx.BalootGames
+            .Where(g => g.OwnerId == user.Id && g.StateName == BalootGameStateEnum.Ended && g.Winner == BalootGameTeam.Us)
+            .CountAsync();
         return Result.Ok(winsCount);
     }
 

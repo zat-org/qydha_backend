@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Qydha.Infrastructure;
@@ -11,9 +12,11 @@ using Qydha.Infrastructure;
 namespace Qydha.Api.Migrations
 {
     [DbContext(typeof(QydhaContext))]
-    partial class QydhaContextModelSnapshot : ModelSnapshot
+    [Migration("20240615022526_InitGame_Sakka_moshtara_StatesAsTables")]
+    partial class InitGame_Sakka_moshtara_StatesAsTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,18 +170,10 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("state");
 
-                    b.Property<int>("ThemGameScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("them_game_score");
-
                     b.Property<string>("ThemName")
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("them_name");
-
-                    b.Property<int>("UsGameScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("us_game_score");
 
                     b.Property<string>("UsName")
                         .IsRequired()
@@ -235,14 +230,6 @@ namespace Qydha.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("state");
 
-                    b.Property<int>("ThemScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("them_score");
-
-                    b.Property<int>("UsScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("us_score");
-
                     b.HasKey("Id");
 
                     b.HasIndex("BalootSakkaId");
@@ -291,14 +278,6 @@ namespace Qydha.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("state");
-
-                    b.Property<int>("ThemScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("them_score");
-
-                    b.Property<int>("UsScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("us_score");
 
                     b.Property<string>("Winner")
                         .HasColumnType("text")

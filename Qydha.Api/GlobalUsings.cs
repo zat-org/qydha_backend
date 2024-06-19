@@ -3,11 +3,11 @@ global using Qydha.Domain.Services.Implementation;
 global using Qydha.Domain.Entities;
 global using Qydha.Domain.Common;
 global using Qydha.Domain.Enums;
-global using Qydha.Domain.ValueObjects;
 global using Qydha.Domain.Repositories;
 global using Qydha.Domain.Settings;
 global using Qydha.Domain.Constants;
 global using Qydha.Domain.Exceptions;
+global using Qydha.Domain.ValueObjects;
 
 global using Qydha.Infrastructure;
 global using Qydha.Infrastructure.Services;

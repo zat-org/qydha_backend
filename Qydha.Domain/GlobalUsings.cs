@@ -17,7 +17,6 @@ global using Qydha.Domain.MediatorNotifications;
 global using Qydha.Domain.Constants;
 global using Qydha.Domain.Services.Implementation;
 global using Qydha.Domain.ValueObjects;
-
 global using Microsoft.Extensions.Logging;
 
 global using MediatR;

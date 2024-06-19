@@ -1,11 +1,11 @@
-﻿namespace Qydha.Domain.Entities;
+﻿namespace Qydha.Domain.ValueObjects;
 public class MoshtaraData
 {
     public BalootRecordingMode RecordingMode { get; init; }
     public int UsAbnat { get; init; }
     public int ThemAbnat { get; init; }
     public MoshtaraDetails? AdvancedDetails { get; init; }
-
+    private MoshtaraData() { }
     public MoshtaraData(int usAbnat, int themAbnat)
     {
         RecordingMode = BalootRecordingMode.Regular;
@@ -19,7 +19,6 @@ public class MoshtaraData
         AdvancedDetails = advancedDetails;
         (UsAbnat, ThemAbnat) = AdvancedDetails.CalculateAbnat();
     }
-
     public Result<MoshtaraData> AddMashare3(int usScore, int themScore)
     {
         if (RecordingMode != BalootRecordingMode.Regular)
@@ -38,73 +37,17 @@ public class MoshtaraData
         return BalootGameStatistics.Zero();
     }
 
-    public MoshtaraDataDto ToDto() =>
-        new(RecordingMode, UsAbnat, ThemAbnat, AdvancedDetails?.ToDto());
-
-    public static MoshtaraData FromDto(MoshtaraDataDto dto)
-    {
-        if (dto.RecordingMode == BalootRecordingMode.Advanced && dto.AdvancedDetails != null)
-            return new MoshtaraData(MoshtaraDetails.FromDto(dto.AdvancedDetails));
-        else
-            return new MoshtaraData(dto.UsAbnat, dto.ThemAbnat);
-    }
 }
-public record MoshtaraDataDto(BalootRecordingMode RecordingMode, int UsAbnat, int ThemAbnat, MoshtaraDetailsDto? AdvancedDetails);
-public record MoshtaraDetailsDto(MoshtaraType MoshtaraType, BalootGameTeam MoshtaraOwner, bool IsMoshtaraSucceeded, MoshtaraTeamDetailsDto Us, MoshtaraTeamDetailsDto Them);
-public record MoshtaraTeamDetailsDto(SunMoshtaraScoresId? SunId, HokmMoshtaraScoresId? HokmId, int Sra, int Khamsen, int Me2a, int? Baloot, int? Rob3ome2a, int Ekak, int Aklat);
 
 public class MoshtaraDetails
 {
+    private MoshtaraDetails() { }
+
     public MoshtaraType Moshtara { get; init; }
     public BalootGameTeam MoshtaraOwner { get; init; }
     public bool IsMoshtaraSucceeded { get; init; }
     public MoshtaraTeamDetails UsData { get; init; } = null!;
     public MoshtaraTeamDetails ThemData { get; init; } = null!;
-
-    public static MoshtaraDetails FromDto(MoshtaraDetailsDto dto)
-    {
-        MoshtaraTeamDetails usData;
-        MoshtaraTeamDetails themData;
-        switch (dto.MoshtaraType)
-        {
-            case MoshtaraType.Sun:
-                if (dto.Us.SunId == null) throw new ArgumentNullException(nameof(dto));
-                if (dto.Us.Rob3ome2a == null) throw new ArgumentNullException(nameof(dto));
-                if (dto.Them.SunId == null) throw new ArgumentNullException(nameof(dto));
-                if (dto.Them.Rob3ome2a == null) throw new ArgumentNullException(nameof(dto));
-                usData = new SunMoshtaraTeamDetails(
-                    new Mashare3Sun(dto.Us.Sra, dto.Us.Khamsen, dto.Us.Me2a, dto.Us.Rob3ome2a.Value)
-                    , dto.Us.Ekak, dto.Us.Aklat, dto.Us.SunId.Value);
-                themData = new SunMoshtaraTeamDetails(
-                    new Mashare3Sun(dto.Them.Sra, dto.Them.Khamsen, dto.Them.Me2a, dto.Them.Rob3ome2a.Value)
-                    , dto.Them.Ekak, dto.Them.Aklat, dto.Them.SunId.Value);
-                break;
-            case MoshtaraType.Hokm:
-                if (dto.Us.HokmId == null) throw new ArgumentNullException(nameof(dto));
-                if (dto.Us.Baloot == null) throw new ArgumentNullException(nameof(dto));
-                if (dto.Them.HokmId == null) throw new ArgumentNullException(nameof(dto));
-                if (dto.Them.Baloot == null) throw new ArgumentNullException(nameof(dto));
-                usData = new HokmMoshtaraTeamDetails(
-                    new Mashare3Hokm(dto.Us.Baloot.Value, dto.Us.Sra, dto.Us.Khamsen, dto.Us.Me2a)
-                    , dto.Us.Ekak, dto.Us.Aklat, dto.Us.HokmId.Value);
-                themData = new HokmMoshtaraTeamDetails(
-                    new Mashare3Hokm(dto.Us.Baloot.Value, dto.Them.Sra, dto.Them.Khamsen, dto.Them.Me2a)
-                    , dto.Them.Ekak, dto.Them.Aklat, dto.Them.HokmId.Value);
-                break;
-            default:
-                throw new ArgumentException("invalid value for moshtara not (sun or hokm)", nameof(dto));
-        }
-        return new MoshtaraDetails(dto.MoshtaraType, usData, themData, dto.MoshtaraOwner, dto.IsMoshtaraSucceeded);
-    }
-    private MoshtaraDetails(MoshtaraType moshtara, MoshtaraTeamDetails usData, MoshtaraTeamDetails themData, BalootGameTeam moshtaraOwner, bool isMoshtaraSucceeded)
-    {
-        Moshtara = moshtara;
-        MoshtaraOwner = moshtaraOwner;
-        IsMoshtaraSucceeded = isMoshtaraSucceeded;
-        UsData = usData;
-        ThemData = themData;
-    }
-
     private MoshtaraDetails(MoshtaraType moshtara, MoshtaraTeamDetails usData, MoshtaraTeamDetails themData, int usAbnat, int themAbnat, BalootGameTeam? selectedMoshtaraOwner)
     {
         Moshtara = moshtara;
@@ -254,11 +197,7 @@ public class MoshtaraDetails
         return new BalootGameStatistics(usStatistics, themStatistics);
     }
 
-    public MoshtaraDetailsDto ToDto()
-        => new(Moshtara, MoshtaraOwner, IsMoshtaraSucceeded, UsData.ToDto(), ThemData.ToDto());
-
 }
-
 
 public abstract class MoshtaraTeamDetails(Mashare3 mashare3, int ekak, int aklat)
 {
@@ -289,10 +228,6 @@ public abstract class MoshtaraTeamDetails(Mashare3 mashare3, int ekak, int aklat
             WonMoshtaraCount = isMoshtaraOwner && isMoshtaraSucceeded ? 1 : 0,
             LostMoshtaraCount = isMoshtaraOwner && !isMoshtaraSucceeded ? 1 : 0
         };
-
-    public abstract MoshtaraTeamDetailsDto ToDto();
-
-
 }
 
 public class SunMoshtaraTeamDetails(Mashare3Sun mashare3, int ekak, int aklat, SunMoshtaraScoresId roundScoreId)
@@ -310,11 +245,6 @@ public class SunMoshtaraTeamDetails(Mashare3Sun mashare3, int ekak, int aklat, S
 
     public override bool IsScoreKhosaraOrKhosaretKaboot() =>
         RoundScoreId == SunMoshtaraScoresId.khosaretKaboot || RoundScoreId == SunMoshtaraScoresId.khosara;
-
-    public override MoshtaraTeamDetailsDto ToDto()
-        => new(RoundScoreId, null, Mashare3.Sra, Mashare3.Khamsen, Mashare3.Me2a, null,
-            (Mashare3 as Mashare3Sun)!.Rob3ome2a, Ekak, Aklat);
-
 }
 
 public class HokmMoshtaraTeamDetails(Mashare3Hokm mashare3, int ekak, int aklat, HokmMoshtaraScoresId roundScoreId)
@@ -334,9 +264,7 @@ public class HokmMoshtaraTeamDetails(Mashare3Hokm mashare3, int ekak, int aklat,
 
     public override bool IsScoreKhosaraOrKhosaretKaboot() =>
         RoundScoreId == HokmMoshtaraScoresId.khosaretKaboot || RoundScoreId == HokmMoshtaraScoresId.khosara;
-    public override MoshtaraTeamDetailsDto ToDto()
-        => new(null, RoundScoreId, Mashare3.Sra, Mashare3.Khamsen, Mashare3.Me2a,
-            (Mashare3 as Mashare3Hokm)!.Baloot, null, Ekak, Aklat);
+
 }
 
 public abstract record Mashare3(int Sra, int Khamsen, int Me2a)

@@ -1,6 +1,5 @@
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Qydha.Domain.Constants;
-using Qydha.Domain.ValueObjects;
+using System.Data.SqlTypes;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Qydha.Infrastructure.DbSchemaConfiguration;
 public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
@@ -40,42 +39,63 @@ public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
             .HasColumnType("jsonb")
             .HasColumnName("game_events");
 
-        entity.Property(e => e.GameData)
-            .HasDefaultValueSql("'{}'::jsonb")
+
+        entity.Property(e => e.UsName)
+            .HasColumnName("us_name")
+            .HasColumnType("varchar(100)");
+
+        entity.Property(e => e.ThemName)
+            .HasColumnName("them_name")
+            .HasColumnType("varchar(100)");
+
+        entity.Property(e => e.UsGameScore)
+            .HasColumnName("us_game_score");
+
+        entity.Property(e => e.ThemGameScore)
+            .HasColumnName("them_game_score");
+
+        entity.Property(e => e.MaxSakkaPerGame)
+                  .HasColumnName("max_sakka_per_game")
+                  .HasColumnType("smallint");
+
+
+        entity.Property(e => e.StartedAt)
+            .IsRequired(false)
+            .HasColumnName("started_at")
+            .HasColumnType("timestamp with time zone");
+
+        entity.Property(e => e.EndedAt)
+            .IsRequired(false)
+            .HasColumnName("ended_at")
+            .HasColumnType("timestamp with time zone");
+
+        entity.Property(e => e.StateName)
+            .HasColumnName("state")
+            .HasConversion<string>();
+
+        entity.Property(e => e.Winner)
+            .IsRequired(false)
+            .HasColumnName("winner")
+            .HasConversion<string>();
+
+
+        entity.Property(e => e.PausingIntervals)
+            .HasDefaultValueSql("'[]'::jsonb")
             .HasColumnType("jsonb")
-            .HasColumnName("game_state")
+            .HasColumnName("pausing_intervals")
             .HasConversion(
-                v => JsonConvert.SerializeObject(v, BalootConstants.balootEventsSerializationSettings),
-                v => JsonConvert.DeserializeObject<BalootGameData>(v, BalootConstants.balootEventsSerializationSettings) ?? new()
-            );
+                v => JsonConvert.SerializeObject(v),
+                v => JsonConvert.DeserializeObject<List<PausingInterval>>(v) ?? new List<PausingInterval>(),
+                new ValueComparer<List<PausingInterval>>(
+                    (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList())
+                );
 
-        // static void moshtaraBuilder(OwnedNavigationBuilder<BalootSakka, BalootMoshtara> builder)
-        // {
-        //     builder.OwnsMany(moshtara => moshtara.PausingIntervals);
-        //     // builder.OwnsOne(moshtara => moshtara.Data);
-        //     builder.Property(moshtara => moshtara.Data).HasConversion(
-        //         v => JsonConvert.SerializeObject(v!.ToDto(), BalootConstants.balootEventsSerializationSettings),
-        //         v => MoshtaraData.FromDto(
-        //                 JsonConvert.DeserializeObject<MoshtaraDataDto>(v, BalootConstants.balootEventsSerializationSettings)
-        //                     ?? new(BalootRecordingMode.Regular, 0, 0, null))
-        //     );
-        // }
-
-        // static void SakkaBuilder(OwnedNavigationBuilder<BalootGameData, BalootSakka> builder)
-        // {
-        //     builder.OwnsOne(sakka => sakka.PausingIntervals);
-        //     builder.OwnsMany(sakka => sakka.Moshtaras, moshtaraBuilder);
-        //     builder.OwnsOne(sakka => sakka.CurrentMoshtara, moshtaraBuilder);
-        // }
-
-        // entity.OwnsOne(g => g.GameData, builder =>
-        //     {
-        //         // builder.Property(g => g).HasColumnName("game_State");
-        //         builder.ToJson();
-        //         builder.OwnsMany(data => data.PausingIntervals);
-        //         builder.OwnsMany(data => data.Sakkas, SakkaBuilder);
-        //         builder.OwnsOne(data => data.CurrentSakka, SakkaBuilder);
-        //     });
+        entity
+            .HasMany(s => s.Sakkas)
+            .WithOne()
+            .HasForeignKey(s => s.BalootGameId);
 
 
     }
