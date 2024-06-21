@@ -1,4 +1,6 @@
-﻿namespace Qydha.Domain.Entities;
+﻿using NetTopologySuite.Geometries;
+
+namespace Qydha.Domain.Entities;
 
 public abstract class BalootGameEvent(string eventName)
 {
@@ -75,17 +77,19 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
 public sealed class StartBalootGameEvent : BalootGameEvent
 {
     private StartBalootGameEvent() : base(nameof(StartBalootGameEvent)) { }
-    public StartBalootGameEvent(string usName, string themName, int sakkaCount) : base(nameof(StartBalootGameEvent))
+    public StartBalootGameEvent(string usName, string themName, int sakkaCount, Point? location) : base(nameof(StartBalootGameEvent))
     {
         UsName = usName;
         ThemName = themName;
         SakkaCountPerGame = sakkaCount;
+        Location = location;
     }
     public int SakkaCountPerGame { get; set; }
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
+    public Point? Location { get; set; }
 
-    public override Result ApplyToState(BalootGame game) => game.StartGame(UsName, ThemName, SakkaCountPerGame, TriggeredAt);
+    public override Result ApplyToState(BalootGame game) => game.StartGame(UsName, ThemName, SakkaCountPerGame, TriggeredAt, Location);
 }
 public sealed class StartSakkaEvent : BalootGameEvent
 {

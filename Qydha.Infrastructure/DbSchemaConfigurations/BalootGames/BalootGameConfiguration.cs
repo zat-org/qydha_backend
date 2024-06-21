@@ -97,6 +97,9 @@ public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
             .WithOne()
             .HasForeignKey(s => s.BalootGameId);
 
+        entity.Property(e => e.Location)
+            .HasColumnType("geometry(Point, 4326)");
+
 
     }
 }

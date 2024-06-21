@@ -39,6 +39,7 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("uuid-ossp");
+        modelBuilder.HasPostgresExtension("postgis");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(QydhaContext).Assembly);
         OnModelCreatingPartial(modelBuilder);
     }

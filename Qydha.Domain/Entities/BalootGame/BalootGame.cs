@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
+using NetTopologySuite.Geometries;
 
 namespace Qydha.Domain.Entities;
 
@@ -67,6 +68,7 @@ public class BalootGame
     public List<PausingInterval> PausingIntervals { get; set; }
     public int UsGameScore { get; private set; }
     public int ThemGameScore { get; private set; }
+    public Point? Location { get; set; }
 
     private void UpdateGameScores()
     {
@@ -186,8 +188,8 @@ public class BalootGame
     #endregion
 
     #region state Transitions
-    public Result StartGame(string usName, string themName, int sakkaCount, DateTimeOffset triggeredAt)
-        => State.StartGame(usName, themName, sakkaCount, triggeredAt);
+    public Result StartGame(string usName, string themName, int sakkaCount, DateTimeOffset triggeredAt, Point? location)
+        => State.StartGame(usName, themName, sakkaCount, triggeredAt, location);
     public Result EndGame(BalootGameTeam winner, DateTimeOffset triggeredAt)
         => State.EndGame(winner, triggeredAt);
     public Result StartMoshtara(DateTimeOffset startAt)
@@ -238,7 +240,7 @@ public abstract class BalootGameState(BalootGame game, BalootGameStateEnum state
        => new($"Can't Fire trigger : {triggerName} On Game Current State : {StateName}");
 
     #region state Transitions
-    public virtual Result StartGame(string usName, string themName, int sakkaCount, DateTimeOffset triggeredAt)
+    public virtual Result StartGame(string usName, string themName, int sakkaCount, DateTimeOffset triggeredAt, Point? Location)
         => Result.Fail(InvalidTrigger(nameof(StartGame)));
     public virtual Result EndGame(BalootGameTeam winner, DateTimeOffset triggeredAt)
         => Result.Fail(InvalidTrigger(nameof(EndGame)));
@@ -286,13 +288,14 @@ public abstract class BalootGameState(BalootGame game, BalootGameStateEnum state
 public class BalootGameCreatedState(BalootGame game)
     : BalootGameState(game, BalootGameStateEnum.Created)
 {
-    public override Result StartGame(string usName, string themName, int sakkaCount, DateTimeOffset triggeredAt)
+    public override Result StartGame(string usName, string themName, int sakkaCount, DateTimeOffset triggeredAt, Point? location)
     {
         Game.UsName = usName;
         Game.ThemName = themName;
         Game.MaxSakkaPerGame = sakkaCount;
         Game.StartedAt = triggeredAt;
         Game.StateName = BalootGameStateEnum.Running;
+        Game.Location = location;
         return Result.Ok();
     }
 }

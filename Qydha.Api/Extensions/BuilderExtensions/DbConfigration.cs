@@ -10,7 +10,10 @@ public static class DbConfigurationExtension
         services.AddDbContext<QydhaContext>(
             (opt) =>
             {
-                var options = opt.UseNpgsql(connectionString, b => b.MigrationsAssembly("Qydha.Api"))
+                var options = opt.UseNpgsql(connectionString,
+                    o => o.MigrationsAssembly("Qydha.Api")
+                          .UseNetTopologySuite()
+                    )
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                 if (!environment.IsProduction())
                     options.EnableSensitiveDataLogging();
