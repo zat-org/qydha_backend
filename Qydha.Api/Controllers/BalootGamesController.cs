@@ -11,7 +11,13 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     {
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService.CreateSingleBalootGame(user))
-            .Resolve((game) => Ok(new { game.CreatedAt, game.Id, State = new BalootGameMapper().BalootGameToBalootGameDto(game) }), HttpContext.TraceIdentifier);
+            .Resolve(
+            (game) => Ok(new
+            {
+                Data = new BalootGameMapper().BalootGameToBalootGameDto(game),
+                Message = "Game Created"
+            })
+            , HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -32,7 +38,12 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
 
         return (await _balootGamesService
             .AddEvents(user, gameId, events))
-            .Resolve((game) => Ok(new { game.Id, state = new BalootGameMapper().BalootGameToBalootGameDto(game), Message = "Events Added!" }), HttpContext.TraceIdentifier);
+            .Resolve(
+                (game) => Ok(new
+                {
+                    Data = new BalootGameMapper().BalootGameToBalootGameDto(game),
+                    Message = "Events Added!"
+                }), HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.RegularUser)]
@@ -42,7 +53,12 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
         User user = (User)HttpContext.Items["User"]!;
         return (await _balootGamesService
             .GetGameById(user, gameId))
-            .Resolve((game) => Ok(new { game.Id, state = new BalootGameMapper().BalootGameToBalootGameDto(game) }), HttpContext.TraceIdentifier);
+            .Resolve(
+                (game) => Ok(new
+                {
+                    Data = new BalootGameMapper().BalootGameToBalootGameDto(game),
+                    Message = "Game state fetched"
+                }), HttpContext.TraceIdentifier);
     }
 
     [Auth(SystemUserRoles.Admin)]

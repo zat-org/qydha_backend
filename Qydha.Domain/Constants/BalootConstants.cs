@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Converters;
+﻿using NetTopologySuite.IO.Converters;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 namespace Qydha.Domain.Constants;
@@ -72,7 +73,7 @@ public static class BalootConstants
         ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() },
         TypeNameHandling = TypeNameHandling.Auto,
         ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-        Converters = [new StringEnumConverter()],
+        Converters = [new StringEnumConverter(), new GeometryConverter()],
         MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
     };
 
