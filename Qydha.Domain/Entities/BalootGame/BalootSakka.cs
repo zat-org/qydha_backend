@@ -11,11 +11,12 @@ public class BalootSakka
         _moshtaras = [];
         PausingIntervals = [];
     }
-    public static BalootSakka CreateNewSakka()
+    public static BalootSakka CreateNewSakka(bool isMashdoda, DateTimeOffset startAt)
     {
-        return new BalootSakka(BalootSakkaStateEnum.Created)
+        return new BalootSakka(BalootSakkaStateEnum.Running)
         {
-            Moshtaras = [new(BalootMoshtaraStateEnum.Created)]
+            IsMashdoda = isMashdoda,
+            StartedAt = startAt
         };
     }
     public int Id { get; set; }
@@ -29,7 +30,7 @@ public class BalootSakka
         {
             State = value switch
             {
-                BalootSakkaStateEnum.Created => new BalootSakkaCreatedState(this),
+                // BalootSakkaStateEnum.Created => new BalootSakkaCreatedState(this),
                 BalootSakkaStateEnum.Running => new BalootSakkaRunningState(this),
                 BalootSakkaStateEnum.Paused => new BalootSakkaPausedState(this),
                 BalootSakkaStateEnum.Ended => new BalootSakkaEndedState(this),
@@ -46,7 +47,7 @@ public class BalootSakka
     public bool IsMashdoda { get; set; }
     public BalootGameTeam? Winner { get; set; }
     public BalootDrawHandler DrawHandler { get; set; }
-    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
     public List<PausingInterval> PausingIntervals { get; set; }
 
@@ -67,34 +68,26 @@ public class BalootSakka
     {
         get
         {
-            if (!IsEnded || EndedAt == null || StartedAt == null) return TimeSpan.Zero;
-            return EndedAt.Value - StartedAt.Value - PausingIntervals.Aggregate(TimeSpan.Zero,
+            if (!IsEnded || EndedAt == null) return TimeSpan.Zero;
+            return EndedAt.Value - StartedAt - PausingIntervals.Aggregate(TimeSpan.Zero,
                 (total, interval) => total + (interval.StartAt - interval.EndAt!.Value));
         }
     }
 
     [NotMapped]
-    public bool IsRunningWithMoshtaras => State is BalootSakkaRunningState && Moshtaras.Count > 1;
+    public bool IsRunningWithMoshtaras => State is BalootSakkaRunningState && Moshtaras.Any(m => m.IsEnded);
 
     [NotMapped]
-    public bool IsCreated => State is BalootSakkaCreatedState;
+    public bool IsRunningWithoutMoshtaras => State is BalootSakkaRunningState && Moshtaras.All(m => !m.IsEnded);
+    // [NotMapped]
+    // public bool IsCreated => State is BalootSakkaCreatedState;
 
     [NotMapped]
     public bool IsEnded => State is BalootSakkaEndedState;
 
-    [NotMapped]
-    public bool IsRunningWithoutMoshtaras => State is BalootSakkaRunningState && Moshtaras.Count <= 1;
 
     #region methods
-    public Result<BalootMoshtara> GetLastEndedMoshtara()
-    {
-        if (IsRunningWithoutMoshtaras)
-        {
-            return Result.Fail(
-                new InvalidBalootGameActionError($"Can't Get last Ended Moshtara in sakka state : IsRunningWithoutMoshtaras"));
-        }
-        return Result.Ok(Moshtaras[^2]);
-    }
+
     public BalootGameTeam? CheckSakkaWinner(BalootGameTeam selectedWinner, BalootDrawHandler handler = BalootDrawHandler.ExtraMoshtara)
     {
         if (UsScore >= WinningScore && UsScore > ThemScore)
@@ -137,14 +130,14 @@ public class BalootSakka
         => State.AddMashare3(usScore, themScore, triggeredAt)
             .OnSuccess(UpdateScores);
 
-    public Result StartSakka(bool isMashdoda, DateTimeOffset startAt)
-        => State.StartSakka(isMashdoda, startAt);
+    // public Result StartSakka(bool isMashdoda, DateTimeOffset startAt)
+    //     => State.StartSakka(isMashdoda, startAt);
     public Result EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
        => State.EndSakka(winner, drawHandler, triggeredAt);
     public Result ChangeIsSakkaMashdoda(bool isMashdoda)
         => State.ChangeIsSakkaMashdoda(isMashdoda);
 
-    public Result Reset() => State.Reset();
+    // public Result Reset() => State.Reset();
     #endregion
 
 }
@@ -179,32 +172,34 @@ public abstract class BalootSakkaState(BalootSakka sakka, BalootSakkaStateEnum s
     public virtual Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => Result.Fail(InvalidTrigger(nameof(AddMashare3)));
 
-    public virtual Result StartSakka(bool isMashdoda, DateTimeOffset startAt)
-        => Result.Fail(InvalidTrigger(nameof(StartSakka)));
+    // public virtual Result StartSakka(bool isMashdoda, DateTimeOffset startAt)
+    //     => Result.Fail(InvalidTrigger(nameof(StartSakka)));
     public virtual Result EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
-       => Result.Fail(InvalidTrigger(nameof(StartSakka)));
+       => Result.Fail(InvalidTrigger(nameof(EndSakka)));
 
     public virtual Result ChangeIsSakkaMashdoda(bool isMashdoda)
     {
         Sakka.IsMashdoda = isMashdoda;
         return Result.Ok();
     }
-    public virtual Result Reset()
-        => Result.Fail(InvalidTrigger(nameof(Reset)));
+    // public virtual Result Reset()
+    //     => Result.Fail(InvalidTrigger(nameof(Reset)));
 
     #endregion
 }
-public class BalootSakkaCreatedState(BalootSakka Sakka)
-    : BalootSakkaState(Sakka, BalootSakkaStateEnum.Created)
-{
-    public override Result StartSakka(bool isMashdoda, DateTimeOffset startAt)
-    {
-        Sakka.StartedAt = startAt;
-        Sakka.IsMashdoda = isMashdoda;
-        Sakka.StateName = BalootSakkaStateEnum.Running;
-        return Result.Ok();
-    }
-}
+
+// public class BalootSakkaCreatedState(BalootSakka Sakka)
+//     : BalootSakkaState(Sakka, BalootSakkaStateEnum.Created)
+// {
+//     public override Result StartSakka(bool isMashdoda, DateTimeOffset startAt)
+//     {
+//         Sakka.StartedAt = startAt;
+//         Sakka.IsMashdoda = isMashdoda;
+//         Sakka.StateName = BalootSakkaStateEnum.Running;
+//         return Result.Ok();
+//     }
+// }
+
 public class BalootSakkaRunningState(BalootSakka Sakka)
     : BalootSakkaState(Sakka, BalootSakkaStateEnum.Running)
 {
@@ -228,25 +223,29 @@ public class BalootSakkaRunningState(BalootSakka Sakka)
                 $"Can't Fire StartMoshtara When sakka has a winner, usScore : {Sakka.UsScore} , themScore : {Sakka.ThemScore}"
             ));
         }
-        return Sakka.CurrentMoshtara.StartMoshtara(startAt);
+        Sakka.Moshtaras.Add(BalootMoshtara.CreateNewMoshtara(startAt));
+        return Result.Ok();
     }
     public override Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
     {
-        if (Sakka.CheckSakkaWinner(selectedWinner: BalootGameTeam.Us) != null)
-        {
+        // if (Sakka.CheckSakkaWinner(selectedWinner: BalootGameTeam.Us) != null)
+        //     return Result.Fail(
+        //         new InvalidBalootGameActionError(
+        //             $"Can't Fire EndMoshtara When sakka has a winner, usScore : {Sakka.UsScore} , themScore : {Sakka.ThemScore}"
+        //         ));
+        if (Sakka.Moshtaras.Count == 0)
             return Result.Fail(
-            new InvalidBalootGameActionError(
-                $"Can't Fire EndMoshtara When sakka has a winner, usScore : {Sakka.UsScore} , themScore : {Sakka.ThemScore}"
-            ));
-        }
-        return Sakka.CurrentMoshtara.EndMoshtara(moshtaraData, endAt)
-            .OnSuccess(() => Sakka.Moshtaras.Add(new(BalootMoshtaraStateEnum.Created)));
+                new InvalidBalootGameActionError(
+                    $"Can't Fire EndMoshtara in sakka state : IsRunningWithoutMoshtaras"
+                ));
+        return Sakka.CurrentMoshtara.EndMoshtara(moshtaraData, endAt);
     }
     public override Result Back(bool withRemoveLastMoshtara = true)
     {
         if (Sakka.IsRunningWithoutMoshtaras)
             return Result.Fail(new InvalidBalootGameActionError($"Can't Fire Back in sakka state : IsRunningWithoutMoshtaras"));
-        Sakka.Moshtaras.RemoveAt(Sakka.Moshtaras.Count - 1);
+        if (Sakka.CurrentMoshtara.IsRunning)
+            Sakka.Moshtaras.RemoveAt(Sakka.Moshtaras.Count - 1);
         return Sakka.CurrentMoshtara.Back();
     }
     public override Result EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
@@ -266,30 +265,34 @@ public class BalootSakkaRunningState(BalootSakka Sakka)
         if (Sakka.IsRunningWithoutMoshtaras)
             return Result.Fail(new InvalidBalootGameActionError($"Can't Fire UpdateMoshtara in sakka state : IsRunningWithoutMoshtaras"));
 
-        return Sakka.Moshtaras[^2].UpdateMoshtara(moshtaraData, triggeredAt)
-            .OnSuccess(() => Sakka.Moshtaras[^1] = new(BalootMoshtaraStateEnum.Created));
+        if (Sakka.CurrentMoshtara.IsRunning)
+            Sakka.Moshtaras.RemoveAt(Sakka.Moshtaras.Count - 1);
+
+        return Sakka.CurrentMoshtara.UpdateMoshtara(moshtaraData, triggeredAt);
     }
     public override Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
     {
         if (Sakka.IsRunningWithoutMoshtaras)
             return Result.Fail(new InvalidBalootGameActionError($"Can't Fire AddMashare3 in sakka state : IsRunningWithoutMoshtaras"));
 
-        return Sakka.Moshtaras[^2].AddMashare3(usScore, themScore, triggeredAt)
-            .OnSuccess(() => Sakka.Moshtaras[^1] = new(BalootMoshtaraStateEnum.Created));
+        if (Sakka.CurrentMoshtara.IsRunning)
+            Sakka.Moshtaras.RemoveAt(Sakka.Moshtaras.Count - 1);
+
+        return Sakka.CurrentMoshtara.AddMashare3(usScore, themScore, triggeredAt);
     }
 
-    public override Result Reset()
-    {
-        if (!Sakka.IsRunningWithoutMoshtaras)
-            return Result.Fail(new InvalidBalootGameActionError($"Can't Fire Reset in sakka state : IsRunningWithMoshtaras"));
-        return Sakka.CurrentMoshtara.Reset()
-            .OnSuccess(() =>
-            {
-                Sakka.StateName = BalootSakkaStateEnum.Created;
-                Sakka.StartedAt = null;
-                Sakka.PausingIntervals = [];
-            });
-    }
+    // public override Result Reset()
+    // {
+    //     if (!Sakka.IsRunningWithoutMoshtaras)
+    //         return Result.Fail(new InvalidBalootGameActionError($"Can't Fire Reset in sakka state : IsRunningWithMoshtaras"));
+    //     return Sakka.CurrentMoshtara.Reset()
+    //         .OnSuccess(() =>
+    //         {
+    //             Sakka.StateName = BalootSakkaStateEnum.Created;
+    //             Sakka.StartedAt = null;
+    //             Sakka.PausingIntervals = [];
+    //         });
+    // }
 }
 
 public class BalootSakkaPausedState(BalootSakka Sakka)
@@ -322,19 +325,21 @@ public class BalootSakkaEndedState(BalootSakka Sakka)
         Sakka.Winner = null;
         Sakka.DrawHandler = BalootDrawHandler.ExtraMoshtara;
         Sakka.EndedAt = null;
-        if (!withRemoveLastMoshtara)
+        if (withRemoveLastMoshtara)
+            return Sakka.CurrentMoshtara.Back()
+                .OnSuccess(() => Sakka.StateName = BalootSakkaStateEnum.Running);
+        else
         {
             Sakka.StateName = BalootSakkaStateEnum.Running;
             return Result.Ok();
         }
-        Sakka.Moshtaras.RemoveAt(Sakka.Moshtaras.Count - 1);
-        return Sakka.CurrentMoshtara.Back()
-            .OnSuccess(() => Sakka.StateName = BalootSakkaStateEnum.Running);
+
     }
 }
 
 public enum BalootSakkaStateEnum
 {
-    Created, Running, Paused, Ended
+    // Created,
+    Running, Paused, Ended
 }
 #endregion

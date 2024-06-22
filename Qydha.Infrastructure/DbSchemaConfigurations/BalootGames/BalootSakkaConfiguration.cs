@@ -25,7 +25,7 @@ public class BalootSakkaConfiguration : IEntityTypeConfiguration<BalootSakka>
             .HasColumnName("them_score");
 
         entity.Property(e => e.StartedAt)
-            .IsRequired(false)
+            .IsRequired()
             .HasColumnName("started_at")
             .HasColumnType("timestamp with time zone");
 

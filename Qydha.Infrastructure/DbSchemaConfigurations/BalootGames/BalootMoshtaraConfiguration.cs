@@ -18,7 +18,7 @@ public class BalootMoshtaraConfiguration : IEntityTypeConfiguration<BalootMoshta
             .HasColumnName("baloot_sakka_id");
 
         entity.Property(e => e.StartedAt)
-            .IsRequired(false)
+            .IsRequired()
             .HasColumnName("started_at")
             .HasColumnType("timestamp with time zone");
 

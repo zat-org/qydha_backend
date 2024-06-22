@@ -4,12 +4,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Qydha.Domain.Entities;
 public class BalootMoshtara
 {
-    public BalootMoshtara(BalootMoshtaraStateEnum stateName)
+    public BalootMoshtara(BalootMoshtaraStateEnum stateName = BalootMoshtaraStateEnum.Running)
     {
         StateName = stateName;
         PausingIntervals = [];
-        // State = new BalootMoshtaraCreatedState(this);
     }
+    public static BalootMoshtara CreateNewMoshtara(DateTimeOffset startAt)
+    {
+        return new BalootMoshtara(BalootMoshtaraStateEnum.Running)
+        {
+            StartedAt = startAt
+        };
+    }
+
     public int Id { get; set; }
     public int BalootSakkaId { get; set; }
     private int _usScore;
@@ -31,7 +38,7 @@ public class BalootMoshtara
 
     [NotMapped]
     private BalootMoshtaraState State { get; set; } = null!;
-    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
     public List<PausingInterval> PausingIntervals { get; set; }
 
@@ -43,7 +50,7 @@ public class BalootMoshtara
         {
             State = value switch
             {
-                BalootMoshtaraStateEnum.Created => new BalootMoshtaraCreatedState(this),
+                // BalootMoshtaraStateEnum.Created => new BalootMoshtaraCreatedState(this),
                 BalootMoshtaraStateEnum.Running => new BalootMoshtaraRunningState(this),
                 BalootMoshtaraStateEnum.Paused => new BalootMoshtaraPausedState(this),
                 BalootMoshtaraStateEnum.Ended => new BalootMoshtaraEndedState(this),
@@ -58,14 +65,14 @@ public class BalootMoshtara
     {
         get
         {
-            if (!IsEnded || EndedAt == null || StartedAt == null) return TimeSpan.Zero;
-            return EndedAt.Value - StartedAt.Value - PausingIntervals.Aggregate(TimeSpan.Zero,
+            if (!IsEnded || EndedAt == null) return TimeSpan.Zero;
+            return EndedAt.Value - StartedAt - PausingIntervals.Aggregate(TimeSpan.Zero,
                 (total, interval) => total + (interval.StartAt - interval.EndAt!.Value));
         }
     }
 
-    [NotMapped]
-    public bool IsCreated => State is BalootMoshtaraCreatedState;
+    // [NotMapped]
+    // public bool IsCreated => State is BalootMoshtaraCreatedState;
 
     [NotMapped]
     public bool IsRunning => State is BalootMoshtaraRunningState;
@@ -100,8 +107,8 @@ public class BalootMoshtara
 
     public Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => State.AddMashare3(usScore, themScore, triggeredAt);
-    public Result Reset()
-        => State.Reset();
+    // public Result Reset(DateTimeOffset triggeredAt)
+    //     => State.Reset(triggeredAt);
     #endregion
 
 
@@ -135,26 +142,24 @@ public abstract class BalootMoshtaraState(BalootMoshtara moshtara, BalootMoshtar
 
     public virtual Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => Result.Fail(InvalidTrigger(nameof(AddMashare3)));
-    public virtual Result Reset()
-        => Result.Fail(InvalidTrigger(nameof(Reset)));
+    // public virtual Result Reset(DateTimeOffset triggeredAt)
+    //     => Result.Fail(InvalidTrigger(nameof(Reset)));
 
     #endregion
 
 }
-public class BalootMoshtaraCreatedState(BalootMoshtara moshtara)
-    : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Created)
-{
-    public override Result StartMoshtara(DateTimeOffset startAt)
-    {
-        Moshtara.StartedAt = startAt;
-        Moshtara.StateName = BalootMoshtaraStateEnum.Running;
-        return Result.Ok();
-    }
-    public override Result Reset()
-    {
-        return Result.Ok();
-    }
-}
+// public class BalootMoshtaraCreatedState(BalootMoshtara moshtara)
+//     : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Created)
+// {
+//     public override Result StartMoshtara(DateTimeOffset startAt)
+//     {
+//         Moshtara.StartedAt = startAt;
+//         Moshtara.StateName = BalootMoshtaraStateEnum.Running;
+//         return Result.Ok();
+//     }
+//     public override Result Reset() => Result.Ok();
+
+// }
 public class BalootMoshtaraRunningState(BalootMoshtara moshtara)
     : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Running)
 {
@@ -172,13 +177,13 @@ public class BalootMoshtaraRunningState(BalootMoshtara moshtara)
         Moshtara.StateName = BalootMoshtaraStateEnum.Ended;
         return Result.Ok();
     }
-    public override Result Reset()
-    {
-        Moshtara.StateName = BalootMoshtaraStateEnum.Created;
-        Moshtara.StartedAt = null;
-        Moshtara.PausingIntervals = [];
-        return Result.Ok();
-    }
+    // public override Result Reset(DateTimeOffset triggeredAt)
+    // {
+    //     Moshtara.StateName = BalootMoshtaraStateEnum.Running;
+    //     Moshtara.StartedAt = triggeredAt;
+    //     Moshtara.PausingIntervals = [];
+    //     return Result.Ok();
+    // }
 
 }
 public class BalootMoshtaraPausedState(BalootMoshtara moshtara)
@@ -221,7 +226,7 @@ public class BalootMoshtaraEndedState(BalootMoshtara moshtara)
 }
 public enum BalootMoshtaraStateEnum
 {
-    Created,
+    // Created,
     Running,
     Paused,
     Ended
