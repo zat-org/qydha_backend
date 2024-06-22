@@ -21,7 +21,21 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     }
 
     [Auth(SystemUserRoles.RegularUser)]
+    [HttpDelete("{gameId}")]
+    public async Task<IActionResult> DeleteBalootGame(Guid gameId)
+    {
+        User user = (User)HttpContext.Items["User"]!;
+        return (await _balootGamesService.DeleteById(gameId, user.Id))
+            .Resolve(
+            () => Ok(new
+            {
+                Data = new { },
+                Message = "Game Deleted Successfully"
+            })
+            , HttpContext.TraceIdentifier);
+    }
 
+    [Auth(SystemUserRoles.RegularUser)]
     [HttpPost("{gameId}/events")]
     public async Task<IActionResult> AddEventToGame([FromRoute] Guid gameId, [FromBody] List<BalootGameEventDto> eventsDtos)
     {

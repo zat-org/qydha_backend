@@ -57,4 +57,7 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
         return (await _balootGamesRepo.GetById(gameId))
             .OnSuccess((game) => Result.Ok(game.GetStatistics()));
     }
+
+    public async Task<Result> DeleteById(Guid gameId, Guid userId) =>
+        await _balootGamesRepo.DeleteById(gameId, userId);
 }

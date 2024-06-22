@@ -8,4 +8,5 @@ public interface IBalootGamesService
     Task<Result<List<BalootGameTimeLineBlock>>> GetGameTimeLineById(Guid gameId);
     Task<Result<(PagedList<BalootGame> Games, int WinsCount)>> GetUserArchive(User user, PaginationParameters parameters);
     Task<Result<BalootGameStatistics>> GetGameStatisticsById(Guid gameId);
+    Task<Result> DeleteById(Guid gameId, Guid userId);
 }

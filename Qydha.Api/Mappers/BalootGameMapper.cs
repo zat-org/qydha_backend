@@ -34,6 +34,13 @@ public partial class BalootGameMapper
     [MapperIgnoreSource(nameof(BalootGame.Moderator))]
     [MapperIgnoreSource(nameof(BalootGame.Owner))]
     [MapperIgnoreSource(nameof(BalootGame.OwnerId))]
+    [MapperIgnoreSource(nameof(BalootGame.IsEnded))]
+    [MapperIgnoreSource(nameof(BalootGame.IsRunningWithoutSakkas))]
+    [MapperIgnoreSource(nameof(BalootGame.IsRunningWithSakkas))]
+    [MapperIgnoreSource(nameof(BalootGame.IsCreated))]
+    [MapperIgnoreSource(nameof(BalootGame.PausingIntervals))]
+    [MapperIgnoreSource(nameof(BalootGame.CurrentSakka))]
+
     public partial BalootGameDto BalootGameToBalootGameDto(BalootGame game);
 
     // [UserMapping(Default = true)]

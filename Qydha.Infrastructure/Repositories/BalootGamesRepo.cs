@@ -40,7 +40,10 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
 
     public async Task<Result<PagedList<BalootGame>>> GetUserBalootGamesArchive(User user, PaginationParameters parameters)
     {
-        var query = _dbCtx.BalootGames.Where(g => g.OwnerId == user.Id).OrderByDescending(g => g.CreatedAt);
+        var query = _dbCtx.BalootGames
+            .Where(g => g.OwnerId == user.Id)
+            .Include(g => g.Sakkas)
+            .OrderByDescending(g => g.CreatedAt);
         PagedList<BalootGame> games = await _dbCtx.GetPagedData(query, parameters.PageNumber, parameters.PageSize);
         return Result.Ok(games);
     }
@@ -52,4 +55,15 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
         return Result.Ok(winsCount);
     }
 
+    public async Task<Result> DeleteById(Guid gameId, Guid userId)
+    {
+        var affected = await _dbCtx
+            .BalootGames
+            .Where(g => g.Id == gameId && (g.OwnerId == userId || g.ModeratorId == userId))
+            .ExecuteDeleteAsync();
+        return affected == 1 ?
+            Result.Ok() :
+            Result.Fail(new EntityNotFoundError<Guid>(gameId, nameof(BalootGame)));
+        throw new NotImplementedException();
+    }
 }
