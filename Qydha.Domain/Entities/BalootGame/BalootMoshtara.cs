@@ -50,7 +50,6 @@ public class BalootMoshtara
         {
             State = value switch
             {
-                // BalootMoshtaraStateEnum.Created => new BalootMoshtaraCreatedState(this),
                 BalootMoshtaraStateEnum.Running => new BalootMoshtaraRunningState(this),
                 BalootMoshtaraStateEnum.Paused => new BalootMoshtaraPausedState(this),
                 BalootMoshtaraStateEnum.Ended => new BalootMoshtaraEndedState(this),
@@ -71,9 +70,6 @@ public class BalootMoshtara
         }
     }
 
-    // [NotMapped]
-    // public bool IsCreated => State is BalootMoshtaraCreatedState;
-
     [NotMapped]
     public bool IsRunning => State is BalootMoshtaraRunningState;
 
@@ -88,8 +84,6 @@ public class BalootMoshtara
 
 
     #region transitions 
-    public Result StartMoshtara(DateTimeOffset startAt)
-        => State.StartMoshtara(startAt);
     public Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
         => State.EndMoshtara(moshtaraData, endAt);
 
@@ -107,8 +101,6 @@ public class BalootMoshtara
 
     public Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => State.AddMashare3(usScore, themScore, triggeredAt);
-    // public Result Reset(DateTimeOffset triggeredAt)
-    //     => State.Reset(triggeredAt);
     #endregion
 
 
@@ -122,9 +114,6 @@ public abstract class BalootMoshtaraState(BalootMoshtara moshtara, BalootMoshtar
        => new($"Can't Fire trigger : {triggerName} On Moshtara Current State : {StateName}");
 
     #region state behavior
-
-    public virtual Result StartMoshtara(DateTimeOffset startAt)
-        => Result.Fail(InvalidTrigger(nameof(StartMoshtara)));
     public virtual Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
         => Result.Fail(InvalidTrigger(nameof(EndMoshtara)));
 
@@ -142,24 +131,10 @@ public abstract class BalootMoshtaraState(BalootMoshtara moshtara, BalootMoshtar
 
     public virtual Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => Result.Fail(InvalidTrigger(nameof(AddMashare3)));
-    // public virtual Result Reset(DateTimeOffset triggeredAt)
-    //     => Result.Fail(InvalidTrigger(nameof(Reset)));
-
     #endregion
 
 }
-// public class BalootMoshtaraCreatedState(BalootMoshtara moshtara)
-//     : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Created)
-// {
-//     public override Result StartMoshtara(DateTimeOffset startAt)
-//     {
-//         Moshtara.StartedAt = startAt;
-//         Moshtara.StateName = BalootMoshtaraStateEnum.Running;
-//         return Result.Ok();
-//     }
-//     public override Result Reset() => Result.Ok();
 
-// }
 public class BalootMoshtaraRunningState(BalootMoshtara moshtara)
     : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Running)
 {
@@ -177,14 +152,6 @@ public class BalootMoshtaraRunningState(BalootMoshtara moshtara)
         Moshtara.StateName = BalootMoshtaraStateEnum.Ended;
         return Result.Ok();
     }
-    // public override Result Reset(DateTimeOffset triggeredAt)
-    // {
-    //     Moshtara.StateName = BalootMoshtaraStateEnum.Running;
-    //     Moshtara.StartedAt = triggeredAt;
-    //     Moshtara.PausingIntervals = [];
-    //     return Result.Ok();
-    // }
-
 }
 public class BalootMoshtaraPausedState(BalootMoshtara moshtara)
     : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Paused)
@@ -218,17 +185,17 @@ public class BalootMoshtaraEndedState(BalootMoshtara moshtara)
     {
         if (Moshtara.Data == null)
             throw new NullReferenceException("Moshtara Data can't be null in state ended.");
-        Moshtara.Data.AddMashare3(usScore, themScore);
-        Moshtara.EndedAt = triggeredAt;
-        return Result.Ok();
+        return Moshtara.Data.AddMashare3(usScore, themScore)
+            .OnSuccess((moshtaraData) =>
+            {
+                Moshtara.Data = moshtaraData;
+                Moshtara.EndedAt = triggeredAt;
+            });
     }
 
 }
 public enum BalootMoshtaraStateEnum
 {
-    // Created,
-    Running,
-    Paused,
-    Ended
+    Running, Paused, Ended
 }
 #endregion

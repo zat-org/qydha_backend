@@ -9,7 +9,6 @@ public class BalootGame
     private BalootGame(BalootGameStateEnum stateName)
     {
         EventsJsonString = "[]";
-        // State = new BalootGameCreatedState(this);
         StateName = stateName;
         _sakkas = [];
         UsName = "Us";
@@ -20,7 +19,6 @@ public class BalootGame
     {
         return new BalootGame(BalootGameStateEnum.Created)
         {
-            // Sakkas = [BalootSakka.CreateNewSakka()],
             GameMode = BalootGameMode.SinglePlayer,
             CreatedAt = DateTimeOffset.UtcNow,
             OwnerId = ownerId,
@@ -342,20 +340,8 @@ public class BalootGameRunningState(BalootGame game)
             Game.StateName = BalootGameStateEnum.Paused;
         });
     }
-    // [E ,E]
     public override Result Back()
     {
-        // if (Game.IsRunningWithoutSakkas ||
-        //         (Game.IsRunningWithSakkas &&
-        //             (Game.CurrentSakka.IsRunningWithMoshtaras || Game.CurrentSakka.IsEnded)))
-        // {
-        //     return Game.CurrentSakka.Back();
-        // }
-        // else
-        // {
-        //     Game.Sakkas.RemoveAt(Game.Sakkas.Count - 1);
-        //     return Result.Ok();
-        // }
         if (Game.IsRunningWithSakkas && Game.CurrentSakka.IsRunningWithoutMoshtaras)
         {
             Game.Sakkas.RemoveAt(Game.Sakkas.Count - 1);
@@ -366,19 +352,11 @@ public class BalootGameRunningState(BalootGame game)
 
     public override Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
-        // if (Game.IsRunningWithoutSakkas ||
-        //         (Game.IsRunningWithSakkas &&
-        //             (Game.CurrentSakka.IsRunningWithMoshtaras || Game.CurrentSakka.IsRunningWithoutMoshtaras)))
-        // {
-        // }
         if (Game.IsRunningWithSakkas && Game.CurrentSakka.IsEnded)
-        {
             return Game.CurrentSakka
                 .Back(withRemoveLastMoshtara: false)
                 .OnSuccess(() => Game.CurrentSakka.UpdateMoshtara(moshtaraData, triggeredAt));
-        }
         return Game.CurrentSakka.UpdateMoshtara(moshtaraData, triggeredAt);
-
     }
 
     public override Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt) =>
@@ -406,10 +384,7 @@ public class BalootGameEndedState(BalootGame game)
     : BalootGameState(game, BalootGameStateEnum.Ended)
 {
     public override Result Back()
-    {
-        if (Game.IsRunningWithoutSakkas)
-            return Result.Fail(new InvalidBalootGameActionError(
-                  $"Can't Back On game state ended that has not sakkas"));
+    {  
         Game.Winner = null;
         Game.EndedAt = null;
         return Game.CurrentSakka.Back()
@@ -417,9 +392,6 @@ public class BalootGameEndedState(BalootGame game)
     }
     public override Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
-        if (Game.IsRunningWithoutSakkas)
-            return Result.Fail(new InvalidBalootGameActionError(
-                  $"Can't Back On game state ended that has not sakkas"));
         Game.Winner = null;
         Game.EndedAt = null;
         return Game.CurrentSakka

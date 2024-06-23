@@ -27,6 +27,16 @@ public static class ResultExtensions
             return func(result.Value);
         return result.ToResult();
     }
+
+    public static Result OnSuccess<InT>(this Result<InT> result, Action<InT> func)
+    {
+        if (result.IsSuccess)
+        {
+            func(result.Value);
+            return Result.Ok();
+        }
+        return result.ToResult();
+    }
     public static Result<OutT> OnSuccess<OutT>(this Result result, Func<Result<OutT>> func)
     {
         if (result.IsSuccess)
