@@ -21,6 +21,7 @@ public class BalootGameAddEventsValidator : AbstractValidator<List<BalootGameEve
 
             v.Add(new StartMoshtaraEventDtoValidator());
             v.Add(new EndMoshtaraEventDtoValidator());
+            v.Add(new UpdateMoshtaraEventDtoValidator());
             v.Add(new AddMashare3ToLastMoshtaraEventDtoValidator());
             v.Add(new RemoveMoshtaraEventDtoValidator());
 

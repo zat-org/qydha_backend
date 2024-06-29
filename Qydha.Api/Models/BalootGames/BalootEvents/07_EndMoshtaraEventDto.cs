@@ -61,77 +61,13 @@ public class EndMoshtaraEventDtoValidator : AbstractValidator<EndMoshtaraEventDt
             RuleFor(e => e.ThemAbnat).GreaterThan(0).When(e => e.UsAbnat == 0);
             RuleFor(e => e.UsAbnat).GreaterThan(0).When(e => e.ThemAbnat == 0);
             RuleFor(e => e.AdvancedDetails).Null();
-        })
-        .Otherwise(() =>
+        });
+        When(e => e.RecordingMode == BalootRecordingMode.Advanced, () =>
         {
             RuleFor(e => e.UsAbnat).Equal(0);
             RuleFor(e => e.ThemAbnat).Equal(0);
-            RuleFor(e => e.AdvancedDetails).NotNull();
-
-            RuleFor(e => e.AdvancedDetails!.Moshtara).IsInEnum();
-            RuleFor(e => e.AdvancedDetails!.UsData).SetValidator(new TeamAdvancedDetailsDtoValidator());
-            RuleFor(e => e.AdvancedDetails!.ThemData).SetValidator(new TeamAdvancedDetailsDtoValidator());
-
-            When(e => e.AdvancedDetails!.Moshtara == MoshtaraType.Sun, () =>
-            {
-                RuleFor(e => e.AdvancedDetails!.UsData.SunScoreId).NotNull().IsInEnum();
-                RuleFor(e => e.AdvancedDetails!.ThemData.SunScoreId).NotNull().IsInEnum();
-
-                RuleFor(x => x).Custom((model, context) =>
-                {
-                    var usScoreId = model.AdvancedDetails!.UsData.SunScoreId!.Value;
-                    var themScoreId = model.AdvancedDetails!.ThemData.SunScoreId!.Value;
-                    if (!BalootConstants.SunRoundScores[usScoreId].GoesToIds.Any(id => id == themScoreId))
-                        context.AddFailure("قيم ال score الرئيسية غير صحيحة");
-                }).When(x => x.AdvancedDetails!.UsData.SunScoreId != null && x.AdvancedDetails!.ThemData.SunScoreId != null);
-
-                RuleFor(e => e.AdvancedDetails!.UsData.HokmScoreId).Null();
-                RuleFor(e => e.AdvancedDetails!.ThemData.HokmScoreId).Null();
-
-                RuleFor(e => e.AdvancedDetails!.UsData.Rob3ome2a).NotNull();
-                RuleFor(e => e.AdvancedDetails!.ThemData.Rob3ome2a).NotNull();
-                RuleFor(e => e.AdvancedDetails!.UsData.Baloot).Null();
-                RuleFor(e => e.AdvancedDetails!.ThemData.Baloot).Null();
-            });
-
-            When(e => e.AdvancedDetails!.Moshtara == MoshtaraType.Hokm, () =>
-            {
-                RuleFor(e => e.AdvancedDetails!.UsData.SunScoreId).Null();
-                RuleFor(e => e.AdvancedDetails!.ThemData.SunScoreId).Null();
-                RuleFor(e => e.AdvancedDetails!.UsData.HokmScoreId).NotNull().IsInEnum();
-                RuleFor(e => e.AdvancedDetails!.ThemData.HokmScoreId).NotNull().IsInEnum();
-
-                RuleFor(x => x).Custom((model, context) =>
-                {
-                    var usScoreId = model.AdvancedDetails!.UsData.HokmScoreId!.Value;
-                    var themScoreId = model.AdvancedDetails!.ThemData.HokmScoreId!.Value;
-                    if (!BalootConstants.HokmRoundScores[usScoreId].GoesToIds.Any(id => id == themScoreId))
-                        context.AddFailure("قيم ال score الرئيسية غير صحيحة");
-                }).When(x => x.AdvancedDetails!.UsData.HokmScoreId != null && x.AdvancedDetails!.ThemData.HokmScoreId != null);
-
-                RuleFor(e => e.AdvancedDetails!.UsData.Rob3ome2a).Null();
-                RuleFor(e => e.AdvancedDetails!.ThemData.Rob3ome2a).Null();
-                RuleFor(e => e.AdvancedDetails!.UsData.Baloot).NotNull();
-                RuleFor(e => e.AdvancedDetails!.ThemData.Baloot).NotNull();
-            });
-
-            RuleFor(x => x).Custom((model, context) =>
-            {
-                int ekakSummation = model.AdvancedDetails!.UsData.Ekak + model.AdvancedDetails!.ThemData.Ekak;
-                if (ekakSummation != 4 && ekakSummation != 0)
-                {
-                    context.AddFailure("مجموع الاكك يجب ان يساوي 4");
-                }
-            });
-            RuleFor(x => x).Custom((model, context) =>
-            {
-                int aklatSummation = model.AdvancedDetails!.UsData.Aklat + model.AdvancedDetails!.ThemData.Aklat;
-                if (aklatSummation != 8 && aklatSummation != 0)
-                {
-                    context.AddFailure("مجموع الاكلات يجب ان يساوي 8");
-                }
-            });
-
+            RuleFor(e => e.AdvancedDetails).NotEmpty();
+            RuleFor(e => e.AdvancedDetails!).SetValidator(new AdvancedDetailsDtoValidator());
         });
     }
 }
@@ -142,7 +78,76 @@ public class AdvancedDetailsDto
     public TeamAdvancedDetailsDto UsData { get; set; } = null!;
     public TeamAdvancedDetailsDto ThemData { get; set; } = null!;
 }
+public class AdvancedDetailsDtoValidator : AbstractValidator<AdvancedDetailsDto>
+{
+    public AdvancedDetailsDtoValidator()
+    {
 
+        RuleFor(e => e.Moshtara).IsInEnum();
+        RuleFor(e => e.UsData).SetValidator(new TeamAdvancedDetailsDtoValidator());
+        RuleFor(e => e.ThemData).SetValidator(new TeamAdvancedDetailsDtoValidator());
+
+        When(e => e.Moshtara == MoshtaraType.Sun, () =>
+        {
+            RuleFor(e => e.UsData.SunScoreId).NotNull().IsInEnum();
+            RuleFor(e => e.ThemData.SunScoreId).NotNull().IsInEnum();
+
+            RuleFor(x => x).Custom((model, context) =>
+            {
+                var usScoreId = model.UsData.SunScoreId!.Value;
+                var themScoreId = model.ThemData.SunScoreId!.Value;
+                if (!BalootConstants.SunRoundScores[usScoreId].GoesToIds.Any(id => id == themScoreId))
+                    context.AddFailure("قيم ال score الرئيسية غير صحيحة");
+            }).When(x => x.UsData.SunScoreId != null && x.ThemData.SunScoreId != null);
+
+            RuleFor(e => e.UsData.HokmScoreId).Null();
+            RuleFor(e => e.ThemData.HokmScoreId).Null();
+
+            RuleFor(e => e.UsData.Rob3ome2a).NotNull();
+            RuleFor(e => e.ThemData.Rob3ome2a).NotNull();
+            RuleFor(e => e.UsData.Baloot).Null();
+            RuleFor(e => e.ThemData.Baloot).Null();
+        });
+
+        When(e => e.Moshtara == MoshtaraType.Hokm, () =>
+        {
+            RuleFor(e => e.UsData.SunScoreId).Null();
+            RuleFor(e => e.ThemData.SunScoreId).Null();
+            RuleFor(e => e.UsData.HokmScoreId).NotNull().IsInEnum();
+            RuleFor(e => e.ThemData.HokmScoreId).NotNull().IsInEnum();
+
+            RuleFor(x => x).Custom((model, context) =>
+            {
+                var usScoreId = model.UsData.HokmScoreId!.Value;
+                var themScoreId = model.ThemData.HokmScoreId!.Value;
+                if (!BalootConstants.HokmRoundScores[usScoreId].GoesToIds.Any(id => id == themScoreId))
+                    context.AddFailure("قيم ال score الرئيسية غير صحيحة");
+            }).When(x => x.UsData.HokmScoreId != null && x.ThemData.HokmScoreId != null);
+
+            RuleFor(e => e.UsData.Rob3ome2a).Null();
+            RuleFor(e => e.ThemData.Rob3ome2a).Null();
+            RuleFor(e => e.UsData.Baloot).NotNull();
+            RuleFor(e => e.ThemData.Baloot).NotNull();
+        });
+
+        RuleFor(x => x).Custom((model, context) =>
+        {
+            int ekakSummation = model.UsData.Ekak + model.ThemData.Ekak;
+            if (ekakSummation != 4 && ekakSummation != 0)
+            {
+                context.AddFailure("مجموع الاكك يجب ان يساوي 4");
+            }
+        });
+        RuleFor(x => x).Custom((model, context) =>
+        {
+            int aklatSummation = model.UsData.Aklat + model.ThemData.Aklat;
+            if (aklatSummation != 8 && aklatSummation != 0)
+            {
+                context.AddFailure("مجموع الاكلات يجب ان يساوي 8");
+            }
+        });
+    }
+}
 public class TeamAdvancedDetailsDto
 {
     public SunMoshtaraScoresId? SunScoreId { get; set; }
