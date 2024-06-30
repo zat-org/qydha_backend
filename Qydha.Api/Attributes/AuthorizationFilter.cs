@@ -28,7 +28,7 @@ public class AuthorizationFilter(IUserRepo userRepo, IAdminUserRepo adminUserRep
                 _logger.LogInformation("401 : No userId value");
                 return Result.Fail(new InvalidAuthTokenError());
             }
-            return Result.Ok((principal, userId));
+            return Result.Ok((principal, userId)); 
         })
         .OnSuccess((tuple) =>
         {

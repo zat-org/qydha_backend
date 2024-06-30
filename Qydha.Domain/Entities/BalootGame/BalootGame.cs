@@ -333,8 +333,10 @@ public class BalootGameRunningState(BalootGame game)
 
     public override Result Pause(DateTimeOffset pausedAt)
     {
-        return Game.CurrentSakka.Pause(pausedAt)
-        .OnSuccess(() =>
+        var res = Result.Ok();
+        if (!Game.CurrentSakka.IsEnded)
+            res = Game.CurrentSakka.Pause(pausedAt);
+        return res.OnSuccess(() =>
         {
             Game.PausingIntervals.Add(new(pausedAt, null));
             Game.StateName = BalootGameStateEnum.Paused;
@@ -368,8 +370,10 @@ public class BalootGamePausedState(BalootGame game)
 {
     public override Result Resume(DateTimeOffset resumedAt)
     {
-        return Game.CurrentSakka.Resume(resumedAt)
-        .OnSuccess(() =>
+        var res = Result.Ok();
+        if (!Game.CurrentSakka.IsEnded)
+            res = Game.CurrentSakka.Resume(resumedAt);
+        return res.OnSuccess(() =>
         {
             if (Game.PausingIntervals.Count == 0)
                 throw new IndexOutOfRangeException("Game PausingIntervals doesn't have any values to get the last one.");
@@ -384,7 +388,7 @@ public class BalootGameEndedState(BalootGame game)
     : BalootGameState(game, BalootGameStateEnum.Ended)
 {
     public override Result Back()
-    {  
+    {
         Game.Winner = null;
         Game.EndedAt = null;
         return Game.CurrentSakka.Back()

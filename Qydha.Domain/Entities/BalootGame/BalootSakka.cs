@@ -73,11 +73,13 @@ public class BalootSakka
     }
 
     [NotMapped]
+    public bool IsRunning => State is BalootSakkaRunningState;
+    [NotMapped]
     public bool IsRunningWithMoshtaras => State is BalootSakkaRunningState && Moshtaras.Any(m => m.IsEnded);
 
     [NotMapped]
     public bool IsRunningWithoutMoshtaras => State is BalootSakkaRunningState && Moshtaras.All(m => !m.IsEnded);
-  
+
     [NotMapped]
     public bool IsEnded => State is BalootSakkaEndedState;
 
