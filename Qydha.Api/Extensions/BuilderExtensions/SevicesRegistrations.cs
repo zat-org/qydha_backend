@@ -27,7 +27,6 @@ public static class SevicesRegistrations
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IPurchaseService, PurchaseService>();
         services.AddScoped<IUserPromoCodesService, UserPromoCodesService>();
-        services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<IInfluencerCodesService, InfluencerCodesService>();
         services.AddScoped<IAppAssetsService, AppAssetsService>();
         services.AddScoped<IInfluencerCodeCategoryService, InfluencerCodeCategoryService>();

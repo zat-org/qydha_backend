@@ -260,6 +260,23 @@ public class UserController(IUserService userService, INotificationService notif
         }, HttpContext.TraceIdentifier);
     }
 
+    [Authorize(Roles = RoleConstants.SuperAdmin)]
+    [HttpPatch("{id}/change-user-roles")]
+    public async Task<IActionResult> ChangeUsersRoles([FromRoute] Guid id, [FromBody] ChangeUserRolesDto dto)
+    {
+        var mapper = new UserMapper();
+        return (await _userService.ChangeUserRoles(id, dto.Roles))
+        .Resolve((user) =>
+        {
+            return Ok(new
+            {
+                data = new { user = mapper.UserToUserDto(user) },
+                message = "User updated Successfully"
+            });
+        }, HttpContext.TraceIdentifier);
+    }
+
+
     #endregion
 
     #region Delete user

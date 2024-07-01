@@ -30,4 +30,6 @@ public interface IUserService
     Task<Result<UserBalootSettings>> GetUserBalootSettings(Guid userId);
     Task<Result<UserBalootSettings>> UpdateUserBalootSettings(Guid userId, UserBalootSettings settings);
 
+    Task<Result<User>> ChangeUserRoles(Guid userId, List<UserRoles> roles);
+
 }

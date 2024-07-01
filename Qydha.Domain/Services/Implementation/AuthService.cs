@@ -31,9 +31,15 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         });
     }
 
-    public async Task<Result<(User user, string jwtToken)>> Login(string username, string password, string? fcm_token)
+    public async Task<Result<(User user, string jwtToken)>> Login(string username, string password, bool asAdmin = false, string? fcm_token = null)
     {
         return (await _userRepo.CheckUserCredentials(username, password))
+        .OnSuccess((user) =>
+        {
+            if (asAdmin && !user.Roles.Any(r => r == UserRoles.SuperAdmin || r == UserRoles.StaffAdmin))
+                return Result.Fail(new ForbiddenError());
+            return Result.Ok(user);
+        })
         .OnSuccessAsync(async (user) => (await _userRepo.UpdateUserLastLoginToNow(user.Id)).ToResult(user))
         .OnSuccessAsync(async (user) =>
         {

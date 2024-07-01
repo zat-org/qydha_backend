@@ -26,7 +26,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("login/")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        return (await _authService.Login(dto.Username, dto.Password, dto.FCMToken))
+        return (await _authService.Login(dto.Username, dto.Password, asAdmin: false, dto.FCMToken))
         .Resolve(
             (tuple) =>
             {

@@ -214,14 +214,18 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     }
     public async Task<Result<User>> UpdateAsync(User user)
     {
-        var affected = await _dbCtx.Users.Where(userRaw => userRaw.Id == user.Id).ExecuteUpdateAsync(
-           setters => setters
-               .SetProperty(userRaw => userRaw.Name, user.Name)
-               .SetProperty(userRaw => userRaw.BirthDate, user.BirthDate)
-       );
-        return affected == 1 ?
-            Result.Ok(user) :
-            Result.Fail<User>(new EntityNotFoundError<Guid>(user.Id, nameof(User)));
+        _dbCtx.Update(user);
+        await _dbCtx.SaveChangesAsync();
+        return Result.Ok(user);
+        //     .Where(userRaw => userRaw.Id == user.Id)
+        //     .ExecuteUpdateAsync(
+        //        setters => setters
+        //            .SetProperty(userRaw => userRaw.Name, user.Name)
+        //            .SetProperty(userRaw => userRaw.BirthDate, user.BirthDate)
+        //    );
+        // affected == 1 ?
+        //     Result.Ok(user) :
+        //     Result.Fail<User>(new EntityNotFoundError<Guid>(user.Id, nameof(User)));
     }
 
     public async Task<Result> DeleteAsync(Guid userId)
@@ -232,7 +236,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
 
-    
+
 }
 internal class Transaction
 {

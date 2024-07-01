@@ -6,7 +6,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     public void Configure(EntityTypeBuilder<User> builder)
     {
 
-        var adminId = Guid.Parse("d2705466-4304-4830-b48a-3e44e031927e");
+        var adminId = new Guid("d2705466-4304-4830-b48a-3e44e031927e");
         var superAdmin = new User(
             id: adminId,
             username: "Admin",
@@ -88,6 +88,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.OwnsOne(d => d.UserBalootSettings, entity =>
         {
+            entity.HasData(new { UserId = adminId });
+
             entity.Property(e => e.UserId)
                 .HasColumnName("user_id");
             entity.HasKey(e => e.UserId);
@@ -122,6 +124,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         });
         builder.OwnsOne(d => d.UserGeneralSettings, entity =>
         {
+            entity.HasData(new { UserId = adminId });
+
             entity.Property(e => e.UserId)
                 .HasColumnName("user_id");
             entity.HasKey(e => e.UserId);
@@ -156,6 +160,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         });
         builder.OwnsOne(d => d.UserHandSettings, entity =>
         {
+            entity.HasData(new { UserId = adminId });
+
             entity.Property(e => e.UserId)
                 .HasColumnName("user_id");
             entity.HasKey(e => e.UserId);

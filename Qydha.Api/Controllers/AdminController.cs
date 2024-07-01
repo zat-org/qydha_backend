@@ -2,14 +2,14 @@
 
 [ApiController]
 [Route("/admin")]
-public class AdminController(IAdminUserService adminUserService) : ControllerBase
+public class AdminController(IAuthService authService) : ControllerBase
 {
-    private readonly IAdminUserService _adminUserService = adminUserService;
+    private readonly IAuthService _authService = authService;
 
     [HttpPost("login/")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        return (await _adminUserService.Login(dto.Username, dto.Password))
+        return (await _authService.Login(dto.Username, dto.Password, true, null))
         .Resolve(
             (tuple) =>
             {

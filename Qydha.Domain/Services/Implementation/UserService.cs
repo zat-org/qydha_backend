@@ -124,18 +124,41 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
         .OnSuccessAsync(async () => await _userRepo.GetByIdAsync(userId));
     }
 
-
+    public async Task<Result<User>> ChangeUserRoles(Guid userId, List<UserRoles> roles)
+    {
+        return (await _userRepo.GetByIdAsync(userId))
+        .OnSuccess((user) =>
+        {
+            if (!roles.Contains(UserRoles.User))
+                return Result.Fail(new InvalidBodyInputError("Roles Must Contain User Role"));
+            if (user.Roles.Contains(UserRoles.SuperAdmin))
+                if (!roles.Contains(UserRoles.SuperAdmin))
+                    return Result.Fail(new InvalidBodyInputError("SuperAdmin Role Can't removed from this user"));
+                else
+                if (roles.Contains(UserRoles.SuperAdmin))
+                    return Result.Fail(new InvalidBodyInputError("SuperAdmin Role Can't Added to users"));
+            user.Roles = roles;
+            return Result.Ok(user);
+        })
+        .OnSuccessAsync(_userRepo.UpdateAsync);
+    }
     #endregion
 
     #region Delete User
     public async Task<Result<User>> DeleteUser(Guid userId, string password)
     {
-        // TODO log delete user action 
         Result<User> checkUserCredentials = await _userRepo.CheckUserCredentials(userId, password);
         return checkUserCredentials
+        .OnSuccess(user =>
+        {
+            if (user.Roles.Contains(UserRoles.SuperAdmin))
+                return Result.Fail(new ForbiddenError());
+            return Result.Ok(user);
+        })
         .OnSuccessAsync(async (user) => (await _userRepo.DeleteAsync(user.Id)).ToResult(user))
         .OnSuccessAsync(async (user) =>
         {
+            _logger.LogInformation("User with id: {userId} , phone :{phone} , username :{username}  deleted his account", userId, user.Phone, user.Username);
             if (user.AvatarPath is not null)
                 await _fileService.DeleteFile(user.AvatarPath);
             return Result.Ok(user);
@@ -161,5 +184,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
             await _userHandSettingsRepo.UpdateByUserIdAsync(userId, settings);
     public async Task<Result<UserBalootSettings>> UpdateUserBalootSettings(Guid userId, UserBalootSettings settings) =>
             await _userBalootSettingsRepo.UpdateByUserIdAsync(userId, settings);
+
+
     #endregion
 }
