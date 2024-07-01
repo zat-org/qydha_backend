@@ -8,6 +8,8 @@ public class UserPromoCodesRepo(QydhaContext qydhaContext, ILogger<UserPromoCode
 
     public async Task<Result<UserPromoCode>> AddAsync(UserPromoCode code)
     {
+        if (!_dbCtx.Users.Any(u => u.Id == code.UserId))
+            return Result.Fail(new EntityNotFoundError<Guid>(code.UserId, nameof(User)));
         await _dbCtx.UserPromoCodes.AddAsync(code);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(code);

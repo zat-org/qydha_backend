@@ -42,6 +42,8 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
         return (await GetByIdAsync(notificationId))
         .OnSuccessAsync(async (notificationData) =>
         {
+            if (!_dbCtx.Users.Any(u => u.Id == userId))
+                return Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
             var notificationLink = new NotificationUserLink()
             {
                 UserId = userId,
@@ -58,6 +60,8 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
 
     public async Task<Result<Notification>> CreateAndAssignToUser(Guid userId, NotificationData notification, Dictionary<string, string> templateValues)
     {
+        if (!_dbCtx.Users.Any(u => u.Id == userId))
+            return Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
         notification.Visibility = NotificationVisibility.Private;
         var notificationLink = new NotificationUserLink()
         {

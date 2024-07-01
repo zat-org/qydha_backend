@@ -12,6 +12,8 @@ public class PurchaseRepo(QydhaContext qydhaContext, ILogger<PurchaseRepo> logge
     }
     public async Task<Result<Purchase>> AddAsync(Purchase purchase)
     {
+        if (!_dbCtx.Users.Any(u => u.Id == purchase.UserId))
+            return Result.Fail(new EntityNotFoundError<Guid>(purchase.UserId, nameof(User)));
         await _dbCtx.Purchases.AddAsync(purchase);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(purchase);

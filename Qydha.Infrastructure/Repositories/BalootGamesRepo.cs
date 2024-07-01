@@ -8,6 +8,8 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     private readonly QydhaContext _dbCtx = qydhaContext;
     public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid ownerId)
     {
+        if (!_dbCtx.Users.Any(u => u.Id == ownerId)) 
+            return Result.Fail(new EntityNotFoundError<Guid>(ownerId, nameof(User)));
         BalootGame balootGame = BalootGame.CreateSinglePlayerGame(ownerId);
         _dbCtx.BalootGames.Add(balootGame);
         await _dbCtx.SaveChangesAsync();
@@ -64,6 +66,5 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
         return affected == 1 ?
             Result.Ok() :
             Result.Fail(new EntityNotFoundError<Guid>(gameId, nameof(BalootGame)));
-        throw new NotImplementedException();
     }
 }

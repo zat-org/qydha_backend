@@ -6,6 +6,8 @@ public class PhoneAuthenticationRequestRepo(QydhaContext qydhaContext, ILogger<P
 
     public async Task<Result<PhoneAuthenticationRequest>> AddAsync(PhoneAuthenticationRequest request)
     {
+        if (!_dbCtx.Users.Any(u => u.Id == request.UserId))
+            return Result.Fail(new EntityNotFoundError<Guid>(request.UserId, nameof(User)));
         await _dbCtx.PhoneAuthenticationRequests.AddAsync(request);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(request);

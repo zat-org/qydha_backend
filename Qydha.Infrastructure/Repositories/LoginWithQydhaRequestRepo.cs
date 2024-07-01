@@ -8,6 +8,8 @@ public class LoginWithQydhaRequestRepo(QydhaContext qydhaContext, ILogger<LoginW
     private readonly ILogger<LoginWithQydhaRequestRepo> _logger = logger;
     public async Task<Result<LoginWithQydhaRequest>> AddAsync(LoginWithQydhaRequest request)
     {
+        if (!_dbCtx.Users.Any(u => u.Id == request.UserId))
+            return Result.Fail(new EntityNotFoundError<Guid>(request.UserId, nameof(User)));
         await _dbCtx.LoginWithQydhaRequests.AddAsync(request);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(request);

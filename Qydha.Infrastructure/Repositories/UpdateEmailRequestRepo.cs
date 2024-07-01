@@ -8,6 +8,8 @@ public class UpdateEmailRequestRepo(QydhaContext qydhaContext, ILogger<UpdateEma
 
     public async Task<Result<UpdateEmailRequest>> AddAsync(UpdateEmailRequest request)
     {
+        if (!_dbCtx.Users.Any(u => u.Id == request.UserId))
+            return Result.Fail(new EntityNotFoundError<Guid>(request.UserId, nameof(User)));
         await _dbCtx.UpdateEmailRequests.AddAsync(request);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(request);

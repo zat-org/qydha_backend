@@ -11,7 +11,7 @@ public class UserGeneralSettingsRepo(QydhaContext dbContext, ILogger<UserGeneral
     {
         return await _dbCtx.Users.FirstOrDefaultAsync((u) => u.Id == userId) is User user ?
             Result.Ok(user.UserGeneralSettings) :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
+            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(UserGeneralSettings)));
     }
 
     public async Task<Result<UserGeneralSettings>> UpdateByUserIdAsync(Guid userId, UserGeneralSettings settings)

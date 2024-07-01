@@ -100,6 +100,8 @@ public class InfluencerCodesRepo(QydhaContext qydhaContext, ILogger<InfluencerCo
 
     public async Task<Result<InfluencerCode>> UseInfluencerCode(Guid userId, InfluencerCode code)
     {
+        if (!_dbCtx.Users.Any(u => u.Id == userId))
+            return Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
         var link = new InfluencerCodeUserLink()
         {
             UserId = userId,
