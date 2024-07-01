@@ -4,17 +4,17 @@ namespace Qydha.Domain.Services.Implementation;
 public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGamesService
 {
     private readonly IBalootGamesRepo _balootGamesRepo = balootGamesRepo;
-    public async Task<Result<BalootGame>> CreateSingleBalootGame(User owner)
+    public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId)
     {
-        return await _balootGamesRepo.CreateSingleBalootGame(owner.Id);
+        return await _balootGamesRepo.CreateSingleBalootGame(userId);
     }
 
-    public async Task<Result<BalootGame>> AddEvents(User user, Guid gameId, ICollection<BalootGameEvent> events)
+    public async Task<Result<BalootGame>> AddEvents(Guid userId, Guid gameId, ICollection<BalootGameEvent> events)
     {
         return (await _balootGamesRepo.GetById(gameId))
             .OnSuccessAsync(async (game) =>
             {
-                if (user.Id != game.ModeratorId && user.Id != game.OwnerId)
+                if (userId != game.ModeratorId && userId != game.OwnerId)
                     return Result.Fail(new ForbiddenError());
 
                 foreach (var e in events)
@@ -26,21 +26,21 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
             });
     }
 
-    public async Task<Result<BalootGame>> GetGameById(User Requester, Guid gameId)
+    public async Task<Result<BalootGame>> GetGameById(Guid requesterId, Guid gameId)
     {
         return (await _balootGamesRepo.GetById(gameId))
             .OnSuccess((game) =>
             {
-                if (Requester.Id != game.ModeratorId && Requester.Id != game.OwnerId)
+                if (requesterId != game.ModeratorId && requesterId != game.OwnerId)
                     return Result.Fail(new ForbiddenError());
                 return Result.Ok(game);
             });
     }
 
-    public async Task<Result<(PagedList<BalootGame> Games, int WinsCount)>> GetUserArchive(User user, PaginationParameters parameters)
+    public async Task<Result<(PagedList<BalootGame> Games, int WinsCount)>> GetUserArchive(Guid userId, PaginationParameters parameters)
     {
-        return (await _balootGamesRepo.GetUserBalootGamesArchive(user, parameters))
-        .OnSuccessAsync(async (games) => (await _balootGamesRepo.GetUserBalootGamesWinsCount(user))
+        return (await _balootGamesRepo.GetUserBalootGamesArchive(userId, parameters))
+        .OnSuccessAsync(async (games) => (await _balootGamesRepo.GetUserBalootGamesWinsCount(userId))
             .ToResult((winsCount) => (games, winsCount)));
     }
 

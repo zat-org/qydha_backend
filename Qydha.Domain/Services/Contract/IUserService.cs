@@ -22,12 +22,12 @@ public interface IUserService
     Task<Result<User>> DeleteUser(Guid userId, string password);
 
     Task<Result<UserGeneralSettings>> GetUserGeneralSettings(Guid userId);
-    Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(UserGeneralSettings settings);
+    Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(Guid userId, UserGeneralSettings settings);
 
     Task<Result<UserHandSettings>> GetUserHandSettings(Guid userId);
-    Task<Result<UserHandSettings>> UpdateUserHandSettings(UserHandSettings settings);
+    Task<Result<UserHandSettings>> UpdateUserHandSettings(Guid userId, UserHandSettings settings);
 
     Task<Result<UserBalootSettings>> GetUserBalootSettings(Guid userId);
-    Task<Result<UserBalootSettings>> UpdateUserBalootSettings(UserBalootSettings settings);
+    Task<Result<UserBalootSettings>> UpdateUserBalootSettings(Guid userId, UserBalootSettings settings);
 
 }

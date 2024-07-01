@@ -3,5 +3,5 @@
 public interface IUserBalootSettingsRepo
 {
     Task<Result<UserBalootSettings>> GetByUserIdAsync(Guid userId);
-    Task<Result<UserBalootSettings>> UpdateByUserIdAsync(UserBalootSettings settings);
+    Task<Result<UserBalootSettings>> UpdateByUserIdAsync(Guid userId, UserBalootSettings settings);
 }

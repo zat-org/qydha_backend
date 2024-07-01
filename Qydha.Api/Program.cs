@@ -1,3 +1,4 @@
+
 FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile("firebase_private_key.json")
@@ -15,11 +16,11 @@ builder.Services.RegisterServices(builder.Configuration);
 builder.Services.RegisterRepos();
 builder.Services.ConfigureControllers();
 builder.Services.ConfigureFluentValidation();
-builder.Services.RegisterFilters();
 builder.Services.RegisterAttributes();
 builder.Services.ConfigureSwagger();
 builder.Services.ConfigureMediatR();
 builder.Services.RegisterSettings(builder.Configuration);
+builder.Services.AuthConfiguration(builder.Configuration);
 
 var app = builder.Build();
 
@@ -33,6 +34,9 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
 app.UseRequestContextLogging();
 
 app.UseCors(MyAllowSpecificOrigins);
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // app.UseStaticFiles();
 

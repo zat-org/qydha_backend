@@ -155,11 +155,11 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     public async Task<Result<UserBalootSettings>> GetUserBalootSettings(Guid userId) =>
         await _userBalootSettingsRepo.GetByUserIdAsync(userId);
 
-    public async Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(UserGeneralSettings settings) =>
-           await _userGeneralSettingsRepo.UpdateByUserIdAsync(settings);
-    public async Task<Result<UserHandSettings>> UpdateUserHandSettings(UserHandSettings settings) =>
-            await _userHandSettingsRepo.UpdateByUserIdAsync(settings);
-    public async Task<Result<UserBalootSettings>> UpdateUserBalootSettings(UserBalootSettings settings) =>
-            await _userBalootSettingsRepo.UpdateByUserIdAsync(settings);
+    public async Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(Guid userId, UserGeneralSettings settings) =>
+           await _userGeneralSettingsRepo.UpdateByUserIdAsync(userId, settings);
+    public async Task<Result<UserHandSettings>> UpdateUserHandSettings(Guid userId, UserHandSettings settings) =>
+            await _userHandSettingsRepo.UpdateByUserIdAsync(userId, settings);
+    public async Task<Result<UserBalootSettings>> UpdateUserBalootSettings(Guid userId, UserBalootSettings settings) =>
+            await _userBalootSettingsRepo.UpdateByUserIdAsync(userId, settings);
     #endregion
 }

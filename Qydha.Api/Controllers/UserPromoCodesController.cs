@@ -11,7 +11,7 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
 
 
     [HttpPost]
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     public async Task<IActionResult> AddPromo(PromoCodesAddingDto dto)
     {
         return (await _userPromoCodesService.AddPromoCode(dto.UserId, dto.Code, dto.NumberOfDays, dto.ExpireAt))
@@ -28,12 +28,12 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
     }
 
     [HttpGet]
-    [Auth(SystemUserRoles.RegularUser)]
-
-    public async Task<IActionResult> GetAllUserPromoCodes()
+    [Authorize(Roles = RoleConstants.User)]
+    public IActionResult GetAllUserPromoCodes()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userPromoCodesService.GetUserValidPromoCodeAsync(user.Id))
+
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(_userPromoCodesService.GetUserValidPromoCodeAsync)
         .Resolve((promoCodes) =>
         {
             var mapper = new UserPromoCodeMapper();
@@ -46,21 +46,18 @@ public class UserPromoCodesController(IUserPromoCodesService userPromoCodesServi
     }
 
     [HttpPost("use")]
-    [Auth(SystemUserRoles.RegularUser)]
-
-    public async Task<IActionResult> UsePromo(PromoCodesUsingDto dto)
+    [Authorize(Roles = RoleConstants.User)]
+    public IActionResult UsePromo(PromoCodesUsingDto dto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-
-        return (await _userPromoCodesService.UsePromoCode(user.Id, dto.PromoCodeId))
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(async (id) => await _userPromoCodesService.UsePromoCode(id, dto.PromoCodeId))
         .Resolve((user) =>
         {
             var mapper = new UserMapper();
 
             return Ok(new
             {
-                Data = new { user = mapper.UserToUserDto(user) }
-                ,
+                Data = new { user = mapper.UserToUserDto(user) },
                 message = "Promo Code Used Successfully."
             });
         }, HttpContext.TraceIdentifier);

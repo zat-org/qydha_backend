@@ -76,7 +76,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
     {
         notificationData.Visibility = NotificationVisibility.Public;
         await _dbCtx.NotificationsData.AddAsync(notificationData);
-        await _dbCtx.Users.Where(u => !u.IsAnonymous).ForEachAsync((u) =>
+        await _dbCtx.Users.ForEachAsync((u) =>
         {
             notificationData.NotificationUserLinks.Add(new()
             {

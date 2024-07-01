@@ -1,4 +1,5 @@
 ﻿
+
 namespace Qydha.API.Controllers;
 
 [ApiController]
@@ -11,9 +12,11 @@ public class UserController(IUserService userService, INotificationService notif
 
     #endregion
 
+
+
     #region Get user 
     [HttpGet]
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     public async Task<IActionResult> GetUsers()
     {
         return (await _userService.GetAllRegularUsers())
@@ -29,27 +32,29 @@ public class UserController(IUserService userService, INotificationService notif
     }
 
     [HttpGet("me/")]
-    [Auth(SystemUserRoles.RegularUser)]
-    public async Task<IActionResult> GetUser()
+    [Authorize(Roles = RoleConstants.User)]
+
+    public IActionResult GetUser()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.GetUserWithSettingsByIdAsync(user.Id))
-       .Resolve(
-           (userData) =>
-           {
-               var mapper = new UserMapper();
-               return Ok(new
-               {
-                   data = new
-                   {
-                       user = mapper.UserToUserDto(userData),
-                       generalSettings = userData.UserGeneralSettings is null ? null : mapper.UserGeneralSettingsToDto(userData.UserGeneralSettings),
-                       handSettings = userData.UserHandSettings is null ? null : mapper.UserHandSettingsToDto(userData.UserHandSettings),
-                       balootSettings = userData.UserBalootSettings is null ? null : mapper.UserBalootSettingsToDto(userData.UserBalootSettings)
-                   },
-                   message = "User fetched successfully."
-               });
-           }, HttpContext.TraceIdentifier);
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(_userService.GetUserWithSettingsByIdAsync)
+            .Resolve(
+                (userData) =>
+                {
+                    var mapper = new UserMapper();
+                    return Ok(new
+                    {
+                        data = new
+                        {
+                            user = mapper.UserToUserDto(userData),
+                            generalSettings = userData.UserGeneralSettings is null ? null : mapper.UserGeneralSettingsToDto(userData.UserGeneralSettings),
+                            handSettings = userData.UserHandSettings is null ? null : mapper.UserHandSettingsToDto(userData.UserHandSettings),
+                            balootSettings = userData.UserBalootSettings is null ? null : mapper.UserBalootSettingsToDto(userData.UserBalootSettings)
+                        },
+                        message = "User fetched successfully."
+                    });
+                },
+                HttpContext.TraceIdentifier);
     }
 
     [HttpGet("is-username-available")]
@@ -70,29 +75,31 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
     #region update user
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/update-password/")]
-    public async Task<IActionResult> UpdateAuthorizedUserPassword([FromBody] ChangePasswordDto changePasswordDto)
+    public IActionResult UpdateAuthorizedUserPassword([FromBody] ChangePasswordDto changePasswordDto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.UpdateUserPassword(user.Id, changePasswordDto.OldPassword, changePasswordDto.NewPassword))
-        .Resolve((user) =>
-            {
-                var mapper = new UserMapper();
-                return Ok(new
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) =>
+                await _userService.UpdateUserPassword(id, changePasswordDto.OldPassword, changePasswordDto.NewPassword))
+            .Resolve((user) =>
                 {
-                    data = new { user = mapper.UserToUserDto(user) },
-                    message = "User updated successfully."
-                });
-            }, HttpContext.TraceIdentifier);
+                    var mapper = new UserMapper();
+                    return Ok(new
+                    {
+                        data = new { user = mapper.UserToUserDto(user) },
+                        message = "User updated successfully."
+                    });
+                }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/update-password-from-phone-authentication/")]
-    public async Task<IActionResult> UpdatePhoneAuthorizedUserPassword([FromBody] UpdatePasswordFromPhoneAuthentication dto)
+    public IActionResult UpdatePhoneAuthorizedUserPassword([FromBody] UpdatePasswordFromPhoneAuthentication dto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.UpdateUserPassword(user.Id, dto.RequestId, dto.NewPassword))
+
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _userService.UpdateUserPassword(id, dto.RequestId, dto.NewPassword))
         .Resolve((user) =>
             {
                 var mapper = new UserMapper();
@@ -104,12 +111,13 @@ public class UserController(IUserService userService, INotificationService notif
             }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/update-username/")]
-    public async Task<IActionResult> UpdateAuthorizedUsername([FromBody] ChangeUsernameDto changeUsernameDto)
+    public IActionResult UpdateAuthorizedUsername([FromBody] ChangeUsernameDto changeUsernameDto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.UpdateUserUsername(user.Id, changeUsernameDto.Password, changeUsernameDto.NewUsername))
+
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _userService.UpdateUserUsername(id, changeUsernameDto.Password, changeUsernameDto.NewUsername))
         .Resolve((user) =>
             {
                 var mapper = new UserMapper();
@@ -121,12 +129,13 @@ public class UserController(IUserService userService, INotificationService notif
             }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/update-phone/")]
-    public async Task<IActionResult> UpdateAuthorizedPhone([FromBody] ChangePhoneDto changePhoneDto)
+    public IActionResult UpdateAuthorizedPhone([FromBody] ChangePhoneDto changePhoneDto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.UpdateUserPhone(user.Id, changePhoneDto.Password, changePhoneDto.NewPhone))
+
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _userService.UpdateUserPhone(id, changePhoneDto.Password, changePhoneDto.NewPhone))
         .Resolve((otp_request) =>
             {
                 return Ok(new
@@ -137,13 +146,13 @@ public class UserController(IUserService userService, INotificationService notif
             }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPost("me/confirm-phone-update/")]
-    public async Task<IActionResult> ConfirmPhoneUpdate([FromBody] ConfirmPhoneDto confirmPhoneDto)
+    public IActionResult ConfirmPhoneUpdate([FromBody] ConfirmPhoneDto confirmPhoneDto)
     {
-        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _userService.ConfirmPhoneUpdate(user.Id, confirmPhoneDto.Code, confirmPhoneDto.RequestId))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _userService.ConfirmPhoneUpdate(id, confirmPhoneDto.Code, confirmPhoneDto.RequestId))
         .Resolve((user) =>
             {
                 var mapper = new UserMapper();
@@ -155,48 +164,29 @@ public class UserController(IUserService userService, INotificationService notif
             }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/update-email")]
-    public async Task<IActionResult> UpdateAuthorizedEmail([FromBody] ChangeEmailDto changeEmailDto)
+    public IActionResult UpdateAuthorizedEmail([FromBody] ChangeEmailDto changeEmailDto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-
-        return (await _userService.UpdateUserEmail(user.Id, changeEmailDto.Password, changeEmailDto.NewEmail))
-        .Resolve((otp_request) =>
-            {
-                var mapper = new UserMapper();
-                return Ok(new
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _userService.UpdateUserEmail(id, changeEmailDto.Password, changeEmailDto.NewEmail))
+            .Resolve((otp_request) =>
                 {
-                    Data = new { RequestId = otp_request.Id },
-                    Message = "User updated successfully."
-                });
-            }, HttpContext.TraceIdentifier);
+                    var mapper = new UserMapper();
+                    return Ok(new
+                    {
+                        Data = new { RequestId = otp_request.Id },
+                        Message = "User updated successfully."
+                    });
+                }, HttpContext.TraceIdentifier);
     }
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPost("me/confirm-email-update/")]
-    public async Task<IActionResult> ConfirmEmailUpdate([FromBody] ConfirmEmailDto confirmEmailDto)
+    public IActionResult ConfirmEmailUpdate([FromBody] ConfirmEmailDto confirmEmailDto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-
-        return (await _userService.ConfirmEmailUpdate(user.Id, confirmEmailDto.Code, confirmEmailDto.RequestId))
-        .Resolve((user) =>
-        {
-            var mapper = new UserMapper();
-            return Ok(new
-            {
-                data = new { user = mapper.UserToUserDto(user) },
-                message = "User updated successfully."
-            });
-        }, HttpContext.TraceIdentifier);
-    }
-    [Auth(SystemUserRoles.RegularUser)]
-
-    [HttpPatch("me/update-avatar")]
-    public async Task<IActionResult> UpdateUserAvatar([FromForm] UpdateUserAvatarDto dto)
-    {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.UploadUserPhoto(user.Id, dto.File))
-        .Resolve((user) =>
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _userService.ConfirmEmailUpdate(id, confirmEmailDto.Code, confirmEmailDto.RequestId))
+            .Resolve((user) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
@@ -206,25 +196,44 @@ public class UserController(IUserService userService, INotificationService notif
                 });
             }, HttpContext.TraceIdentifier);
     }
-
-    [Auth(SystemUserRoles.RegularUser)]
-    [HttpPatch("me/update-fcm-token")]
-    public async Task<IActionResult> UpdateUsersFCMToken([FromBody] ChangeUserFCMTokenDto changeUserFCMTokenDto)
+    [Authorize(Roles = RoleConstants.User)]
+    [HttpPatch("me/update-avatar")]
+    public IActionResult UpdateUserAvatar([FromForm] UpdateUserAvatarDto dto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _userService.UpdateFCMToken(user.Id, changeUserFCMTokenDto.FCMToken))
-        .Resolve(() => Ok(new { data = new { }, Message = "User fcm token Updated Successfully" }), HttpContext.TraceIdentifier);
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _userService.UploadUserPhoto(id, dto.File))
+            .Resolve((user) =>
+                {
+                    var mapper = new UserMapper();
+                    return Ok(new
+                    {
+                        data = new { user = mapper.UserToUserDto(user) },
+                        message = "User updated successfully."
+                    });
+                }, HttpContext.TraceIdentifier);
+    }
+
+    [Authorize(Roles = RoleConstants.User)]
+    [HttpPatch("me/update-fcm-token")]
+    public IActionResult UpdateUsersFCMToken([FromBody] ChangeUserFCMTokenDto changeUserFCMTokenDto)
+    {
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _userService.UpdateFCMToken(id, changeUserFCMTokenDto.FCMToken))
+            .Resolve(() => Ok(new
+            {
+                data = new { },
+                Message = "User fcm token Updated Successfully"
+            }), HttpContext.TraceIdentifier);
     }
 
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/")]
     public IActionResult UpdateUserData([FromBody] JsonPatchDocument<UpdateUserDto> updateUserDtoPatch)
     {
-        User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
-
-        return Result.Ok(user)
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(_userService.GetUserById)
         .OnSuccess((user) =>
         {
             var dto = mapper.UserToUpdateUserDto(user);
@@ -254,13 +263,12 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
     #region Delete user
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpDelete("me/")]
-    public async Task<IActionResult> DeleteUser(DeleteUserDto deleteUserDto)
+    public IActionResult DeleteUser(DeleteUserDto deleteUserDto)
     {
-        User user = (User)HttpContext.Items["User"]!;
-
-        return (await _userService.DeleteUser(user.Id, deleteUserDto.Password))
+        return HttpContext.User.GetUserIdentifier()
+             .OnSuccessAsync(async (id) => await _userService.DeleteUser(id, deleteUserDto.Password))
         .Resolve((user) => Ok(new { data = new { }, message = $"User with username: '{user.Username}' Deleted Successfully." }), HttpContext.TraceIdentifier);
     }
 
@@ -268,13 +276,12 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
     #region users notifications
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpGet("me/notifications")]
-    public async Task<IActionResult> GetUserNotifications([FromQuery] PaginationParameters pageParams)
+    public IActionResult GetUserNotifications([FromQuery] PaginationParameters pageParams)
     {
-        User user = (User)HttpContext.Items["User"]!;
-
-        return (await _notificationService.GetByUserId(user.Id, pageParams))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _notificationService.GetByUserId(id, pageParams))
         .Resolve((notifications) =>
             {
                 return Ok(new
@@ -285,87 +292,87 @@ public class UserController(IUserService userService, INotificationService notif
             }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/notifications/{notificationId}/mark-as-read/")]
-    public async Task<IActionResult> MarkNotificationAsRead([FromRoute] int notificationId)
+    public IActionResult MarkNotificationAsRead([FromRoute] int notificationId)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _notificationService.MarkNotificationAsRead(user.Id, notificationId))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _notificationService.MarkNotificationAsRead(id, notificationId))
         .Resolve(() => Ok(new { data = new { }, message = "notification marked as read." }), HttpContext.TraceIdentifier);
     }
-    [Auth(SystemUserRoles.RegularUser)]
+
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/notifications/mark-all-as-read/")]
-    public async Task<IActionResult> MarkAllNotificationAsRead()
+    public IActionResult MarkAllNotificationAsRead()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _notificationService.MarkAllNotificationsOfUserAsRead(user.Id))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(_notificationService.MarkAllNotificationsOfUserAsRead)
         .Resolve(() => Ok(new { data = new { }, message = "notification marked as read." }), HttpContext.TraceIdentifier);
     }
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpDelete("me/notifications/{notificationId}")]
-    public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
+    public IActionResult DeleteNotification([FromRoute] int notificationId)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _notificationService.DeleteNotification(user.Id, notificationId))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async (id) => await _notificationService.DeleteNotification(id, notificationId))
         .Resolve(() => Ok(new { data = new { }, message = "notification Deleted." }), HttpContext.TraceIdentifier);
     }
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpDelete("me/notifications/")]
-    public async Task<IActionResult> DeleteAllNotifications()
+    public IActionResult DeleteAllNotifications()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _notificationService.DeleteAll(user.Id))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(_notificationService.DeleteAll)
         .Resolve(() => Ok(new { data = new { }, message = "All Notifications has been Deleted." }), HttpContext.TraceIdentifier);
     }
     #endregion
 
     #region user Settings
 
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/general-settings")]
-    [Auth(SystemUserRoles.RegularUser)]
-    public async Task<IActionResult> UpdateUserGeneralSettings([FromBody] JsonPatchDocument<UserGeneralSettingsDto> generalSettingsDtoPatch)
+    public IActionResult UpdateUserGeneralSettings([FromBody] JsonPatchDocument<UserGeneralSettingsDto> generalSettingsDtoPatch)
     {
-        User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
-        return (await _userService.GetUserGeneralSettings(user.Id))
-        .OnSuccess((settings) =>
-        {
-            var dto = mapper.UserGeneralSettingsToDto(settings);
-            return generalSettingsDtoPatch.ApplyToAsResult(dto)
-            .OnSuccess((dtoWithChanges) =>
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(_userService.GetUserGeneralSettings)
+            .OnSuccess((settings) =>
             {
-                mapper.DtoToUserGeneralSettings(dtoWithChanges, settings);
-                return Result.Ok(settings);
-            });
-
-        })
-        .OnSuccessAsync(_userService.UpdateUserGeneralSettings)
-        .Resolve((settings) =>
-        {
-            return Ok(new
-            {
-                data = new
+                var dto = mapper.UserGeneralSettingsToDto(settings);
+                return generalSettingsDtoPatch.ApplyToAsResult(dto)
+                .OnSuccess((dtoWithChanges) =>
                 {
-                    user = mapper.UserToUserDto(user),
-                    generalSettings = mapper.UserGeneralSettingsToDto(settings)
-                },
-                message = "User's General settings updated successfully."
-            });
-        }, HttpContext.TraceIdentifier);
+                    mapper.DtoToUserGeneralSettings(dtoWithChanges, settings);
+                    return Result.Ok(settings);
+                });
+
+            })
+            .OnSuccessAsync((settings) => _userService.UpdateUserGeneralSettings(settings.UserId, settings))
+            .Resolve((settings) =>
+            {
+                return Ok(new
+                {
+                    data = new
+                    {
+                        generalSettings = mapper.UserGeneralSettingsToDto(settings)
+                    },
+                    message = "User's General settings updated successfully."
+                });
+            }, HttpContext.TraceIdentifier);
     }
 
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/hand-settings")]
-    [Auth(SystemUserRoles.RegularUser)]
-    public async Task<IActionResult> UpdateUserHandSettings([FromBody] JsonPatchDocument<UserHandSettingsDto> handSettingsDtoPatch)
+    public IActionResult UpdateUserHandSettings([FromBody] JsonPatchDocument<UserHandSettingsDto> handSettingsDtoPatch)
     {
         if (handSettingsDtoPatch is null)
             return BadRequest(new InvalidBodyInputError("لا يوجد بيانات لتحديثها"));
 
-        User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
-        return (await _userService.GetUserHandSettings(user.Id))
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(_userService.GetUserHandSettings)
         .OnSuccess((settings) =>
         {
             var dto = mapper.UserHandSettingsToDto(settings);
@@ -381,100 +388,100 @@ public class UserController(IUserService userService, INotificationService notif
                 return Result.Ok(settings);
             });
         })
-        .OnSuccessAsync(_userService.UpdateUserHandSettings)
+        .OnSuccessAsync((settings) => _userService.UpdateUserHandSettings(settings.UserId, settings))
         .Resolve((settings) =>
         {
             return Ok(new
             {
-                data = new { user = mapper.UserToUserDto(user), handSettings = mapper.UserHandSettingsToDto(settings) },
+                data = new { handSettings = mapper.UserHandSettingsToDto(settings) },
                 message = "User's Hand settings updated successfully."
             });
         }, HttpContext.TraceIdentifier);
     }
 
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPatch("me/baloot-settings")]
-    [Auth(SystemUserRoles.RegularUser)]
-    public async Task<IActionResult> UpdateUserBalootSettings([FromBody] JsonPatchDocument<UserBalootSettingsDto> balootSettingsDtoPatch)
+    public IActionResult UpdateUserBalootSettings([FromBody] JsonPatchDocument<UserBalootSettingsDto> balootSettingsDtoPatch)
     {
         if (balootSettingsDtoPatch is null)
             return BadRequest(new InvalidBodyInputError("لا يوجد بيانات لتحديثها"));
-
-        User user = (User)HttpContext.Items["User"]!;
         var mapper = new UserMapper();
 
-        return (await _userService.GetUserBalootSettings(user.Id))
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(_userService.GetUserBalootSettings)
         .OnSuccess((settings) =>
         {
             var dto = mapper.UserBalootSettingsToDto(settings);
             return balootSettingsDtoPatch.ApplyToAsResult(dto)
-             .OnSuccess((dtoWithChanges) =>
-             {
-                 mapper.DtoToUserBalootSettings(dtoWithChanges, settings);
-                 return Result.Ok(settings);
-             });
+            .OnSuccess((dtoWithChanges) =>
+            {
+                mapper.DtoToUserBalootSettings(dtoWithChanges, settings);
+                return Result.Ok(settings);
+            });
         })
-        .OnSuccessAsync(_userService.UpdateUserBalootSettings)
+        .OnSuccessAsync((settings) => _userService.UpdateUserBalootSettings(settings.UserId, settings))
         .Resolve((settings) =>
         {
             return Ok(new
             {
-                data = new { user = mapper.UserToUserDto(user), balootSettings = mapper.UserBalootSettingsToDto(settings) },
+                data = new { balootSettings = mapper.UserBalootSettingsToDto(settings) },
                 message = "User's baloot settings updated successfully."
             });
         }, HttpContext.TraceIdentifier);
     }
 
+    [Authorize(Roles = RoleConstants.User)]
     [HttpGet("me/general-settings")]
-    [Auth(SystemUserRoles.RegularUser)]
-    public async Task<IActionResult> GetUserGeneralSettings()
+    public IActionResult GetUserGeneralSettings()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        var mapper = new UserMapper();
-        return (await _userService.GetUserGeneralSettings(user.Id))
-        .Resolve(
-            (settings) =>
-            {
-                return Ok(new
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(_userService.GetUserGeneralSettings)
+            .Resolve(
+                (settings) =>
                 {
-                    data = new { generalSettings = mapper.UserGeneralSettingsToDto(settings) },
-                    message = "Settings fetched successfully."
-                });
-            }, HttpContext.TraceIdentifier);
-    }
-    [HttpGet("me/hand-settings")]
-    [Auth(SystemUserRoles.RegularUser)]
-    public async Task<IActionResult> GetUserHandSettings()
-    {
-        User user = (User)HttpContext.Items["User"]!;
-        var mapper = new UserMapper();
-        return (await _userService.GetUserHandSettings(user.Id))
-        .Resolve(
-            (settings) =>
-            {
-                return Ok(new
-                {
-                    data = new { handSettings = mapper.UserHandSettingsToDto(settings) },
-                    message = "Settings fetched successfully."
-                });
-            }, HttpContext.TraceIdentifier);
+                    var mapper = new UserMapper();
+                    return Ok(new
+                    {
+                        data = new { generalSettings = mapper.UserGeneralSettingsToDto(settings) },
+                        message = "Settings fetched successfully."
+                    });
+                }, HttpContext.TraceIdentifier);
     }
 
-    [HttpGet("me/baloot-settings")]
-    [Auth(SystemUserRoles.RegularUser)]
-    public async Task<IActionResult> GetUserBalootSettings()
+    [Authorize(Roles = RoleConstants.User)]
+    [HttpGet("me/hand-settings")]
+    public IActionResult GetUserHandSettings()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        var mapper = new UserMapper();
-        return (await _userService.GetUserBalootSettings(user.Id))
-        .Resolve(
-            (settings) =>
-            {
-                return Ok(new
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(_userService.GetUserHandSettings)
+            .Resolve(
+                (settings) =>
                 {
-                    data = new { balootSettings = mapper.UserBalootSettingsToDto(settings) },
-                    message = "Settings fetched successfully."
-                });
-            }, HttpContext.TraceIdentifier);
+                    var mapper = new UserMapper();
+                    return Ok(new
+                    {
+                        data = new { handSettings = mapper.UserHandSettingsToDto(settings) },
+                        message = "Settings fetched successfully."
+                    });
+                }, HttpContext.TraceIdentifier);
+    }
+
+    [Authorize(Roles = RoleConstants.User)]
+    [HttpGet("me/baloot-settings")]
+    public IActionResult GetUserBalootSettings()
+    {
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(_userService.GetUserBalootSettings)
+            .Resolve(
+                (settings) =>
+                {
+                    var mapper = new UserMapper();
+                    return Ok(new
+                    {
+                        data = new { balootSettings = mapper.UserBalootSettingsToDto(settings) },
+                        message = "Settings fetched successfully."
+                    });
+                }, HttpContext.TraceIdentifier);
     }
     #endregion
 

@@ -7,8 +7,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
 {
     private readonly IAppAssetsService _appAssetsService = appAssetsService;
 
-
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     [HttpPatch("baloot-book/")]
     public async Task<IActionResult> UpdateBalootBook([FromForm] UpdateBalootBookDto dto)
     {
@@ -23,7 +22,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
             }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin | SystemUserRoles.RegularUser)]
+    [Authorize(Policy = PolicyConstants.CanReadBalootBook)]
     [HttpGet("baloot-book/")]
     public async Task<IActionResult> GetBalootBook()
     {
@@ -38,7 +37,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
             }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     [HttpPatch("popup/")]
     public async Task<IActionResult> UpdatePopupData([FromBody] JsonPatchDocument<PopupDto> popupDtoPatch)
     {
@@ -70,7 +69,8 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
         }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
+    [Authorize]
     [HttpPut("popup/image")]
     public async Task<IActionResult> UpdatePopupImage([FromForm] UpdatePopupImageDto dto)
     {

@@ -5,14 +5,10 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     private readonly QydhaContext _dbCtx = qydhaContext;
     private readonly ILogger<UserRepo> _logger = logger;
 
-
     #region  add User
     public async Task<Result<User>> AddAsync(User user)
     {
         await _dbCtx.Users.AddAsync(user);
-        user.UserGeneralSettings = new UserGeneralSettings();
-        user.UserBalootSettings = new UserBalootSettings();
-        user.UserHandSettings = new UserHandSettings();
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(user);
     }
@@ -32,7 +28,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
 
     public async Task<Result<IEnumerable<User>>> GetAllRegularUsers()
     {
-        var users = await _dbCtx.Users.Where(user => user.IsAnonymous == false).ToListAsync();
+        var users = await _dbCtx.Users.ToListAsync();
         return Result.Ok((IEnumerable<User>)users);
     }
 
@@ -118,7 +114,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
             setters => setters
                 .SetProperty(user => user.Username, username)
-                .SetProperty(user => user.NormalizedEmail, username.ToUpper())
         );
         return affected == 1 ?
             Result.Ok() :
@@ -139,8 +134,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         var affected = await _dbCtx.Users.Where(user => user.Id == userId).ExecuteUpdateAsync(
             setters => setters
                 .SetProperty(user => user.Email, email)
-                .SetProperty(user => user.NormalizedEmail, email.ToUpper())
-                .SetProperty(user => user.IsEmailConfirmed, true)
         );
         return affected == 1 ?
             Result.Ok() :
@@ -191,7 +184,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     }
     #endregion
 
-
     public async Task<Result<User>> CheckUserCredentials(Guid userId, string password)
     {
         var checkRes = (await GetByIdAsync(userId))
@@ -239,6 +231,8 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Ok() :
             Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
+
+    
 }
 internal class Transaction
 {

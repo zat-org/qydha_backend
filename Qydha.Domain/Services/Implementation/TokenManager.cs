@@ -9,20 +9,18 @@ public class TokenManager(IOptions<JWTSettings> jwtSettings)
 
     public string Generate(IEnumerable<Claim> claims)
     {
-        var securityKey = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(_jwtSettings.SecretForKey)
-        );
-
-        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var jwtSecurityToken = new JwtSecurityToken(
-            _jwtSettings.Issuer,
-            _jwtSettings.Audience,
-            claims,
-            DateTime.UtcNow,
-            DateTime.UtcNow.AddSeconds(_jwtSettings.SecondsForValidityOfToken),
-            signingCredentials);
-        return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenDescriptor = new SecurityTokenDescriptor()
+        {
+            Issuer = _jwtSettings.Issuer,
+            Audience = _jwtSettings.Audience,
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.SecretForKey)), SecurityAlgorithms.HmacSha256),
+            Subject = new ClaimsIdentity(claims),
+            NotBefore = DateTime.UtcNow,
+            Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpireAfterMinutes),
+        };
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
     }
 
 }

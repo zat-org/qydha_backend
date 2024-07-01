@@ -4,13 +4,13 @@
 public class BalootGamesController(IBalootGamesService balootGamesService) : ControllerBase
 {
     private readonly IBalootGamesService _balootGamesService = balootGamesService;
-    [Auth(SystemUserRoles.RegularUser)]
 
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPost]
-    public async Task<IActionResult> CreateBalootGame()
+    public IActionResult CreateBalootGame()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _balootGamesService.CreateSingleBalootGame(user))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(_balootGamesService.CreateSingleBalootGame)
             .Resolve(
             (game) => Ok(new
             {
@@ -20,12 +20,12 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             , HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpDelete("{gameId}")]
-    public async Task<IActionResult> DeleteBalootGame(Guid gameId)
+    public IActionResult DeleteBalootGame(Guid gameId)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _balootGamesService.DeleteById(gameId, user.Id))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async id => await _balootGamesService.DeleteById(gameId, id))
             .Resolve(
             () => Ok(new
             {
@@ -35,11 +35,10 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             , HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpPost("{gameId}/events")]
-    public async Task<IActionResult> AddEventToGame([FromRoute] Guid gameId, [FromBody] List<BalootGameEventDto> eventsDtos)
+    public IActionResult AddEventToGame([FromRoute] Guid gameId, [FromBody] List<BalootGameEventDto> eventsDtos)
     {
-        User user = (User)HttpContext.Items["User"]!;
         List<BalootGameEvent> events = [];
 
         foreach (var eDto in eventsDtos)
@@ -50,8 +49,8 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             events.Add(res.Value);
         }
 
-        return (await _balootGamesService
-            .AddEvents(user, gameId, events))
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async id => await _balootGamesService.AddEvents(id, gameId, events))
             .Resolve(
                 (game) => Ok(new
                 {
@@ -60,13 +59,13 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
                 }), HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpGet("{gameId}")]
-    public async Task<IActionResult> GetGameState([FromRoute] Guid gameId)
+    public IActionResult GetGameState([FromRoute] Guid gameId)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _balootGamesService
-            .GetGameById(user, gameId))
+
+        return HttpContext.User.GetUserIdentifier()
+            .OnSuccessAsync(async id => await _balootGamesService.GetGameById(id, gameId))
             .Resolve(
                 (game) => Ok(new
                 {
@@ -75,7 +74,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
                 }), HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     [HttpGet("{gameId}/statistics")]
     public async Task<IActionResult> GetGameStatistics([FromRoute] Guid gameId)
     {
@@ -88,7 +87,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             }), HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     [HttpGet("{gameId}/timeline")]
     public async Task<IActionResult> GetGameTimeLine([FromRoute] Guid gameId)
     {
@@ -101,13 +100,14 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
                     Message = "Game Timeline fetched successfully."
                 }), HttpContext.TraceIdentifier);
     }
-    [HttpGet("archive")]
-    [Auth(SystemUserRoles.RegularUser)]
 
-    public async Task<IActionResult> GetPagedArchive([FromQuery] PaginationParameters paginationParameters)
+    [HttpGet("archive")]
+    [Authorize(Roles = RoleConstants.User)]
+    public IActionResult GetPagedArchive([FromQuery] PaginationParameters paginationParameters)
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _balootGamesService.GetUserArchive(user, paginationParameters))
+
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(async id => await _balootGamesService.GetUserArchive(id, paginationParameters))
             .Resolve((tuple) =>
             {
                 return Ok(new

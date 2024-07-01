@@ -15,7 +15,6 @@ public static class ReposRegistrations
         services.AddScoped<IPurchaseRepo, PurchaseRepo>();
         services.AddScoped<INotificationRepo, NotificationRepo>();
         services.AddScoped<IUserPromoCodesRepo, UserPromoCodesRepo>();
-        services.AddScoped<IAdminUserRepo, AdminUserRepo>();
         services.AddScoped<IInfluencerCodesRepo, InfluencerCodesRepo>();
         services.AddScoped<IUserGeneralSettingsRepo, UserGeneralSettingsRepo>();
         services.AddScoped<IUserHandSettingsRepo, UserHandSettingsRepo>();
@@ -24,7 +23,6 @@ public static class ReposRegistrations
         services.AddScoped<IInfluencerCodesCategoriesRepo, InfluencerCodesCategoriesRepo>();
         services.AddScoped<ILoginWithQydhaRequestRepo, LoginWithQydhaRequestRepo>();
         services.AddScoped<IBalootGamesRepo, BalootGamesRepo>();
-
         return services;
         #endregion
 

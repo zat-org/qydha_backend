@@ -2,7 +2,7 @@
 
 [ApiController]
 [Route("influencer-codes-categories/")]
-[Auth(SystemUserRoles.Admin)]
+[Authorize(Roles = RoleConstants.Admin)]
 public class InfluencerCodesCategoriesController(IInfluencerCodeCategoryService influencerCodeCategoryService) : ControllerBase
 {
     private readonly IInfluencerCodeCategoryService _influencerCodeCategoryService = influencerCodeCategoryService;

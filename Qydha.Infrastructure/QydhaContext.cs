@@ -3,14 +3,10 @@
 public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbContext(options)
 {
     #region  dbSets
-    public virtual DbSet<AdminUser> Admins { get; set; }
     public virtual DbSet<AppAsset> AppAssets { get; set; }
     public virtual DbSet<InfluencerCode> InfluencerCodes { get; set; }
     public virtual DbSet<InfluencerCodeCategory> InfluencerCodeCategories { get; set; }
     public virtual DbSet<User> Users { get; set; }
-    public virtual DbSet<UserBalootSettings> UserBalootSettings { get; set; }
-    public virtual DbSet<UserGeneralSettings> UserGeneralSettings { get; set; }
-    public virtual DbSet<UserHandSettings> UserHandSettings { get; set; }
     public virtual DbSet<UpdateEmailRequest> UpdateEmailRequests { get; set; }
     public virtual DbSet<UpdatePhoneRequest> UpdatePhoneRequests { get; set; }
     public virtual DbSet<PhoneAuthenticationRequest> PhoneAuthenticationRequests { get; set; }

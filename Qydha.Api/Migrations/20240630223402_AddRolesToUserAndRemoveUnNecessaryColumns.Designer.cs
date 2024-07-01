@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Qydha.Infrastructure;
 namespace Qydha.Api.Migrations
 {
     [DbContext(typeof(QydhaContext))]
-    partial class QydhaContextModelSnapshot : ModelSnapshot
+    [Migration("20240630223402_AddRolesToUserAndRemoveUnNecessaryColumns")]
+    partial class AddRolesToUserAndRemoveUnNecessaryColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,6 +27,65 @@ namespace Qydha.Api.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "uuid-ossp");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Qydha.Domain.Entities.AdminUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("uuid_generate_v4()");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("NormalizedUsername")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("normalized_username");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("password_hash");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)")
+                        .HasColumnName("role");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("username");
+
+                    b.HasKey("Id")
+                        .HasName("admins_pkey");
+
+                    b.HasIndex(new[] { "NormalizedUsername" }, "admins_normalized_username_key")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "Username" }, "admins_username_key")
+                        .IsUnique();
+
+                    b.ToTable("admins", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d2705466-4304-4830-b48a-3e44e031927e"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            NormalizedUsername = "ADMIN",
+                            PasswordHash = "$2a$11$V0A5.EYwXlFUjK3RIis3...A9rfzUm.mO.88MUYW9.uHSZLjURNsC",
+                            Role = "SuperAdmin",
+                            Username = "Admin"
+                        });
+                });
 
             modelBuilder.Entity("Qydha.Domain.Entities.AppAsset", b =>
                 {
@@ -934,7 +996,7 @@ namespace Qydha.Api.Migrations
                             NormalizedUsername = "ADMIN",
                             PasswordHash = "$2a$11$V0A5.EYwXlFUjK3RIis3...A9rfzUm.mO.88MUYW9.uHSZLjURNsC",
                             Phone = "+201555330346",
-                            Roles = new[] { 1, 3 },
+                            Roles = new[] { 1 },
                             Username = "Admin"
                         });
                 });

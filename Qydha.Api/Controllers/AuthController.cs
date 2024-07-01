@@ -117,22 +117,22 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = "StaffAdmin,SuperAdmin,User")]
     [HttpPost("logout/")]
-    public async Task<IActionResult> Logout()
+    public IActionResult Logout()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _authService.Logout(user.Id))
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(_authService.Logout)
         .Resolve(
             () => Ok(new { data = new { }, message = "User logged out successfully." })
         , HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     [HttpPost("login-with-qydha")]
     public async Task<IActionResult> LoginWithQydha(LoginWithQydhaDto dto)
     {
-        AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
+        // AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
 
         return (await _authService.SendOtpToLoginWithQydha(dto.Username, "زات"))
         .Resolve(
@@ -149,11 +149,11 @@ public class AuthController(IAuthService authService) : ControllerBase
             }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     [HttpPost("confirm-login-with-qydha")]
     public async Task<IActionResult> ConfirmLoginWithQydha(ConfirmLoginWithQydhaDto dto)
     {
-        AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
+        // AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
 
         return (await _authService.ConfirmLoginWithQydha(dto.RequestId, dto.Otp))
         .Resolve(

@@ -2,10 +2,29 @@
 
 public class User
 {
-
+    private User() { }
+    public User(Guid? id, string username, string passwordHash, string phone, List<UserRoles>? roles = null, DateTimeOffset? createdAt = null)
+    {
+        Id = id ?? Guid.Empty;
+        Username = username;
+        PasswordHash = passwordHash;
+        Phone = phone;
+        CreatedAt = createdAt ?? DateTimeOffset.UtcNow;
+        Roles = roles ?? [UserRoles.User];
+    }
     public Guid Id { get; set; }
 
-    public string Username { get; set; } = null!;
+    private string _username = null!;
+    public string Username
+    {
+        get => _username;
+        set
+        {
+            _username = value;
+            NormalizedUsername = value.ToUpper();
+        }
+    }
+    public string NormalizedUsername { get; private set; } = null!;
 
     public string? Name { get; set; }
 
@@ -13,7 +32,16 @@ public class User
 
     public string Phone { get; set; } = null!;
 
-    public string? Email { get; set; }
+    public string? _email = null!;
+    public string? Email
+    {
+        get => _email; set
+        {
+            _email = value;
+            NormalizedEmail = value?.ToUpper();
+        }
+    }
+    public string? NormalizedEmail { get; private set; }
 
     public DateTime? BirthDate { get; set; }
 
@@ -21,23 +49,17 @@ public class User
 
     public DateTimeOffset? LastLogin { get; set; }
 
-    public bool IsAnonymous { get; set; }
-
-    public bool IsPhoneConfirmed { get; set; }
-
-    public bool IsEmailConfirmed { get; set; }
-
     public string? AvatarUrl { get; set; }
 
     public string? AvatarPath { get; set; }
 
-    public DateTimeOffset? ExpireDate { get; set; } = null;
+    public DateTimeOffset? ExpireDate { get; set; }
 
     public string? FCMToken { get; set; }
 
-    public string NormalizedUsername { get; set; } = null!;
 
-    public string? NormalizedEmail { get; set; } = null!;
+
+    public List<UserRoles> Roles { get; set; } = null!;
 
     public UserGeneralSettings UserGeneralSettings { get; set; } = null!;
     public UserBalootSettings UserBalootSettings { get; set; } = null!;
@@ -56,30 +78,33 @@ public class User
 
     public IEnumerable<Claim> GetClaims()
     {
-        return
-            [
-                new ("sub", Id.ToString()),
-                new ("userId", Id.ToString()),
-                new ("username", Username ?? "" ),
-                new ("phone", Phone ?? ""),
-                new ("isAnonymous", IsAnonymous.ToString()),
-                new ("role", !IsAnonymous ? "RegularUser" : "AnonymousUser"),
-            ];
+        var claims = new List<Claim>(){
+                new(ClaimTypes.NameIdentifier, Id.ToString()),
+                new(ClaimTypes.Name, Username),
+                new(ClaimTypes.MobilePhone, Phone),
+                new("SubscriptionExpireDate", ExpireDate?.ToString() ?? ""),
+        };
+        Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.ToString())));
+        return claims;
     }
     public static User CreateUserFromRegisterRequest(RegistrationOTPRequest otpRequest)
     {
-        return new User()
+        return new User(
+                id: null,
+                username: otpRequest.Username,
+                passwordHash: otpRequest.PasswordHash,
+                phone: otpRequest.Phone
+            )
         {
-            Username = otpRequest.Username,
-            NormalizedUsername = otpRequest.Username.ToUpper(),
-            PasswordHash = otpRequest.PasswordHash,
-            Phone = otpRequest.Phone,
-            CreatedAt = DateTimeOffset.UtcNow,
             LastLogin = DateTimeOffset.UtcNow,
-            IsPhoneConfirmed = true,
-            IsAnonymous = false,
-            FCMToken = otpRequest.FCMToken
+            FCMToken = otpRequest.FCMToken,
         };
     }
+}
 
+public enum UserRoles
+{
+    SuperAdmin = 1,
+    StaffAdmin,
+    User,
 }

@@ -1,24 +1,23 @@
 ﻿namespace Qydha.Domain.Services.Implementation;
 
-public class AdminUserService(IAdminUserRepo adminUserRepo, TokenManager tokenManager) : IAdminUserService
+public class AdminUserService(IUserRepo userRepo, TokenManager tokenManager) : IAdminUserService
 {
-    private readonly IAdminUserRepo _adminUserRepo = adminUserRepo;
+    private readonly IUserRepo _userRepo = userRepo;
     private readonly TokenManager _tokenManager = tokenManager;
 
-    public async Task<Result<(AdminUser, string)>> Login(string username, string password)
+    public async Task<Result<(User, string)>> Login(string username, string password)
     {
-        return (await _adminUserRepo.CheckUserCredentials(username, password))
-        .OnSuccess((adminUser) =>
+        return (await _userRepo.CheckUserCredentials(username, password))
+        .OnSuccess((user) =>
         {
-            var jwtToken = _tokenManager.Generate(adminUser.GetClaims());
-            return Result.Ok((adminUser, jwtToken));
+            if (user.Roles.Contains(UserRoles.SuperAdmin) || user.Roles.Contains(UserRoles.StaffAdmin))
+                return Result.Ok(user);
+            return Result.Fail(new ForbiddenError());
+        })
+        .OnSuccess((user) =>
+        {
+            var jwtToken = _tokenManager.Generate(user.GetClaims());
+            return Result.Ok((user, jwtToken));
         });
-    }
-
-    public async Task<Result<AdminUser>> ChangePassword(Guid adminUserId, string oldPassword, string newPassword)
-    {
-        Result<AdminUser> checkingRes = await _adminUserRepo.CheckUserCredentials(adminUserId, oldPassword);
-        return checkingRes.OnSuccessAsync(async (adminUser) =>
-            (await _adminUserRepo.UpdateUserPassword(adminUserId, BCrypt.Net.BCrypt.HashPassword(newPassword))).ToResult(adminUser));
     }
 }

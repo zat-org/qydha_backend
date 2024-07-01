@@ -6,12 +6,10 @@ public static class ControllersConfigrations
 {
     public static IServiceCollection ConfigureControllers(this IServiceCollection services)
     {
-
-
         services.AddControllers((options) =>
         {
             options.Filters.Add<ExceptionHandlerAttribute>();
-            options.Filters.Add<AuthorizationFilter>();
+            // options.Filters.Add<AuthorizationFilter>();
             options.ModelBinderProviders.Insert(0, new BalootGameEventsDtoModelBinderProvider());
         }).AddNewtonsoftJson(options =>
         {
