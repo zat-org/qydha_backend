@@ -8,7 +8,7 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     private readonly QydhaContext _dbCtx = qydhaContext;
     public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid ownerId)
     {
-        if (!_dbCtx.Users.Any(u => u.Id == ownerId)) 
+        if (!_dbCtx.Users.Any(u => u.Id == ownerId))
             return Result.Fail(new EntityNotFoundError<Guid>(ownerId, nameof(User)));
         BalootGame balootGame = BalootGame.CreateSinglePlayerGame(ownerId);
         _dbCtx.BalootGames.Add(balootGame);
@@ -20,7 +20,8 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
         var game = await _dbCtx.BalootGames
             .AsTracking(QueryTrackingBehavior.TrackAll)
             .AsSplitQuery()
-            .Include(g => g.Sakkas).ThenInclude(s => s.Moshtaras)
+            .Include(g => g.Sakkas.OrderBy(s => s.Id))
+            .ThenInclude(s => s.Moshtaras.OrderBy(m => m.Id))
             .FirstOrDefaultAsync((g) => g.Id == gameId);
         if (game == null) return Result.Fail(new EntityNotFoundError<Guid>(gameId, nameof(BalootGame)));
         return Result.Ok(game);
@@ -44,7 +45,8 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     {
         var query = _dbCtx.BalootGames
             .Where(g => g.OwnerId == userId)
-            .Include(g => g.Sakkas)
+            .Include(g => g.Sakkas.OrderBy(s => s.Id))
+            .ThenInclude(s => s.Moshtaras.OrderBy(m => m.Id))
             .OrderByDescending(g => g.CreatedAt);
         PagedList<BalootGame> games = await _dbCtx.GetPagedData(query, parameters.PageNumber, parameters.PageSize);
         return Result.Ok(games);

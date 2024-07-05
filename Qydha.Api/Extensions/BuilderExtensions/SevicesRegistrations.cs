@@ -1,24 +1,30 @@
 ﻿namespace Qydha.API.Extensions;
 
-public static class SevicesRegistrations
+public static class ServicesRegistrations
 {
-    public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
 
         #region DI Services
         services.AddSingleton<TokenManager>();
         services.AddSingleton<OtpManager>();
-        services.AddSingleton<WaApiInstancesTracker>();
 
-        services.AddSingleton(new GoogleStorageService(configuration.GetSection("GoogleStorage").Get<GoogleStorageSettings>()?.JsonKeyPath
-           ?? throw new ArgumentNullException("can't get storage service key.")));
+        string storageServiceKey = configuration.GetSection("GoogleStorage").Get<GoogleStorageSettings>()?.JsonKeyPath
+            ?? throw new NullReferenceException("can't get storage service key.");
+        services.AddSingleton(new GoogleStorageService(storageServiceKey));
 
         services.AddHttpClient();
 
-        services.AddScoped<WaApiService>();
-        services.AddScoped<WhatsAppService>();
+        // services.AddScoped<WaApiService>();
+        // services.AddScoped<WhatsAppService>();
+        // services.AddSingleton<WaApiInstancesTracker>();
+        // services.AddScoped<IMessageService, OtpSenderByWhatsAppService>();
 
-        services.AddScoped<IMessageService, OtpSenderByWhatsAppService>();
+        if (environment.IsProduction())
+            services.AddScoped<IMessageService, WhatsAppService>();
+        else
+            services.AddScoped<IMessageService, WaApiService>();
+
         services.AddScoped<IMailingService, MailingService>();
         services.AddScoped<IFileService, GoogleCloudFileService>();
         services.AddScoped<IPushNotificationService, FCMService>();

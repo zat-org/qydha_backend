@@ -21,7 +21,7 @@ public class PhoneAuthenticationRequest
     {
         if (userId != UserId)
             return Result.Fail(new ForbiddenError());
-        if (CreatedAt.AddHours(1) < DateTimeOffset.UtcNow)
+        if (CreatedAt.AddHours(1) <= DateTimeOffset.UtcNow)
             return Result.Fail(new RequestExceedTimeError(CreatedAt, nameof(PhoneAuthenticationRequest)));
         return Result.Ok();
     }

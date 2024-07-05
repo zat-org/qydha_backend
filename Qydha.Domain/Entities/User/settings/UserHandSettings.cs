@@ -14,6 +14,4 @@ public class UserHandSettings
     public bool WinUsingZat { get; set; } = false;
 
     public int TakweeshPoints { get; set; } = 100;
-
-    public User User { get; set; } = null!;
 }

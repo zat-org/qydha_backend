@@ -22,7 +22,7 @@ public class InfluencerCodesCategoriesRepo(QydhaContext qydhaContext, ILogger<In
     {
         Result<InfluencerCodeCategory> getCategoryRes = await GetByCategoryNameAsync(categoryName);
         if (getCategoryRes.IsSuccess && (categoryId is null || (categoryId is not null && categoryId != getCategoryRes.Value.Id)))
-            return Result.Fail(new EntityUniqueViolationError("اسم التصنيف موجود بالفعل"));
+            return Result.Fail(new EntityUniqueViolationError(nameof(categoryName), "اسم التصنيف موجود بالفعل"));
         return Result.Ok();
     }
 

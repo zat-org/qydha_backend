@@ -12,7 +12,7 @@ LoggerServiceExtension.AddLoggerConfiguration(builder.Configuration, builder.Env
 builder.Host.UseSerilog();
 // builder.WebHost.UseWebRoot("wwwroot");
 builder.Services.DbConfiguration(builder.Configuration, builder.Environment);
-builder.Services.RegisterServices(builder.Configuration);
+builder.Services.RegisterServices(builder.Configuration, builder.Environment);
 builder.Services.RegisterRepos();
 builder.Services.ConfigureControllers();
 builder.Services.ConfigureFluentValidation();

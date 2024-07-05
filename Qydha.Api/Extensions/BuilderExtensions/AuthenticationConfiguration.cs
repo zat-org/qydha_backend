@@ -19,7 +19,7 @@ public static class AuthenticationConfiguration
                     else if (context.User.IsInRole(UserRoles.User.ToString()))
                     {
                         var dateString = context.User.FindFirstValue("SubscriptionExpireDate");
-                        if (dateString == null) return false;
+                        if (string.IsNullOrWhiteSpace(dateString)) return false;
                         var expireAt = DateTimeOffset.Parse(dateString);
                         return DateTimeOffset.UtcNow > expireAt;
                     }
