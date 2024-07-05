@@ -2,7 +2,7 @@
 
 public interface IBalootGamesService
 {
-    Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId);
+    Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId, ICollection<BalootGameEvent> events);
     Task<Result<BalootGame>> AddEvents(Guid userId, Guid gameId, ICollection<BalootGameEvent> events);
     Task<Result<BalootGame>> GetGameById(Guid userId, Guid gameId);
     Task<Result<List<BalootGameTimeLineBlock>>> GetGameTimeLineById(Guid gameId);

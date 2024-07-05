@@ -6,14 +6,15 @@ namespace Qydha.Infrastructure.Repositories;
 public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
 {
     private readonly QydhaContext _dbCtx = qydhaContext;
-    public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid ownerId)
+    public async Task<Result<BalootGame>> SaveGame(BalootGame game)
     {
-        if (!_dbCtx.Users.Any(u => u.Id == ownerId))
-            return Result.Fail(new EntityNotFoundError<Guid>(ownerId, nameof(User)));
-        BalootGame balootGame = BalootGame.CreateSinglePlayerGame(ownerId);
-        _dbCtx.BalootGames.Add(balootGame);
+        if (!_dbCtx.Users.Any(u => u.Id == game.OwnerId))
+            return Result.Fail(new EntityNotFoundError<Guid>(game.OwnerId, nameof(User)));
+        if (!_dbCtx.Users.Any(u => u.Id == game.ModeratorId))
+            return Result.Fail(new EntityNotFoundError<Guid>(game.ModeratorId, nameof(User)));
+        _dbCtx.BalootGames.Add(game);
         await _dbCtx.SaveChangesAsync();
-        return Result.Ok(balootGame);
+        return Result.Ok(game);
     }
     public async Task<Result<BalootGame>> GetById(Guid gameId)
     {

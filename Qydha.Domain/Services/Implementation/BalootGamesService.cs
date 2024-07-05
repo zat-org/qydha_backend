@@ -4,9 +4,16 @@ namespace Qydha.Domain.Services.Implementation;
 public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGamesService
 {
     private readonly IBalootGamesRepo _balootGamesRepo = balootGamesRepo;
-    public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId)
+    public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId, ICollection<BalootGameEvent> events)
     {
-        return await _balootGamesRepo.CreateSingleBalootGame(userId);
+        BalootGame balootGame = BalootGame.CreateSinglePlayerGame(userId);
+        foreach (var e in events)
+        {
+            Result res = e.ApplyToState(balootGame);
+            if (res.IsFailed) return res;
+        }
+        balootGame.EventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
+        return await _balootGamesRepo.SaveGame(balootGame);
     }
 
     public async Task<Result<BalootGame>> AddEvents(Guid userId, Guid gameId, ICollection<BalootGameEvent> events)

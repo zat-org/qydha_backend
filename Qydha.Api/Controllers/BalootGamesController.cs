@@ -7,10 +7,19 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
 
     [Authorize(Roles = RoleConstants.User)]
     [HttpPost]
-    public IActionResult CreateBalootGame()
+    public IActionResult CreateBalootGame([FromBody] List<BalootGameEventDto> eventsDtos)
     {
+        List<BalootGameEvent> events = [];
+        foreach (var eDto in eventsDtos)
+        {
+            Result<BalootGameEvent> res = eDto.MapToCorrespondingEvent();
+            if (res.IsFailed)
+                return res.Errors.First().Handle(HttpContext.TraceIdentifier);
+            events.Add(res.Value);
+        }
+
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(_balootGamesService.CreateSingleBalootGame)
+            .OnSuccessAsync((userId) => _balootGamesService.CreateSingleBalootGame(userId, events))
             .Resolve(
             (game) => Ok(new
             {
