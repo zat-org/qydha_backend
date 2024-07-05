@@ -7,6 +7,6 @@ public class ChangeUserRolesDtoValidator : AbstractValidator<ChangeUserRolesDto>
 {
     public ChangeUserRolesDtoValidator()
     {
-        RuleFor(r => r.Roles).IsInEnum();
+        RuleForEach(r => r.Roles).IsInEnum();
     }
 }

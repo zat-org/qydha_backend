@@ -17,9 +17,10 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     #region getUser
     public async Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId)
     {
-        return await _dbCtx.Users.Include(user => user.UserGeneralSettings)
-            .Include(user => user.UserBalootSettings)
-            .Include(user => user.UserHandSettings)
+        return await _dbCtx.Users
+            // .Include(user => user.UserGeneralSettings)
+            // .Include(user => user.UserBalootSettings)
+            // .Include(user => user.UserHandSettings)
             .AsSplitQuery()
             .FirstOrDefaultAsync((user) => user.Id == userId) is User user ?
             Result.Ok(user) :
@@ -56,7 +57,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     {
         Result<User> getUserRes = await GetByUsernameAsync(username);
         if (getUserRes.IsSuccess && ((userId is null) || (userId is not null && getUserRes.Value.Id != userId)))
-            return Result.Fail(new EntityUniqueViolationError("اسم المستخدم موجود بالفعل"));
+            return Result.Fail(new EntityUniqueViolationError("newUsername", "اسم المستخدم موجود بالفعل"));
         return Result.Ok();
     }
 
@@ -64,7 +65,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     {
         Result<User> getUserRes = await GetByPhoneAsync(phone);
         if (getUserRes.IsSuccess)
-            return Result.Fail(new EntityUniqueViolationError("رقم الجوال موجود بالفعل"));
+            return Result.Fail(new EntityUniqueViolationError("newPhone", "رقم الجوال موجود بالفعل"));
         return Result.Ok();
     }
 
@@ -72,7 +73,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     {
         Result<User> getUserRes = await GetByEmailAsync(email);
         if (getUserRes.IsSuccess && ((userId is null) || (userId is not null && getUserRes.Value.Id != userId)))
-            return Result.Fail(new EntityUniqueViolationError("البريد الاكترونى موجود بالفعل"));
+            return Result.Fail(new EntityUniqueViolationError("newEmail", "البريد الاكترونى موجود بالفعل"));
         return Result.Ok();
     }
 
@@ -150,7 +151,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Ok() :
             Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
-
     public async Task<Result<User>> UpdateUserExpireDate(Guid userId)
     {
         var allTransactions = await _dbCtx.UserPromoCodes
@@ -182,8 +182,8 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
         return await GetUserWithSettingsByIdAsync(userId);
     }
-    #endregion
 
+    #endregion
     public async Task<Result<User>> CheckUserCredentials(Guid userId, string password)
     {
         var checkRes = (await GetByIdAsync(userId))
@@ -217,17 +217,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         _dbCtx.Update(user);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(user);
-        //     .Where(userRaw => userRaw.Id == user.Id)
-        //     .ExecuteUpdateAsync(
-        //        setters => setters
-        //            .SetProperty(userRaw => userRaw.Name, user.Name)
-        //            .SetProperty(userRaw => userRaw.BirthDate, user.BirthDate)
-        //    );
-        // affected == 1 ?
-        //     Result.Ok(user) :
-        //     Result.Fail<User>(new EntityNotFoundError<Guid>(user.Id, nameof(User)));
     }
-
     public async Task<Result> DeleteAsync(Guid userId)
     {
         var affected = await _dbCtx.Users.Where(c => c.Id == userId).ExecuteDeleteAsync();
@@ -235,7 +225,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Ok() :
             Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
-
 
 }
 internal class Transaction

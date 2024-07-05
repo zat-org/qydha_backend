@@ -74,6 +74,7 @@ public class MailingService(IOptions<EmailSettings> mailSettings, ILogger<Mailin
         Guid requestId = Guid.NewGuid();
         var emailSubject = "تأكيد البريد الالكتروني لحساب تطبيق قيدها";
         var emailBody = await GenerateConfirmEmailBody(otp, requestId.ToString(), user);
-        return (await SendEmailAsync(newEmail, emailSubject, emailBody)).ToResult((sender) => (otp, requestId, sender));
+        _ = SendEmailAsync(newEmail, emailSubject, emailBody);
+        return Result.Ok((otp, requestId, $"Email:MailKit:{_mailSettings.Email}"));
     }
 }

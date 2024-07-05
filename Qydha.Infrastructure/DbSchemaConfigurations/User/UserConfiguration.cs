@@ -66,16 +66,19 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(200)
             .HasColumnName("name");
 
+        builder.Property(e => e.Roles)
+            .HasColumnName("roles");
+
         builder.Property(e => e.NormalizedEmail)
             .HasMaxLength(200)
             .HasColumnName("normalized_email")
             .HasComputedColumnSql("UPPER(email)", true);
 
+
         builder.Property(e => e.NormalizedUsername)
             .HasMaxLength(100)
             .HasColumnName("normalized_username")
             .HasComputedColumnSql("UPPER(username)", true);
-
         builder.Property(e => e.PasswordHash)
             .HasColumnType("character varying")
             .HasColumnName("password_hash");
@@ -85,7 +88,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(e => e.Username)
             .HasMaxLength(100)
             .HasColumnName("username");
-
         builder.OwnsOne(d => d.UserBalootSettings, entity =>
         {
             entity.HasData(new { UserId = adminId });
@@ -124,7 +126,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         });
         builder.OwnsOne(d => d.UserGeneralSettings, entity =>
         {
-            entity.HasData(new { UserId = adminId });
+            entity.HasData(new UserGeneralSettings() { UserId = adminId, PlayersNames = [], TeamsNames = [] });
 
             entity.Property(e => e.UserId)
                 .HasColumnName("user_id");
@@ -134,29 +136,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 .HasDefaultValue(true)
                 .HasColumnName("enable_vibration");
             entity.Property(e => e.PlayersNames)
-                .HasDefaultValueSql("'[]'::jsonb")
-                .HasColumnType("jsonb")
-                .HasColumnName("players_names")
-                .HasConversion(
-                    v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>(),
-                    new ValueComparer<List<string>>(
-                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
-                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToList())
-                    );
+                .HasColumnName("players_names");
             entity.Property(e => e.TeamsNames)
-                .HasDefaultValueSql("'[]'::jsonb")
-                .HasColumnType("jsonb")
-                .HasColumnName("teams_names")
-                .HasConversion(
-                    v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>(),
-                    new ValueComparer<List<string>>(
-                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
-                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToList())
-                );
+                .HasColumnName("teams_names");
         });
         builder.OwnsOne(d => d.UserHandSettings, entity =>
         {

@@ -61,6 +61,9 @@ public class User
 
     public List<UserRoles> Roles { get; set; } = null!;
 
+    public bool IsAdmin => Roles.Any(r => r == UserRoles.SuperAdmin || r == UserRoles.StaffAdmin);
+    public bool IsSuperAdmin => Roles.Any(r => r == UserRoles.SuperAdmin);
+    public bool IsStaffAdmin => Roles.Any(r => r == UserRoles.StaffAdmin);
     public UserGeneralSettings UserGeneralSettings { get; set; } = null!;
     public UserBalootSettings UserBalootSettings { get; set; } = null!;
     public UserHandSettings UserHandSettings { get; set; } = null!;
@@ -87,6 +90,27 @@ public class User
         Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.ToString())));
         return claims;
     }
+    public Result ChangeUserRoles(List<UserRoles> roles)
+    {
+        var err = new InvalidBodyInputError("invalid roles list.");
+        if (!roles.Contains(UserRoles.User))
+        {
+            err.ValidationErrors.Add(nameof(roles), ["Roles Must Contain User Role"]);
+            return Result.Fail(err);
+        }
+        if (IsSuperAdmin && !roles.Contains(UserRoles.SuperAdmin))
+        {
+            err.ValidationErrors.Add(nameof(roles), ["SuperAdmin Role Can't removed from this user"]);
+            return Result.Fail(err);
+        }
+        if (!IsSuperAdmin && roles.Contains(UserRoles.SuperAdmin))
+        {
+            err.ValidationErrors.Add(nameof(roles), ["SuperAdmin Role Can't Added to users"]);
+            return Result.Fail(err);
+        }
+        Roles = roles;
+        return Result.Ok();
+    }
     public static User CreateUserFromRegisterRequest(RegistrationOTPRequest otpRequest)
     {
         return new User(
@@ -98,6 +122,9 @@ public class User
         {
             LastLogin = DateTimeOffset.UtcNow,
             FCMToken = otpRequest.FCMToken,
+            UserBalootSettings = new(),
+            UserHandSettings = new(),
+            UserGeneralSettings = new()
         };
     }
 }

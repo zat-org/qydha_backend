@@ -12,7 +12,7 @@ public interface IUserRepo
     Task<Result<User>> GetByEmailAsync(string email);
     Task<Result<User>> GetByUsernameAsync(string username);
     Task<Result> IsUsernameAvailable(string username, Guid? userId = null);
-    Task<Result> IsPhoneAvailable(string phone); // todo 
+    Task<Result> IsPhoneAvailable(string phone); 
     Task<Result> IsEmailAvailable(string email, Guid? userId = null);
 
     Task<Result> UpdateUserLastLoginToNow(Guid userId);

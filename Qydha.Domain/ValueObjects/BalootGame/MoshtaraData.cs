@@ -22,11 +22,11 @@ public class MoshtaraData
     public Result<MoshtaraData> AddMashare3(int usScore, int themScore)
     {
         if (RecordingMode != BalootRecordingMode.Regular)
-        {
-            var err = new InvalidBodyInputError();
-            err.ValidationErrors.Add(nameof(RecordingMode), ["يجب ان يكون المشترى مسجل يدويا"]);
-            return Result.Fail(err);
-        }
+            return Result.Fail(
+                new InvalidBodyInputError(new Dictionary<string, List<string>>() {
+                    {nameof(RecordingMode) ,["يجب ان يكون المشترى مسجل يدويا"] }
+                })
+            );
         return Result.Ok(new MoshtaraData(UsAbnat + usScore, ThemAbnat + themScore));
     }
 
@@ -74,18 +74,17 @@ public class MoshtaraDetails
         {
             case MoshtaraType.Sun:
                 if (sunId is null)
-                {
-                    var err = new InvalidBodyInputError();
-                    err.ValidationErrors.Add(nameof(sunId),
-                    [" في حالة مشترى الصن يجب ان تكون قيمة النتيجة الاساسية صحيحة "]);
-                    return Result.Fail(err);
-                }
+                    return Result.Fail(
+                        new InvalidBodyInputError(new Dictionary<string, List<string>>() {
+                            {nameof(sunId) ,[" في حالة مشترى الصن يجب ان تكون قيمة النتيجة الاساسية صحيحة "] }
+                        })
+                    );
                 if (rob3ome2a is null)
                 {
-                    var err = new InvalidBodyInputError();
-                    err.ValidationErrors.Add(nameof(sunId),
-                    [" في حالة مشترى الصن يجب ان تكون الربعمائة بقيمة صحيحة"]);
-                    return Result.Fail(err);
+                    return Result.Fail(
+                        new InvalidBodyInputError(new Dictionary<string, List<string>>() {
+                            {nameof(rob3ome2a) ,["في حالة مشترى الصن يجب ان تكون الربعمائة بقيمة صحيحة"] }
+                        }));
                 }
                 usData = new SunMoshtaraTeamDetails(
                     new Mashare3Sun(sra.Us, khamsen.Us, me2a.Us, rob3ome2a.Value.Us), ekak.Us, aklat.Us, sunId.Value.Us);
@@ -94,19 +93,17 @@ public class MoshtaraDetails
                 break;
             case MoshtaraType.Hokm:
                 if (hokmId is null)
-                {
-                    var err = new InvalidBodyInputError();
-                    err.ValidationErrors.Add(nameof(hokmId),
-                    [" في حالة مشترى حكم يجب ان تكون قيمة النتيجة الاساسية صحيحة "]);
-                    return Result.Fail(err);
-                }
+                    return Result.Fail(
+                        new InvalidBodyInputError(new Dictionary<string, List<string>>() {
+                            {nameof(hokmId) ,[" في حالة مشترى حكم يجب ان تكون قيمة النتيجة الاساسية صحيحة "] }
+                        })
+                    );
                 if (baloot is null)
-                {
-                    var err = new InvalidBodyInputError();
-                    err.ValidationErrors.Add(nameof(baloot),
-                    [" في حالة مشترى حكم يجب ان يكون البلوت بقيمة صحيحة"]);
-                    return Result.Fail(err);
-                }
+                    return Result.Fail(
+                        new InvalidBodyInputError(new Dictionary<string, List<string>>() {
+                            {nameof(baloot) ,[" في حالة مشترى حكم يجب ان يكون البلوت بقيمة صحيحة"] }
+                        })
+                    );
 
                 usData = new HokmMoshtaraTeamDetails(
                     new Mashare3Hokm(baloot.Value.Us, sra.Us, khamsen.Us, me2a.Us), ekak.Us, aklat.Us, hokmId.Value.Us);
@@ -120,16 +117,12 @@ public class MoshtaraDetails
         int usAbnat, themAbnat;
         (usAbnat, themAbnat) = CalculateAbnat(usData, themData);
 
-        if (usData.IsScoreDoubled() || usData.IsScoreDoubled() || usAbnat == themAbnat)
-        {
-            if (selectedMoshtaraOwner is null)
-            {
-                var err = new InvalidBodyInputError();
-                err.ValidationErrors.Add(nameof(selectedMoshtaraOwner),
-                    ["يجب تحديد صاحب المشترى في حالة التعادل او اللعب الدبل"]);
-                return Result.Fail(err);
-            }
-        }
+        if ((usData.IsScoreDoubled() || usData.IsScoreDoubled() || usAbnat == themAbnat) && selectedMoshtaraOwner is null)
+            return Result.Fail(
+                new InvalidBodyInputError(new Dictionary<string, List<string>>() {
+                    {nameof(selectedMoshtaraOwner) , ["يجب تحديد صاحب المشترى في حالة التعادل او اللعب الدبل"] }
+                })
+            );
         return Result.Ok(new MoshtaraDetails(moshtaraType, usData, themData, usAbnat, themAbnat, selectedMoshtaraOwner));
     }
     public (BalootGameTeam, bool) CalculateMoshtaraOwnerAndResult(int usAbnat, int themAbnat, BalootGameTeam? selectedMoshtaraOwner)

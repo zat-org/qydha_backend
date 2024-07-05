@@ -46,7 +46,7 @@ public class InfluencerCodesRepo(QydhaContext qydhaContext, ILogger<InfluencerCo
     {
         Result<InfluencerCode> getCodeRes = await GetByCodeAsync(code);
         if (getCodeRes.IsSuccess)
-            return Result.Fail(new EntityUniqueViolationError("اسم الكود موجود بالفعل"));
+            return Result.Fail(new EntityUniqueViolationError(nameof(code), "اسم الكود موجود بالفعل"));
         return Result.Ok();
     }
 

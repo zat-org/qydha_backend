@@ -13,17 +13,12 @@ public abstract class ResultError(string msg, ErrorType errorCode, int statusCod
         new(new ErrorResponse(ErrorCode, Message, traceId)) { StatusCode = StatusCode };
 
 }
-public class InvalidBodyInputError : ResultError
+public class InvalidBodyInputError(Dictionary<string, List<string>> validationErrors, string msg = "Invalid Body Input") : ResultError(msg, ErrorType.InvalidBodyInput, StatusCodes.Status400BadRequest)
 {
-    public Dictionary<string, List<string>> ValidationErrors { get; set; } = [];
+    public Dictionary<string, List<string>> ValidationErrors { get; set; } = validationErrors;
+    public InvalidBodyInputError() : this("Invalid Body Input") { }
+    public InvalidBodyInputError(string msg) : this([], msg) { }
 
-    public InvalidBodyInputError()
-        : base("Invalid Body Input", ErrorType.InvalidBodyInput, StatusCodes.Status400BadRequest)
-    { }
-    public InvalidBodyInputError(string msg)
-     : base(msg, ErrorType.InvalidBodyInput, StatusCodes.Status400BadRequest)
-    { }
-    
     public override IActionResult ToIResult(string traceId)
     {
         return new JsonResult(new ValidationErrorResponse(ErrorCode, Message, ValidationErrors)) { StatusCode = StatusCode };
@@ -80,11 +75,20 @@ public class EntityNotFoundError<T>(T identifier, string entityName)
     StatusCodes.Status404NotFound)
 { }
 
-public class EntityUniqueViolationError(string userMessage) : ResultError(
+public class EntityUniqueViolationError(string propName, string userMessage) : ResultError(
     userMessage,
     ErrorType.DbUniqueViolation,
     StatusCodes.Status409Conflict)
-{ }
+{
+    public string PropertyName { get; set; } = propName;
+    public override IActionResult ToIResult(string traceId)
+    {
+        return new JsonResult(new ValidationErrorResponse(ErrorCode, Message, new Dictionary<string, List<string>>() {
+            {PropertyName, [Message]}
+        }))
+        { StatusCode = StatusCode };
+    }
+}
 
 public class InvalidCredentialsError(string userMessage)
     : ResultError(userMessage, ErrorType.InvalidCredentials, StatusCodes.Status400BadRequest)

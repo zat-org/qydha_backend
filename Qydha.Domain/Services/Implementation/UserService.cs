@@ -1,6 +1,8 @@
-﻿namespace Qydha.Domain.Services.Implementation;
+﻿using FluentResults.Extensions;
 
-public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, IUserGeneralSettingsRepo userGeneralSettingsRepo, IUserHandSettingsRepo handSettingsRepo, IUserBalootSettingsRepo balootSettingsRepo) : IUserService
+namespace Qydha.Domain.Services.Implementation;
+
+public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo) : IUserService
 {
     #region  injections
     private readonly OtpManager _otpManager = otpManager;
@@ -11,9 +13,6 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     private readonly IUpdateEmailRequestRepo _updateEmailRequestRepo = updateEmailRequestRepo;
     private readonly IUpdatePhoneOTPRequestRepo _updatePhoneOTPRequestRepo = updatePhoneOTPRequestRepo;
     private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
-    private readonly IUserGeneralSettingsRepo _userGeneralSettingsRepo = userGeneralSettingsRepo;
-    private readonly IUserHandSettingsRepo _userHandSettingsRepo = handSettingsRepo;
-    private readonly IUserBalootSettingsRepo _userBalootSettingsRepo = balootSettingsRepo;
 
     private readonly AvatarSettings _avatarSettings = avatarOptions.Value;
     private readonly ILogger<UserService> _logger = logger;
@@ -56,6 +55,11 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     public async Task<Result<User>> UpdateUserUsername(Guid userId, string password, string newUsername)
     {
         Result<User> checkingRes = await _userRepo.CheckUserCredentials(userId, password);
+        if (checkingRes.IsFailed)
+            return Result.Fail(new InvalidBodyInputError(
+                new Dictionary<string, List<string>>() {
+                    { nameof(password), ["كلمة المرور غير صحيحة"] }
+                }));
         return checkingRes
             .OnSuccessAsync(async (user) => (await _userRepo.IsUsernameAvailable(newUsername, userId)).ToResult(user))
             .OnSuccessAsync(async (user) => (await _userRepo.UpdateUserUsername(userId, newUsername)).ToResult(user))
@@ -67,7 +71,13 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     }
     public async Task<Result<UpdatePhoneRequest>> UpdateUserPhone(Guid userId, string password, string newPhone)
     {
-        return (await _userRepo.CheckUserCredentials(userId, password))
+        var checkingRes = await _userRepo.CheckUserCredentials(userId, password);
+        if (checkingRes.IsFailed)
+            return Result.Fail(new InvalidBodyInputError(
+                new Dictionary<string, List<string>>() {
+                    { nameof(password), ["كلمة المرور غير صحيحة"] }
+                }));
+        return checkingRes
             .OnSuccessAsync(async (user) => (await _userRepo.IsPhoneAvailable(newPhone)).ToResult(user))
             .OnSuccessAsync(async (user) =>
             {
@@ -88,7 +98,13 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     }
     public async Task<Result<UpdateEmailRequest>> UpdateUserEmail(Guid userId, string password, string newEmail)
     {
-        return (await _userRepo.CheckUserCredentials(userId, password))
+        var checkingRes = await _userRepo.CheckUserCredentials(userId, password);
+        if (checkingRes.IsFailed)
+            return Result.Fail(new InvalidBodyInputError(
+                new Dictionary<string, List<string>>() {
+                    { nameof(password), ["كلمة المرور غير صحيحة"] }
+                }));
+        return checkingRes
             .OnSuccessAsync(async (user) => (await _userRepo.IsEmailAvailable(newEmail, user.Id)).ToResult(user))
             .OnSuccessAsync(async (user) =>
             {
@@ -129,16 +145,11 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
         return (await _userRepo.GetByIdAsync(userId))
         .OnSuccess((user) =>
         {
-            if (!roles.Contains(UserRoles.User))
-                return Result.Fail(new InvalidBodyInputError("Roles Must Contain User Role"));
-            if (user.Roles.Contains(UserRoles.SuperAdmin))
-                if (!roles.Contains(UserRoles.SuperAdmin))
-                    return Result.Fail(new InvalidBodyInputError("SuperAdmin Role Can't removed from this user"));
-                else
-                if (roles.Contains(UserRoles.SuperAdmin))
-                    return Result.Fail(new InvalidBodyInputError("SuperAdmin Role Can't Added to users"));
-            user.Roles = roles;
-            return Result.Ok(user);
+            var changeRes = user.ChangeUserRoles(roles);
+            if (changeRes.IsSuccess)
+                return Result.Ok(user);
+            else
+                return changeRes;
         })
         .OnSuccessAsync(_userRepo.UpdateAsync);
     }
@@ -165,26 +176,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
         });
     }
 
-
     #endregion
 
-    #region user  settings
-    public async Task<Result<UserGeneralSettings>> GetUserGeneralSettings(Guid userId) =>
-        await _userGeneralSettingsRepo.GetByUserIdAsync(userId);
 
-    public async Task<Result<UserHandSettings>> GetUserHandSettings(Guid userId) =>
-        await _userHandSettingsRepo.GetByUserIdAsync(userId);
-
-    public async Task<Result<UserBalootSettings>> GetUserBalootSettings(Guid userId) =>
-        await _userBalootSettingsRepo.GetByUserIdAsync(userId);
-
-    public async Task<Result<UserGeneralSettings>> UpdateUserGeneralSettings(Guid userId, UserGeneralSettings settings) =>
-           await _userGeneralSettingsRepo.UpdateByUserIdAsync(userId, settings);
-    public async Task<Result<UserHandSettings>> UpdateUserHandSettings(Guid userId, UserHandSettings settings) =>
-            await _userHandSettingsRepo.UpdateByUserIdAsync(userId, settings);
-    public async Task<Result<UserBalootSettings>> UpdateUserBalootSettings(Guid userId, UserBalootSettings settings) =>
-            await _userBalootSettingsRepo.UpdateByUserIdAsync(userId, settings);
-
-
-    #endregion
 }

@@ -137,9 +137,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
     public async Task<Result<int>> DeleteAllByUserIdAsync(Guid userId)
     {
         var affected = await _dbCtx.NotificationUserLinks.Where(ul => ul.UserId == userId).ExecuteDeleteAsync();
-        return affected > 0 ?
-            Result.Ok(affected) :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(NotificationData)));
+        return Result.Ok(affected);
     }
 
     public async Task<Result<int>> DeleteByIdsAsync(Guid userId, int notificationId)
@@ -158,9 +156,7 @@ public class NotificationRepo(QydhaContext qydhaContext, ILogger<NotificationRep
            setters => setters
                .SetProperty(ul => ul.ReadAt, DateTimeOffset.UtcNow)
        );
-        return affected > 0 ?
-            Result.Ok(affected) :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(NotificationData)));
+        return Result.Ok(affected);
     }
 
     public async Task<Result<int>> MarkAsReadByIdsAsync(Guid userId, int notificationId)

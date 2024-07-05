@@ -16,9 +16,6 @@ public static class ReposRegistrations
         services.AddScoped<INotificationRepo, NotificationRepo>();
         services.AddScoped<IUserPromoCodesRepo, UserPromoCodesRepo>();
         services.AddScoped<IInfluencerCodesRepo, InfluencerCodesRepo>();
-        services.AddScoped<IUserGeneralSettingsRepo, UserGeneralSettingsRepo>();
-        services.AddScoped<IUserHandSettingsRepo, UserHandSettingsRepo>();
-        services.AddScoped<IUserBalootSettingsRepo, UserBalootSettingsRepo>();
         services.AddScoped<IAppAssetsRepo, AppAssetsRepo>();
         services.AddScoped<IInfluencerCodesCategoriesRepo, InfluencerCodesCategoriesRepo>();
         services.AddScoped<ILoginWithQydhaRequestRepo, LoginWithQydhaRequestRepo>();

@@ -353,26 +353,26 @@ public class UserController(IUserService userService, INotificationService notif
         var mapper = new UserMapper();
 
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(_userService.GetUserGeneralSettings)
-            .OnSuccess((settings) =>
+            .OnSuccessAsync(_userService.GetUserById)
+            .OnSuccess((user) =>
             {
-                var dto = mapper.UserGeneralSettingsToDto(settings);
+                var dto = mapper.UserGeneralSettingsToDto(user.UserGeneralSettings);
                 return generalSettingsDtoPatch.ApplyToAsResult(dto)
                 .OnSuccess((dtoWithChanges) =>
                 {
-                    mapper.DtoToUserGeneralSettings(dtoWithChanges, settings);
-                    return Result.Ok(settings);
+                    mapper.DtoToUserGeneralSettings(dtoWithChanges, user.UserGeneralSettings);
+                    return Result.Ok(user);
                 });
 
             })
-            .OnSuccessAsync((settings) => _userService.UpdateUserGeneralSettings(settings.UserId, settings))
-            .Resolve((settings) =>
+            .OnSuccessAsync(_userService.UpdateUser)
+            .Resolve((user) =>
             {
                 return Ok(new
                 {
                     data = new
                     {
-                        generalSettings = mapper.UserGeneralSettingsToDto(settings)
+                        generalSettings = mapper.UserGeneralSettingsToDto(user.UserGeneralSettings)
                     },
                     message = "User's General settings updated successfully."
                 });
@@ -389,10 +389,10 @@ public class UserController(IUserService userService, INotificationService notif
         var mapper = new UserMapper();
 
         return HttpContext.User.GetUserIdentifier()
-        .OnSuccessAsync(_userService.GetUserHandSettings)
-        .OnSuccess((settings) =>
+        .OnSuccessAsync(_userService.GetUserById)
+        .OnSuccess((user) =>
         {
-            var dto = mapper.UserHandSettingsToDto(settings);
+            var dto = mapper.UserHandSettingsToDto(user.UserHandSettings);
             return handSettingsDtoPatch.ApplyToAsResult(dto)
             .OnSuccess((dtoWithChanges) =>
             {
@@ -401,16 +401,16 @@ public class UserController(IUserService userService, INotificationService notif
             })
             .OnSuccess((dtoWithChanges) =>
             {
-                mapper.DtoToUserHandSettings(dtoWithChanges, settings);
-                return Result.Ok(settings);
+                mapper.DtoToUserHandSettings(dtoWithChanges, user.UserHandSettings);
+                return Result.Ok(user);
             });
         })
-        .OnSuccessAsync((settings) => _userService.UpdateUserHandSettings(settings.UserId, settings))
-        .Resolve((settings) =>
+        .OnSuccessAsync(_userService.UpdateUser)
+        .Resolve((user) =>
         {
             return Ok(new
             {
-                data = new { handSettings = mapper.UserHandSettingsToDto(settings) },
+                data = new { handSettings = mapper.UserHandSettingsToDto(user.UserHandSettings) },
                 message = "User's Hand settings updated successfully."
             });
         }, HttpContext.TraceIdentifier);
@@ -425,23 +425,23 @@ public class UserController(IUserService userService, INotificationService notif
         var mapper = new UserMapper();
 
         return HttpContext.User.GetUserIdentifier()
-        .OnSuccessAsync(_userService.GetUserBalootSettings)
-        .OnSuccess((settings) =>
+        .OnSuccessAsync(_userService.GetUserById)
+        .OnSuccess((user) =>
         {
-            var dto = mapper.UserBalootSettingsToDto(settings);
+            var dto = mapper.UserBalootSettingsToDto(user.UserBalootSettings);
             return balootSettingsDtoPatch.ApplyToAsResult(dto)
             .OnSuccess((dtoWithChanges) =>
             {
-                mapper.DtoToUserBalootSettings(dtoWithChanges, settings);
-                return Result.Ok(settings);
+                mapper.DtoToUserBalootSettings(dtoWithChanges, user.UserBalootSettings);
+                return Result.Ok(user);
             });
         })
-        .OnSuccessAsync((settings) => _userService.UpdateUserBalootSettings(settings.UserId, settings))
-        .Resolve((settings) =>
+        .OnSuccessAsync(_userService.UpdateUser)
+        .Resolve((user) =>
         {
             return Ok(new
             {
-                data = new { balootSettings = mapper.UserBalootSettingsToDto(settings) },
+                data = new { balootSettings = mapper.UserBalootSettingsToDto(user.UserBalootSettings) },
                 message = "User's baloot settings updated successfully."
             });
         }, HttpContext.TraceIdentifier);
@@ -452,14 +452,14 @@ public class UserController(IUserService userService, INotificationService notif
     public IActionResult GetUserGeneralSettings()
     {
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(_userService.GetUserGeneralSettings)
+            .OnSuccessAsync(_userService.GetUserById)
             .Resolve(
-                (settings) =>
+                (user) =>
                 {
                     var mapper = new UserMapper();
                     return Ok(new
                     {
-                        data = new { generalSettings = mapper.UserGeneralSettingsToDto(settings) },
+                        data = new { generalSettings = mapper.UserGeneralSettingsToDto(user.UserGeneralSettings) },
                         message = "Settings fetched successfully."
                     });
                 }, HttpContext.TraceIdentifier);
@@ -470,14 +470,14 @@ public class UserController(IUserService userService, INotificationService notif
     public IActionResult GetUserHandSettings()
     {
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(_userService.GetUserHandSettings)
+            .OnSuccessAsync(_userService.GetUserById)
             .Resolve(
-                (settings) =>
+                (user) =>
                 {
                     var mapper = new UserMapper();
                     return Ok(new
                     {
-                        data = new { handSettings = mapper.UserHandSettingsToDto(settings) },
+                        data = new { handSettings = mapper.UserHandSettingsToDto(user.UserHandSettings) },
                         message = "Settings fetched successfully."
                     });
                 }, HttpContext.TraceIdentifier);
@@ -488,14 +488,14 @@ public class UserController(IUserService userService, INotificationService notif
     public IActionResult GetUserBalootSettings()
     {
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(_userService.GetUserBalootSettings)
+            .OnSuccessAsync(_userService.GetUserById)
             .Resolve(
-                (settings) =>
+                (user) =>
                 {
                     var mapper = new UserMapper();
                     return Ok(new
                     {
-                        data = new { balootSettings = mapper.UserBalootSettingsToDto(settings) },
+                        data = new { balootSettings = mapper.UserBalootSettingsToDto(user.UserBalootSettings) },
                         message = "Settings fetched successfully."
                     });
                 }, HttpContext.TraceIdentifier);
