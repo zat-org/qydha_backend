@@ -21,6 +21,8 @@ global using Qydha.API.Attributes;
 global using Qydha.API.Extensions;
 global using Qydha.API.Binders;
 global using Qydha.API.Middlewares;
+global using Qydha.API.Policies;
+
 
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.Filters;

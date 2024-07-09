@@ -1,8 +1,10 @@
 ﻿namespace Qydha.Domain.Entities;
 
-public class User
+public class User : IClaimable
 {
+    public const string TokenType = "ServiceAccountToken";
     private User() { }
+
     public User(Guid? id, string username, string passwordHash, string phone, List<UserRoles>? roles = null, DateTimeOffset? createdAt = null)
     {
         Id = id ?? Guid.Empty;
@@ -85,7 +87,8 @@ public class User
                 new(ClaimTypes.NameIdentifier, Id.ToString()),
                 new(ClaimTypes.Name, Username),
                 new(ClaimTypes.MobilePhone, Phone),
-                new("SubscriptionExpireDate", ExpireDate?.ToString() ?? ""),
+                new("SubscriptionExpireDate", ExpireDate?.ToString() ?? ""), // TODO use db to get the expire date not from jwt ,
+                new(ClaimsNamesConstants.TokenType, TokenType)
         };
         Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.ToString())));
         return claims;

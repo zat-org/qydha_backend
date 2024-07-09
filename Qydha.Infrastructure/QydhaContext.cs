@@ -18,6 +18,7 @@ public partial class QydhaContext(DbContextOptions<QydhaContext> options) : DbCo
     public virtual DbSet<NotificationUserLink> NotificationUserLinks { get; set; }
     public virtual DbSet<InfluencerCodeUserLink> InfluencerCodeUserLinks { get; set; }
     public virtual DbSet<BalootGame> BalootGames { get; set; }
+    public virtual DbSet<ServiceAccount> ServiceAccounts { get; set; }
 
     #endregion
 

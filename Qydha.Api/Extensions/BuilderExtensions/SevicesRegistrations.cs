@@ -38,6 +38,7 @@ public static class ServicesRegistrations
         services.AddScoped<IInfluencerCodeCategoryService, InfluencerCodeCategoryService>();
         services.AddScoped<ILoginWithQydhaOtpSenderService, LoginWithQydhaOtpSenderAsNotification>();
         services.AddScoped<IBalootGamesService, BalootGamesService>();
+        services.AddScoped<IServiceAccountsService, ServiceAccountsService>();
         #endregion
         return services;
 

@@ -22,7 +22,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
             }, HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Policy = PolicyConstants.CanReadBalootBook)]
+    [Authorize(Policy = PolicyConstants.AdminOrSubscribedUser)]
     [HttpGet("baloot-book/")]
     public async Task<IActionResult> GetBalootBook()
     {
@@ -70,7 +70,6 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
     }
 
     [Authorize(Roles = RoleConstants.Admin)]
-    [Authorize]
     [HttpPut("popup/image")]
     public async Task<IActionResult> UpdatePopupImage([FromForm] UpdatePopupImageDto dto)
     {
@@ -87,7 +86,8 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
             }, HttpContext.TraceIdentifier);
     }
 
-
+    [Authorize(Policy = PolicyConstants.UserWithAnyRoleOrServiceAccount)]
+    [Permission(ServiceAccountPermission.ReadPopup)]
     [HttpGet("popup/")]
     public async Task<IActionResult> GetPopup()
     {

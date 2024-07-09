@@ -9,7 +9,8 @@ public class NotificationController(INotificationService notificationService) : 
     private readonly INotificationService _notificationService = notificationService;
 
     [HttpGet("public/")]
-    [AllowAnonymous]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.ReadPublicNotifications)]
     public async Task<IActionResult> GetPublicNotifications([FromQuery] PaginationParameters pageParams)
     {
         return (await _notificationService.GetAllAnonymous(pageParams))
@@ -25,7 +26,8 @@ public class NotificationController(INotificationService notificationService) : 
     }
 
     [HttpPatch("click/{notificationId}")]
-    [AllowAnonymous]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.ClickOnPublicNotification)]
     public async Task<IActionResult> ApplyAnonymousClickOnNotification([FromRoute] int notificationId)
     {
         return (await _notificationService.ApplyAnonymousClick(notificationId))

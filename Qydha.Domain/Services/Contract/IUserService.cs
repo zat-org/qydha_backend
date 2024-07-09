@@ -4,7 +4,7 @@ public interface IUserService
     Task<Result<IEnumerable<User>>> GetAllRegularUsers();
     Task<Result<User>> GetUserById(Guid userId);
     Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
-
+    Task<Result> IsUserSubscribed(Guid userId);
     Task<Result> IsUserNameAvailable(string username);
     Task<Result<User>> UpdateUser(User user);
     Task<Result<User>> UpdateUserPassword(Guid userId, string oldPassword, string newPassword);

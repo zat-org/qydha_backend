@@ -15,6 +15,13 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     #endregion
 
     #region getUser
+    public async Task<Result> IsUserSubscribed(Guid userId)
+    {
+        return (await _dbCtx.Users
+            .AnyAsync((user) => user.Id == userId && user.ExpireDate >= DateTimeOffset.UtcNow)) ?
+                Result.Ok() :
+                Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
+    }
     public async Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId)
     {
         return await _dbCtx.Users
@@ -225,6 +232,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Ok() :
             Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
+
 
 }
 internal class Transaction

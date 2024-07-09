@@ -117,7 +117,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
 
-    [Authorize(Roles = "StaffAdmin,SuperAdmin,User")]
+    [Authorize(Roles = RoleConstants.UserWithAnyRole)]
     [HttpPost("logout/")]
     public IActionResult Logout()
     {

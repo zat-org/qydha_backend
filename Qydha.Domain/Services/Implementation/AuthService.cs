@@ -26,7 +26,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         .OnSuccessAsync(async (user) => (await _registrationOTPRequestRepo.MarkRequestAsUsed(requestId, user.Id)).ToResult(user))
         .OnSuccess((user) =>
         {
-            string jwtToken = _tokenManager.Generate(user.GetClaims());
+            string jwtToken = _tokenManager.Generate(user);
             return Result.Ok((user, jwtToken));
         });
     }
@@ -47,7 +47,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
                 return (await _userRepo.UpdateUserFCMToken(user.Id, fcm_token)).ToResult(user);
             return Result.Ok(user);
         })
-        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user.GetClaims()))));
+        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user))));
     }
 
     public async Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken)
@@ -105,7 +105,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
                 return (await _userRepo.UpdateUserFCMToken(user.Id, fcmToken)).ToResult(user);
             return Result.Ok(user);
         })
-        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user.GetClaims()))));
+        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user))));
     }
 
     public async Task<Result<LoginWithQydhaRequest>> SendOtpToLoginWithQydha(string username, string serviceConsumerName)
@@ -126,7 +126,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         .OnSuccess((otpReq) => otpReq.IsRequestValidToUse(_otpManager, otpCode).ToResult(otpReq))
         .OnSuccessAsync(async (otpReq) => (await _loginWithQydhaRequestRepo.MarkRequestAsUsed(requestId)).ToResult(otpReq))
         .OnSuccessAsync(async (request) => await _userRepo.GetByIdAsync(request.UserId))
-        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user.GetClaims()))));
+        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user))));
     }
 
 }

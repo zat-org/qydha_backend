@@ -13,7 +13,6 @@ public class UserController(IUserService userService, INotificationService notif
     #endregion
 
 
-
     #region Get user 
     [HttpGet]
     [Authorize(Roles = RoleConstants.Admin)]
@@ -33,7 +32,6 @@ public class UserController(IUserService userService, INotificationService notif
 
     [HttpGet("me/")]
     [Authorize(Roles = RoleConstants.User)]
-
     public IActionResult GetUser()
     {
         return HttpContext.User.GetUserIdentifier()
@@ -57,6 +55,8 @@ public class UserController(IUserService userService, INotificationService notif
                 HttpContext.TraceIdentifier);
     }
 
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.CheckUserNameAvailable)]
     [HttpGet("is-username-available")]
     public async Task<IActionResult> IsUserNameAvailable([FromBody] string username)
     {
@@ -275,7 +275,6 @@ public class UserController(IUserService userService, INotificationService notif
             });
         }, HttpContext.TraceIdentifier);
     }
-
 
     #endregion
 

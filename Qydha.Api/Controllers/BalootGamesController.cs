@@ -29,7 +29,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             , HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Roles = RoleConstants.User)]
+    [Authorize(Policy = PolicyConstants.SubscribedUser)]
     [HttpDelete("{gameId}")]
     public IActionResult DeleteBalootGame(Guid gameId)
     {
@@ -68,7 +68,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
                 }), HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Roles = RoleConstants.User)]
+    [Authorize(Policy = PolicyConstants.SubscribedUser)]
     [HttpGet("{gameId}")]
     public IActionResult GetGameState([FromRoute] Guid gameId)
     {
@@ -83,7 +83,8 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
                 }), HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Roles = RoleConstants.Admin)]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.ReadBalootGameStatistics)]
     [HttpGet("{gameId}/statistics")]
     public async Task<IActionResult> GetGameStatistics([FromRoute] Guid gameId)
     {
@@ -96,7 +97,8 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             }), HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Roles = RoleConstants.Admin)]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.ReadBalootGameTimeline)]
     [HttpGet("{gameId}/timeline")]
     public async Task<IActionResult> GetGameTimeLine([FromRoute] Guid gameId)
     {
@@ -110,8 +112,8 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
                 }), HttpContext.TraceIdentifier);
     }
 
+    [Authorize(Policy = PolicyConstants.SubscribedUser)]
     [HttpGet("archive")]
-    [Authorize(Roles = RoleConstants.User)]
     public IActionResult GetPagedArchive([FromQuery] PaginationParameters paginationParameters)
     {
 

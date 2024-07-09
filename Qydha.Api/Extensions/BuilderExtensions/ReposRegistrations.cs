@@ -20,6 +20,7 @@ public static class ReposRegistrations
         services.AddScoped<IInfluencerCodesCategoriesRepo, InfluencerCodesCategoriesRepo>();
         services.AddScoped<ILoginWithQydhaRequestRepo, LoginWithQydhaRequestRepo>();
         services.AddScoped<IBalootGamesRepo, BalootGamesRepo>();
+        services.AddScoped<IServiceAccountRepo, ServiceAccountRepo>();
         return services;
         #endregion
 

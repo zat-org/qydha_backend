@@ -7,7 +7,7 @@ public class TokenManager(IOptions<JWTSettings> jwtSettings)
 {
     private readonly JWTSettings _jwtSettings = jwtSettings.Value;
 
-    public string Generate(IEnumerable<Claim> claims)
+    public string Generate(IClaimable claimable)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor()
@@ -15,7 +15,7 @@ public class TokenManager(IOptions<JWTSettings> jwtSettings)
             Issuer = _jwtSettings.Issuer,
             Audience = _jwtSettings.Audience,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.SecretForKey)), SecurityAlgorithms.HmacSha256),
-            Subject = new ClaimsIdentity(claims),
+            Subject = new ClaimsIdentity(claimable.GetClaims()),
             NotBefore = DateTime.UtcNow,
             Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpireAfterMinutes),
         };

@@ -2,7 +2,8 @@
 
 namespace Qydha.Domain.Services.Implementation;
 
-public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo) : IUserService
+public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo)
+ : IUserService
 {
     #region  injections
     private readonly OtpManager _otpManager = otpManager;
@@ -27,6 +28,9 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
 
     public async Task<Result<IEnumerable<User>>> GetAllRegularUsers() =>
       await _userRepo.GetAllRegularUsers();
+
+    public async Task<Result> IsUserSubscribed(Guid userId) => await _userRepo.IsUserSubscribed(userId);
+
     #endregion
 
     #region Update User
@@ -175,6 +179,8 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
             return Result.Ok(user);
         });
     }
+
+
 
     #endregion
 
