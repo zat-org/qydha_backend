@@ -128,7 +128,8 @@ public class AuthController(IAuthService authService) : ControllerBase
         , HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Roles = RoleConstants.Admin)]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.LoginWithQydha)]
     [HttpPost("login-with-qydha")]
     public async Task<IActionResult> LoginWithQydha(LoginWithQydhaDto dto)
     {
@@ -149,7 +150,8 @@ public class AuthController(IAuthService authService) : ControllerBase
             }, HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Roles = RoleConstants.Admin)]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.LoginWithQydha)]
     [HttpPost("confirm-login-with-qydha")]
     public async Task<IActionResult> ConfirmLoginWithQydha(ConfirmLoginWithQydhaDto dto)
     {

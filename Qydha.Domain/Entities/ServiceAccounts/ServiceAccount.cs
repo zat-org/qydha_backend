@@ -32,4 +32,5 @@ public enum ServiceAccountPermission
     ReadPublicNotifications,
     ClickOnPublicNotification,
     CheckUserNameAvailable,
+    LoginWithQydha
 }

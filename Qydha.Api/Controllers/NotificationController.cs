@@ -41,6 +41,7 @@ public class NotificationController(INotificationService notificationService) : 
     }
 
     [HttpPost("send-to-user/")]
+    [Authorize(Roles = RoleConstants.Admin)]
     public IActionResult SendNotificationToUser([FromForm] NotificationSendToUserDto dto)
     {
         Dictionary<string, object> payload = [];
@@ -70,6 +71,8 @@ public class NotificationController(INotificationService notificationService) : 
 
 
     [HttpPost("send-to-all-users/")]
+    [Authorize(Roles = RoleConstants.Admin)]
+
     public IActionResult SendNotificationToAllUsers([FromForm] NotificationSendDto dto)
     {
         Dictionary<string, object> payload = [];
@@ -98,6 +101,7 @@ public class NotificationController(INotificationService notificationService) : 
     }
 
     [HttpPost("send-to-anonymous-users/")]
+    [Authorize(Roles = RoleConstants.Admin)]
     public IActionResult SendNotificationToAnonymousUsers([FromForm] NotificationSendDto dto)
     {
         Dictionary<string, object> payload = [];

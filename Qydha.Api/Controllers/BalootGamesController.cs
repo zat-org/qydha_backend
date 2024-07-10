@@ -29,7 +29,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             , HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Policy = PolicyConstants.SubscribedUser)]
+    [Authorize(Roles = RoleConstants.User)]
     [HttpDelete("{gameId}")]
     public IActionResult DeleteBalootGame(Guid gameId)
     {

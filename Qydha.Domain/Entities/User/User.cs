@@ -2,7 +2,7 @@
 
 public class User : IClaimable
 {
-    public const string TokenType = "ServiceAccountToken";
+    public const string TokenType = "User";
     private User() { }
 
     public User(Guid? id, string username, string passwordHash, string phone, List<UserRoles>? roles = null, DateTimeOffset? createdAt = null)
