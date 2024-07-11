@@ -4,24 +4,29 @@ namespace Qydha.Domain.Services.Implementation;
 public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGamesService
 {
     private readonly IBalootGamesRepo _balootGamesRepo = balootGamesRepo;
-    public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId, ICollection<BalootGameEvent> events)
+    private async Task<Result<BalootGame>> ApplyEventsAndSaveTheGame(BalootGame game, ICollection<BalootGameEvent> events)
     {
-        BalootGame balootGame = BalootGame.CreateSinglePlayerGame(userId);
         foreach (var e in events)
         {
-            Result res = e.ApplyToState(balootGame);
+            Result res = e.ApplyToState(game);
             if (res.IsFailed) return res;
         }
-        balootGame.EventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
-        return await _balootGamesRepo.SaveGame(balootGame);
+        game.EventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
+        return await _balootGamesRepo.SaveGame(game);
     }
+    public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId, ICollection<BalootGameEvent> events) =>
+        await ApplyEventsAndSaveTheGame(BalootGame.CreateSinglePlayerGame(userId), events);
 
-    public async Task<Result<BalootGame>> AddEvents(Guid userId, Guid gameId, ICollection<BalootGameEvent> events)
+    public async Task<Result<BalootGame>> CreateAnonymousBalootGame(ICollection<BalootGameEvent> events) =>
+            await ApplyEventsAndSaveTheGame(BalootGame.CreateAnonymousGame(), events);
+
+    public async Task<Result<BalootGame>> AddEvents(Guid userId, Guid gameId, ICollection<BalootGameEvent> events, bool hasServiceAccountPermission = false)
     {
         return (await _balootGamesRepo.GetById(gameId))
             .OnSuccessAsync(async (game) =>
             {
-                if (userId != game.ModeratorId && userId != game.OwnerId)
+                if ((game.GameMode == BalootGameMode.AnonymousGame && !hasServiceAccountPermission) ||
+                    (game.GameMode != BalootGameMode.AnonymousGame && userId != game.ModeratorId && userId != game.OwnerId))
                     return Result.Fail(new ForbiddenError());
 
                 foreach (var e in events)
@@ -33,12 +38,14 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
             });
     }
 
-    public async Task<Result<BalootGame>> GetGameById(Guid requesterId, Guid gameId)
+    public async Task<Result<BalootGame>> GetGameById(Guid requesterId, Guid gameId, bool isRequesterAdmin = false)
     {
         return (await _balootGamesRepo.GetById(gameId))
             .OnSuccess((game) =>
             {
-                if (requesterId != game.ModeratorId && requesterId != game.OwnerId)
+                if (!isRequesterAdmin &&
+                    requesterId != game.ModeratorId &&
+                    requesterId != game.OwnerId)
                     return Result.Fail(new ForbiddenError());
                 return Result.Ok(game);
             });
@@ -50,8 +57,6 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
         .OnSuccessAsync(async (games) => (await _balootGamesRepo.GetUserBalootGamesWinsCount(userId))
             .ToResult((winsCount) => (games, winsCount)));
     }
-
-
 
     public async Task<Result<List<BalootGameTimeLineBlock>>> GetGameTimeLineById(Guid gameId)
     {
@@ -65,6 +70,6 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
             .OnSuccess((game) => Result.Ok(game.GetStatistics()));
     }
 
-    public async Task<Result> DeleteById(Guid gameId, Guid userId) =>
-        await _balootGamesRepo.DeleteById(gameId, userId);
+    public async Task<Result> DeleteByIds(Guid gameId, Guid userId, bool hasServiceAccountPermission = false) =>
+        await _balootGamesRepo.DeleteByIds(gameId, userId, hasServiceAccountPermission);
 }

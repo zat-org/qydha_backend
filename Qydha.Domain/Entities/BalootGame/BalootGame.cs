@@ -25,15 +25,24 @@ public class BalootGame
             ModeratorId = ownerId,
         };
     }
-
+    public static BalootGame CreateAnonymousGame()
+    {
+        return new BalootGame(BalootGameStateEnum.Created)
+        {
+            GameMode = BalootGameMode.AnonymousGame,
+            CreatedAt = DateTimeOffset.UtcNow,
+            OwnerId = null,
+            ModeratorId = null,
+        };
+    }
     public Guid Id { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public string EventsJsonString { get; set; }
     public BalootGameMode GameMode { get; set; }
-    public Guid ModeratorId { get; set; }
-    public virtual User Moderator { get; set; } = null!;
-    public Guid OwnerId { get; set; }
-    public virtual User Owner { get; set; } = null!;
+    public Guid? ModeratorId { get; set; }
+    public virtual User? Moderator { get; set; }
+    public Guid? OwnerId { get; set; }
+    public virtual User? Owner { get; set; }
     private BalootGameState State { get; set; } = null!;
 
     private BalootGameStateEnum _stateName;

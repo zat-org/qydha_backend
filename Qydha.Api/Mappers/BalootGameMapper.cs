@@ -65,6 +65,7 @@ public partial class BalootGameMapper
     [MapProperty(nameof(BalootSakka.ThemScore), nameof(BalootSakkaDto.ThemSakkaScore))]
     [MapProperty(nameof(BalootSakka.StateName), nameof(BalootSakkaDto.State))]
     [MapperIgnoreSource(nameof(BalootSakka.IsRunningWithMoshtaras))]
+    [MapperIgnoreSource(nameof(BalootSakka.IsRunning))]
     [MapperIgnoreSource(nameof(BalootSakka.IsEnded))]
     [MapperIgnoreSource(nameof(BalootSakka.BalootGameId))]
     [MapperIgnoreSource(nameof(BalootSakka.IsRunningWithoutMoshtaras))]
@@ -94,5 +95,18 @@ public partial class BalootGameMapper
 
     private static int TimeSpanToSeconds(TimeSpan t) => t.Seconds;
     private static Location PointToLocation(Point p) => new(p.X, p.Y);
+
+    public Result<List<BalootGameEvent>> BalootEventsDtoToBalootEvents(List<BalootGameEventDto> eventDtos)
+    {
+        List<BalootGameEvent> events = [];
+        foreach (var eDto in eventDtos)
+        {
+            Result<BalootGameEvent> res = eDto.MapToCorrespondingEvent();
+            if (res.IsFailed) return res.ToResult();
+            events.Add(res.Value);
+        }
+        return Result.Ok(events);
+    }
+
 }
 public record Location(double Longitude, double Latitude);

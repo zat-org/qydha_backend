@@ -86,7 +86,7 @@ public class AppAssetsController(IAppAssetsService appAssetsService) : Controlle
             }, HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Policy = PolicyConstants.UserWithAnyRoleOrServiceAccount)]
+    [Authorize(Policy = PolicyConstants.UserOrServiceAccount)]
     [Permission(ServiceAccountPermission.ReadPopup)]
     [HttpGet("popup/")]
     public async Task<IActionResult> GetPopup()

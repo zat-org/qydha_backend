@@ -5,36 +5,38 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
 {
     private readonly IBalootGamesService _balootGamesService = balootGamesService;
 
-    [Authorize(Roles = RoleConstants.User)]
+    [Authorize(Policy = PolicyConstants.UserOrServiceAccount)]
+    [Permission(ServiceAccountPermission.AnonymousBalootGameCRUDs)]
     [HttpPost]
     public IActionResult CreateBalootGame([FromBody] List<BalootGameEventDto> eventsDtos)
     {
-        List<BalootGameEvent> events = [];
-        foreach (var eDto in eventsDtos)
-        {
-            Result<BalootGameEvent> res = eDto.MapToCorrespondingEvent();
-            if (res.IsFailed)
-                return res.Errors.First().Handle(HttpContext.TraceIdentifier);
-            events.Add(res.Value);
-        }
-
-        return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync((userId) => _balootGamesService.CreateSingleBalootGame(userId, events))
-            .Resolve(
-            (game) => Ok(new
-            {
-                Data = new BalootGameMapper().BalootGameToBalootGameDto(game),
-                Message = "Game Created"
-            })
-            , HttpContext.TraceIdentifier);
+        var balootGameMapper = new BalootGameMapper();
+        return balootGameMapper.BalootEventsDtoToBalootEvents(eventsDtos)
+        .OnSuccess(events => HttpContext.User.GetUserIdentifier().Map(userId => (userId, events)))
+        .OnSuccessAsync((tuple) =>
+           {
+               if (HttpContext.User.IsServiceAccountToken())
+                   return _balootGamesService.CreateAnonymousBalootGame(tuple.events);
+               return _balootGamesService.CreateSingleBalootGame(tuple.userId, tuple.events);
+           })
+           .Resolve(
+           (game) => Ok(new
+           {
+               Data = balootGameMapper.BalootGameToBalootGameDto(game),
+               Message = "Game Created"
+           })
+           , HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Roles = RoleConstants.User)]
+
+    [Authorize(Policy = PolicyConstants.UserOrServiceAccount)]
+    [Permission(ServiceAccountPermission.AnonymousBalootGameCRUDs)]
     [HttpDelete("{gameId}")]
     public IActionResult DeleteBalootGame(Guid gameId)
     {
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(async id => await _balootGamesService.DeleteById(gameId, id))
+            .OnSuccessAsync(async id =>
+                await _balootGamesService.DeleteByIds(gameId, id, hasServiceAccountPermission: HttpContext.User.IsServiceAccountToken()))
             .Resolve(
             () => Ok(new
             {
@@ -44,37 +46,35 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
             , HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Roles = RoleConstants.User)]
+    [Authorize(Policy = PolicyConstants.UserOrServiceAccount)]
+    [Permission(ServiceAccountPermission.AnonymousBalootGameCRUDs)]
     [HttpPost("{gameId}/events")]
     public IActionResult AddEventToGame([FromRoute] Guid gameId, [FromBody] List<BalootGameEventDto> eventsDtos)
     {
-        List<BalootGameEvent> events = [];
-
-        foreach (var eDto in eventsDtos)
+        var balootGameMapper = new BalootGameMapper();
+        return balootGameMapper.BalootEventsDtoToBalootEvents(eventsDtos)
+        .OnSuccess(events => HttpContext.User.GetUserIdentifier().Map(userId => (userId, events)))
+        .OnSuccessAsync(async (tuple) =>
         {
-            Result<BalootGameEvent> res = eDto.MapToCorrespondingEvent();
-            if (res.IsFailed)
-                return res.Errors.First().Handle(HttpContext.TraceIdentifier);
-            events.Add(res.Value);
-        }
-
-        return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(async id => await _balootGamesService.AddEvents(id, gameId, events))
-            .Resolve(
-                (game) => Ok(new
-                {
-                    Data = new BalootGameMapper().BalootGameToBalootGameDto(game),
-                    Message = "Events Added!"
-                }), HttpContext.TraceIdentifier);
+            if (HttpContext.User.IsServiceAccountToken())
+                return await _balootGamesService.AddEvents(tuple.userId, gameId, tuple.events, hasPermission: true);
+            return await _balootGamesService.AddEvents(tuple.userId, gameId, tuple.events);
+        })
+        .Resolve(
+        (game) => Ok(new
+        {
+            Data = balootGameMapper.BalootGameToBalootGameDto(game),
+            Message = "Events Added!"
+        }), HttpContext.TraceIdentifier);
     }
 
-    [Authorize(Policy = PolicyConstants.SubscribedUser)]
+    [Authorize(Policy = PolicyConstants.AdminOrSubscribedUser)]
     [HttpGet("{gameId}")]
     public IActionResult GetGameState([FromRoute] Guid gameId)
     {
-
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(async id => await _balootGamesService.GetGameById(id, gameId))
+            .OnSuccessAsync(async userId =>
+                await _balootGamesService.GetGameById(userId, gameId, isRequesterAdmin: HttpContext.User.HasAdminRole()))
             .Resolve(
                 (game) => Ok(new
                 {

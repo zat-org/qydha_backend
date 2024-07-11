@@ -8,10 +8,10 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
     private readonly QydhaContext _dbCtx = qydhaContext;
     public async Task<Result<BalootGame>> SaveGame(BalootGame game)
     {
-        if (!_dbCtx.Users.Any(u => u.Id == game.OwnerId))
-            return Result.Fail(new EntityNotFoundError<Guid>(game.OwnerId, nameof(User)));
-        if (!_dbCtx.Users.Any(u => u.Id == game.ModeratorId))
-            return Result.Fail(new EntityNotFoundError<Guid>(game.ModeratorId, nameof(User)));
+        if (game.OwnerId != null && !_dbCtx.Users.Any(u => u.Id == game.OwnerId))
+            return Result.Fail(new EntityNotFoundError<Guid>(game.OwnerId.Value, nameof(User)));
+        if (game.ModeratorId != null && !_dbCtx.Users.Any(u => u.Id == game.ModeratorId))
+            return Result.Fail(new EntityNotFoundError<Guid>(game.ModeratorId.Value, nameof(User)));
         _dbCtx.BalootGames.Add(game);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(game);
@@ -59,15 +59,20 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
             .CountAsync();
         return Result.Ok(winsCount);
     }
-
-    public async Task<Result> DeleteById(Guid gameId, Guid userId)
+    public async Task<Result> DeleteByIds(Guid gameId, Guid userId, bool hasServiceAccountPermission = false)
     {
         var affected = await _dbCtx
             .BalootGames
-            .Where(g => g.Id == gameId && (g.OwnerId == userId || g.ModeratorId == userId))
+            .Where(g => g.Id == gameId &&
+                    (
+                        (g.GameMode == BalootGameMode.AnonymousGame && hasServiceAccountPermission) ||
+                        (g.GameMode != BalootGameMode.AnonymousGame && (g.OwnerId == userId || g.ModeratorId == userId))
+                    ))
             .ExecuteDeleteAsync();
         return affected == 1 ?
             Result.Ok() :
             Result.Fail(new EntityNotFoundError<Guid>(gameId, nameof(BalootGame)));
     }
+
+
 }

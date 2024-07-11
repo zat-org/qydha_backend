@@ -1,10 +1,10 @@
 namespace Qydha.API.Policies;
-public class UserWithAnyRoleOrPermissionPolicyHandler(IServiceAccountsService serviceAccountService) : AuthorizationHandler<UserWithAnyRoleOrPermissionPolicyRequirement>
+public class UserOrPermissionPolicyHandler(IServiceAccountsService serviceAccountService) : AuthorizationHandler<UserOrPermissionPolicyRequirement>
 {
     private readonly IServiceAccountsService _serviceAccountService = serviceAccountService;
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UserWithAnyRoleOrPermissionPolicyRequirement requirement)
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UserOrPermissionPolicyRequirement requirement)
     {
-        if (PoliciesUtility.IsUserWithAnyRole(context))
+        if (PoliciesUtility.IsUser(context))
         {
             context.Succeed(requirement);
             return Task.CompletedTask;
@@ -18,4 +18,4 @@ public class UserWithAnyRoleOrPermissionPolicyHandler(IServiceAccountsService se
     }
 }
 
-public class UserWithAnyRoleOrPermissionPolicyRequirement : IAuthorizationRequirement { }
+public class UserOrPermissionPolicyRequirement : IAuthorizationRequirement { }

@@ -18,15 +18,15 @@ public static class PoliciesUtility
         }
         return false;
     }
+    public static bool IsUser(AuthorizationHandlerContext context) =>
+        context.User.IsUserToken() && context.User.HasUserRole();
+
     public static bool IsAdmin(AuthorizationHandlerContext context) =>
-        context.User.HasClaim(c => c.Type == ClaimsNamesConstants.TokenType && c.Value == User.TokenType) &&
-        (context.User.IsInRole(UserRoles.StaffAdmin.ToString()) || context.User.IsInRole(UserRoles.SuperAdmin.ToString()));
-    public static bool IsUserWithAnyRole(AuthorizationHandlerContext context) => 
-        context.User.HasClaim(c => c.Type == ClaimsNamesConstants.TokenType && c.Value == User.TokenType);
+        context.User.IsUserToken() && context.User.HasAdminRole();
+
     public static bool IsSubscribedUser(AuthorizationHandlerContext context, IUserService _userService)
     {
-        if (!context.User.HasClaim(c => c.Type == ClaimsNamesConstants.TokenType && c.Value == User.TokenType))
-            return false;
+        if (!context.User.IsUserToken()) return false;
 
         var checkIsUserSubscribedRes = context.User
             .GetUserIdentifier()

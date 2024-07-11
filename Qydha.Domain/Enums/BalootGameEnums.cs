@@ -1,6 +1,7 @@
 ﻿namespace Qydha.Domain.Enums;
 public enum BalootGameMode
 {
+    AnonymousGame,
     SinglePlayer,
     MultiPlayer,
     Championship,

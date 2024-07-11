@@ -14,7 +14,7 @@ public static class AuthenticationConfiguration
         services.AddScoped<IAuthorizationHandler, SubscribedUserPolicyHandler>();
         services.AddScoped<IAuthorizationHandler, AdminOrPermissionPolicyHandler>();
         services.AddScoped<IAuthorizationHandler, AdminOrSubscribedUserPolicyHandler>();
-        services.AddScoped<IAuthorizationHandler, UserWithAnyRoleOrPermissionPolicyHandler>();
+        services.AddScoped<IAuthorizationHandler, UserOrPermissionPolicyHandler>();
 
 
 
@@ -23,7 +23,7 @@ public static class AuthenticationConfiguration
             .AddPolicy(PolicyConstants.SubscribedUser, policy => policy.Requirements.Add(new SubscribedUserPolicyRequirement()))
             .AddPolicy(PolicyConstants.AdminOrServiceAccount, policy => policy.Requirements.Add(new AdminOrPermissionPolicyRequirement()))
             .AddPolicy(PolicyConstants.AdminOrSubscribedUser, policy => policy.Requirements.Add(new AdminOrSubscribedUserPolicyRequirement()))
-            .AddPolicy(PolicyConstants.UserWithAnyRoleOrServiceAccount, policy => policy.Requirements.Add(new UserWithAnyRoleOrPermissionPolicyRequirement()));
+            .AddPolicy(PolicyConstants.UserOrServiceAccount, policy => policy.Requirements.Add(new UserOrPermissionPolicyRequirement()));
 
 
         services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, (options) =>
@@ -59,7 +59,7 @@ public static class PolicyConstants
     public const string AdminOrServiceAccount = "AdminOrServiceAccountPermission";
     public const string ServiceAccountPermission = "ServiceAccountPermission";
     public const string SubscribedUser = "SubscribedUser";
-    public const string UserWithAnyRoleOrServiceAccount = "UserWithAnyRoleOrServiceAccount";
+    public const string UserOrServiceAccount = "UserOrServiceAccount";
 
 }
 
