@@ -15,22 +15,22 @@ public class BalootGame
         ThemName = "Them";
         PausingIntervals = [];
     }
-    public static BalootGame CreateSinglePlayerGame(Guid ownerId)
+    public static BalootGame CreateSinglePlayerGame(Guid ownerId, DateTimeOffset createdAt)
     {
         return new BalootGame(BalootGameStateEnum.Created)
         {
             GameMode = BalootGameMode.SinglePlayer,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = createdAt.ToUniversalTime(),
             OwnerId = ownerId,
             ModeratorId = ownerId,
         };
     }
-    public static BalootGame CreateAnonymousGame()
+    public static BalootGame CreateAnonymousGame(DateTimeOffset createdAt)
     {
         return new BalootGame(BalootGameStateEnum.Created)
         {
             GameMode = BalootGameMode.AnonymousGame,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = createdAt.ToUniversalTime(),
             OwnerId = null,
             ModeratorId = null,
         };

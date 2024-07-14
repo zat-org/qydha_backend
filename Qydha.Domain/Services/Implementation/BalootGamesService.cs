@@ -14,11 +14,11 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
         game.EventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
         return await _balootGamesRepo.SaveGame(game);
     }
-    public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId, ICollection<BalootGameEvent> events) =>
-        await ApplyEventsAndSaveTheGame(BalootGame.CreateSinglePlayerGame(userId), events);
+    public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId, ICollection<BalootGameEvent> events, DateTimeOffset createdAt) =>
+        await ApplyEventsAndSaveTheGame(BalootGame.CreateSinglePlayerGame(userId, createdAt), events);
 
-    public async Task<Result<BalootGame>> CreateAnonymousBalootGame(ICollection<BalootGameEvent> events) =>
-            await ApplyEventsAndSaveTheGame(BalootGame.CreateAnonymousGame(), events);
+    public async Task<Result<BalootGame>> CreateAnonymousBalootGame(ICollection<BalootGameEvent> events, DateTimeOffset createdAt) =>
+            await ApplyEventsAndSaveTheGame(BalootGame.CreateAnonymousGame(createdAt), events);
 
     public async Task<Result<BalootGame>> AddEvents(Guid userId, Guid gameId, ICollection<BalootGameEvent> events, bool hasServiceAccountPermission = false)
     {

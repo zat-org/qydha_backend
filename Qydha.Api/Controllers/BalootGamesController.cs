@@ -8,16 +8,16 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     [Authorize(Policy = PolicyConstants.UserOrServiceAccount)]
     [Permission(ServiceAccountPermission.AnonymousBalootGameCRUDs)]
     [HttpPost]
-    public IActionResult CreateBalootGame([FromBody] List<BalootGameEventDto> eventsDtos)
+    public IActionResult CreateBalootGame([ModelBinder(typeof(CreateBalootGameDtoModelBinder))] CreateBalootGameDto dto)
     {
         var balootGameMapper = new BalootGameMapper();
-        return balootGameMapper.BalootEventsDtoToBalootEvents(eventsDtos)
+        return balootGameMapper.BalootEventsDtoToBalootEvents(dto.Events)
         .OnSuccess(events => HttpContext.User.GetUserIdentifier().Map(userId => (userId, events)))
         .OnSuccessAsync((tuple) =>
            {
                if (HttpContext.User.IsServiceAccountToken())
-                   return _balootGamesService.CreateAnonymousBalootGame(tuple.events);
-               return _balootGamesService.CreateSingleBalootGame(tuple.userId, tuple.events);
+                   return _balootGamesService.CreateAnonymousBalootGame(tuple.events, dto.CreatedAt);
+               return _balootGamesService.CreateSingleBalootGame(tuple.userId, tuple.events, dto.CreatedAt);
            })
            .Resolve(
            (game) => Ok(new
@@ -49,7 +49,7 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     [Authorize(Policy = PolicyConstants.UserOrServiceAccount)]
     [Permission(ServiceAccountPermission.AnonymousBalootGameCRUDs)]
     [HttpPost("{gameId}/events")]
-    public IActionResult AddEventToGame([FromRoute] Guid gameId, [FromBody] List<BalootGameEventDto> eventsDtos)
+    public IActionResult AddEventToGame([FromRoute] Guid gameId, [ModelBinder(typeof(BalootGameEventDtoListModelBinder))] List<BalootGameEventDto> eventsDtos)
     {
         var balootGameMapper = new BalootGameMapper();
         return balootGameMapper.BalootEventsDtoToBalootEvents(eventsDtos)

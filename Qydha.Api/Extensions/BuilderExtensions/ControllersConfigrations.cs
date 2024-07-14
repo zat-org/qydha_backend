@@ -9,7 +9,6 @@ public static class ControllersConfigurations
         services.AddControllers((options) =>
         {
             options.Filters.Add<ExceptionHandlerAttribute>();
-            options.ModelBinderProviders.Insert(0, new BalootGameEventsDtoModelBinderProvider());
         }).AddNewtonsoftJson(options =>
         {
             options.SerializerSettings.Converters.Add(new StringEnumConverter());
