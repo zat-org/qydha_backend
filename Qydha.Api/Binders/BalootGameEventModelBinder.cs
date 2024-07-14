@@ -15,13 +15,12 @@ public class BalootGameEventDtoListModelBinder() : IModelBinder
         string json = await sr.ReadToEndAsync();
         try
         {
-            // var x = bindingContext.ModelType;
             var val = JsonConvert.DeserializeObject<List<BalootGameEventDto>>(json, _converter);
             bindingContext.Result = ModelBindingResult.Success(val);
         }
         catch (JsonSerializationException exp)
         {
-            throw new InvalidBalootGameEventException(exp.Message, exp);
+            throw new InvalidBalootGameEventException("Can't Serialize this body data to Correct API Schema", exp);
         }
     }
 }
@@ -34,13 +33,12 @@ public class CreateBalootGameDtoModelBinder() : IModelBinder
         string json = await sr.ReadToEndAsync();
         try
         {
-            // var x = bindingContext.ModelType;
             var val = JsonConvert.DeserializeObject<CreateBalootGameDto>(json, _converter);
             bindingContext.Result = ModelBindingResult.Success(val);
         }
         catch (JsonSerializationException exp)
         {
-            throw new InvalidBalootGameEventException(exp.Message, exp);
+            throw new InvalidBalootGameEventException("Can't Serialize this body data to Correct API Schema", exp);
         }
     }
 }

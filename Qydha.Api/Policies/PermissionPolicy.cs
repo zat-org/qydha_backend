@@ -7,6 +7,7 @@ public class PermissionHandler(IServiceAccountsService serviceAccountService) : 
         if (PoliciesUtility.IsServiceAccountHasPermission(context, _serviceAccountService))
         {
             context.Succeed(requirement);
+            return Task.CompletedTask;
         }
         return Task.CompletedTask;
     }

@@ -3,7 +3,6 @@ namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("notifications/")]
-[Authorize(Roles = RoleConstants.Admin)]
 public class NotificationController(INotificationService notificationService) : ControllerBase
 {
     private readonly INotificationService _notificationService = notificationService;
