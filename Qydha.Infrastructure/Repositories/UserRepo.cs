@@ -34,10 +34,19 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             Result.Fail<User>(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
 
-    public async Task<Result<IEnumerable<User>>> GetAllRegularUsers()
+    public async Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters)
     {
-        var users = await _dbCtx.Users.ToListAsync();
-        return Result.Ok((IEnumerable<User>)users);
+        IQueryable<User> query = _dbCtx.Users;
+        if (filterParameters.Role != null)
+            query = query.Where(u => u.Roles.Contains(filterParameters.Role.Value));
+        if (!string.IsNullOrEmpty(filterParameters.SearchToken))
+        {
+            query = query.Where(u => EF.Functions.ToTsVector("english", u.Id + " " + u.Username + " " + u.Email + " " + u.Phone)
+                .Matches(filterParameters.SearchToken));
+        }
+        query = query.OrderByDescending(g => g.CreatedAt);
+        PagedList<User> users = await _dbCtx.GetPagedData(query, parameters.PageNumber, parameters.PageSize);
+        return Result.Ok(users);
     }
 
     public async Task<Result<User>> GetByIdAsync(Guid id) =>

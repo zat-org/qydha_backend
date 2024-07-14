@@ -137,4 +137,5 @@ public enum UserRoles
     SuperAdmin = 1,
     StaffAdmin,
     User,
+    Streamer
 }

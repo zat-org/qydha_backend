@@ -16,15 +16,15 @@ public class UserController(IUserService userService, INotificationService notif
     #region Get user 
     [HttpGet]
     [Authorize(Roles = RoleConstants.Admin)]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetUsers([FromQuery] PaginationParameters paginationParameters, [FromQuery] UsersFilterParameters filterParameters)
     {
-        return (await _userService.GetAllRegularUsers())
+        return (await _userService.GetAllRegularUsers(paginationParameters, filterParameters))
             .Resolve((users) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { users = users.Select(u => mapper.UserToUserDto(u)) },
+                    data = new { users = mapper.PageListToUserPageDto(users) },
                     message = "users fetched successfully."
                 });
             }, HttpContext.TraceIdentifier);

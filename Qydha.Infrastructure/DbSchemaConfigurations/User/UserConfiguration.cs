@@ -33,6 +33,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(e => e.Username, "users_username_key").IsUnique();
 
+        builder.HasIndex(u => new { u.Username, u.Email, u.Phone, u.Id })
+            .HasMethod("GIN")
+            .IsTsVectorExpressionIndex("english");
+
         builder.Property(e => e.Id)
             .HasDefaultValueSql("uuid_generate_v4()")
             .HasColumnName("id");

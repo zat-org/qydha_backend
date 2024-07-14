@@ -6,6 +6,13 @@ public partial class UserMapper
     [MapProperty(nameof(User.CreatedAt), nameof(GetUserDto.CreatedOn))]
     public partial GetUserDto UserToUserDto(User user);
 
+    public UsersPage PageListToUserPageDto(PagedList<User> users)
+    {
+        return new UsersPage(users.Select(UserToUserDto).ToList(),
+            users.TotalCount,
+            users.CurrentPage,
+            users.PageSize);
+    }
     public partial UpdateUserDto UserToUpdateUserDto(User user);
     public partial void ApplyUpdateUserDtoToUser(UpdateUserDto dto, User user);
 

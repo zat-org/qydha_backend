@@ -12,10 +12,6 @@ public class GetNotificationDto
     public NotificationDataPayload Payload { get; set; } = null!;
 }
 
-public class NotificationPage : Page<GetNotificationDto>
-{
-    public NotificationPage(List<GetNotificationDto> items, int count, int pageNumber, int pageSize)
-        : base(items, count, pageNumber, pageSize)
-    { }
-
-}
+public class NotificationPage(List<GetNotificationDto> items, int count, int pageNumber, int pageSize)
+    : Page<GetNotificationDto>(items, count, pageNumber, pageSize)
+{ }

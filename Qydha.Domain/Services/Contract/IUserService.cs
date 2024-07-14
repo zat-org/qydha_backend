@@ -1,7 +1,7 @@
 ﻿namespace Qydha.Domain.Services.Contracts;
 public interface IUserService
 {
-    Task<Result<IEnumerable<User>>> GetAllRegularUsers();
+    Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters);
     Task<Result<User>> GetUserById(Guid userId);
     Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
     Task<Result> IsUserSubscribed(Guid userId);

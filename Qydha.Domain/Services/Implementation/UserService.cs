@@ -26,8 +26,8 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
 
     public async Task<Result> IsUserNameAvailable(string username) => await _userRepo.IsUsernameAvailable(username);
 
-    public async Task<Result<IEnumerable<User>>> GetAllRegularUsers() =>
-      await _userRepo.GetAllRegularUsers();
+    public async Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters) =>
+      await _userRepo.GetAllRegularUsers(parameters, filterParameters);
 
     public async Task<Result> IsUserSubscribed(Guid userId) => await _userRepo.IsUserSubscribed(userId);
 

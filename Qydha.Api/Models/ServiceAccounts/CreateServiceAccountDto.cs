@@ -19,3 +19,7 @@ public class ServiceAccountDtoValidator : AbstractValidator<ServiceAccountDto>
         RuleFor(r => r.Permissions).NotEmpty();
     }
 }
+
+public class ServiceAccountPage(List<ServiceAccount> items, int count, int pageNumber, int pageSize)
+    : Page<ServiceAccount>(items, count, pageNumber, pageSize)
+{ }

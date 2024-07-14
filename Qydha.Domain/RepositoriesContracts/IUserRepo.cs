@@ -6,7 +6,7 @@ public interface IUserRepo
     Task<Result> DeleteAsync(Guid userId);
 
     Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
-    Task<Result<IEnumerable<User>>> GetAllRegularUsers();
+    Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters);
     Task<Result<User>> GetByIdAsync(Guid id);
     Task<Result<User>> GetByPhoneAsync(string phone);
     Task<Result<User>> GetByEmailAsync(string email);

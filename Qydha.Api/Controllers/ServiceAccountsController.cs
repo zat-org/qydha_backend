@@ -33,7 +33,10 @@ public class ServiceAccountController(IServiceAccountsService serviceAccountsSer
             {
                 return Ok(new
                 {
-                    data = new { accounts },
+                    data = new
+                    {
+                        accounts = new ServiceAccountPage(accounts, accounts.TotalCount, accounts.CurrentPage, accounts.PageSize)
+                    },
                     message = "Service Accounts fetched successfully."
                 });
             }
