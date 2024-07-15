@@ -41,8 +41,13 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             query = query.Where(u => u.Roles.Contains(filterParameters.Role.Value));
         if (!string.IsNullOrEmpty(filterParameters.SearchToken))
         {
-            query = query.Where(u => EF.Functions.ToTsVector("english", u.Id + " " + u.Username + " " + u.Email + " " + u.Phone)
-                .Matches(filterParameters.SearchToken));
+            string token = filterParameters.SearchToken.ToLower().Trim();
+            query = query.Where(u =>
+                EF.Functions.Like(u.Username.ToLower(), $"%{token}%") ||
+                (u.Email != null && EF.Functions.Like(u.Email.ToLower(), $"%{token}%")) ||
+                EF.Functions.Like(u.Phone.ToLower(), $"%{token}%") ||
+                EF.Functions.Like(u.Id.ToString().ToLower(), $"%{token}%")
+            );
         }
         query = query.OrderByDescending(g => g.CreatedAt);
         PagedList<User> users = await _dbCtx.GetPagedData(query, parameters.PageNumber, parameters.PageSize);
