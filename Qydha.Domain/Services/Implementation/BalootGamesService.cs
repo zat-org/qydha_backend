@@ -1,15 +1,20 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGamesService
+public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<BalootGamesService> logger) : IBalootGamesService
 {
     private readonly IBalootGamesRepo _balootGamesRepo = balootGamesRepo;
+    private readonly ILogger<BalootGamesService> _logger = logger;
     private async Task<Result<BalootGame>> ApplyEventsAndSaveTheGame(BalootGame game, ICollection<BalootGameEvent> events)
     {
         foreach (var e in events)
         {
             Result res = e.ApplyToState(game);
-            if (res.IsFailed) return res;
+            if (res.IsFailed)
+            {
+                _logger.LogWarning("Baloot Game Error While trying to Create game with these events : {events}", JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings));
+                return res;
+            }
         }
         game.EventsJsonString = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings);
         return await _balootGamesRepo.SaveGame(game);
@@ -32,7 +37,11 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo) : IBalootGames
                 foreach (var e in events)
                 {
                     Result res = e.ApplyToState(game);
-                    if (res.IsFailed) return res;
+                    if (res.IsFailed)
+                    {
+                        _logger.LogWarning("Baloot Game Error While trying to Apply these events userId : {userId} , gameId : {gameId} , events {events}", userId, gameId, JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings));
+                        return res;
+                    }
                 }
                 return (await _balootGamesRepo.AddEvents(game, events)).ToResult(game);
             });

@@ -63,7 +63,9 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
     public override Result ApplyToState(BalootGame game)
     {
         if (RecordingMode != BalootRecordingMode.Regular)
-            return Result.Fail(new InvalidBalootGameActionError("Mashare3 can only be added during regular Recoding"));
+            return Result.Fail(new InvalidBodyInputError(
+                new Dictionary<string, List<string>>() { { nameof(RecordingMode), ["Mashare3 can only be added during regular Recoding"] } }
+                , "please provide correct recording mode."));
 
         return game.AddMashare3(UsAbnat, ThemAbnat, TriggeredAt);
     }
