@@ -12,10 +12,10 @@ public class NotificationUserLinkConfiguration : IEntityTypeConfiguration<Notifi
         entity.Property(e => e.Id).HasColumnName("id");
         entity.Property(e => e.NotificationId).HasColumnName("notification_id");
         entity.Property(e => e.ReadAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("read_at");
         entity.Property(e => e.SentAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("sent_at");
 
         entity.Property(e => e.TemplateValues)

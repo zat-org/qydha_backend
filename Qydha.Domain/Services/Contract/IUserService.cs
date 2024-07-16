@@ -2,6 +2,7 @@
 public interface IUserService
 {
     Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters);
+    Task<Result<User>> GetByIdForDashboardAsync(Guid userId);
     Task<Result<User>> GetUserById(Guid userId);
     Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
     Task<Result> IsUserSubscribed(Guid userId);

@@ -9,7 +9,7 @@ public class InfluencerCodeUserLinkConfiguration : IEntityTypeConfiguration<Infl
         entity.ToTable("influencer_code_users_link");
 
         entity.Property(e => e.UsedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("used_at");
         entity.Property(e => e.NumberOfDays)
             .HasColumnName("number_of_days");

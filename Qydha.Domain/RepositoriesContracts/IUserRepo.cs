@@ -4,7 +4,7 @@ public interface IUserRepo
     Task<Result<User>> AddAsync(User user);
     Task<Result<User>> UpdateAsync(User user);
     Task<Result> DeleteAsync(Guid userId);
-
+    Task<Result<User>> GetByIdForDashboardAsync(Guid userId);
     Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
     Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters);
     Task<Result<User>> GetByIdAsync(Guid id);

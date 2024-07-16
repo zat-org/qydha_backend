@@ -11,7 +11,7 @@ public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
         entity.ToTable("baloot_games");
 
         entity.Property(e => e.CreatedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("created_at");
 
         entity.Property(e => e.Id)
@@ -62,12 +62,12 @@ public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
         entity.Property(e => e.StartedAt)
             .IsRequired(false)
             .HasColumnName("started_at")
-            .HasColumnType("timestamp with time zone");
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter);
 
         entity.Property(e => e.EndedAt)
             .IsRequired(false)
             .HasColumnName("ended_at")
-            .HasColumnType("timestamp with time zone");
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter);
 
         entity.Property(e => e.StateName)
             .HasColumnName("state")

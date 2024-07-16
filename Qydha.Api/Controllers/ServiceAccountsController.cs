@@ -15,10 +15,10 @@ public class ServiceAccountController(IServiceAccountsService serviceAccountsSer
             data = new
             {
                 permissions = Enum
-                .GetValues(typeof(ServiceAccountPermission))
-                .Cast<ServiceAccountPermission>()
-                .Select(c => c.ToString())
-                .ToList()
+                    .GetValues(typeof(ServiceAccountPermission))
+                    .Cast<ServiceAccountPermission>()
+                    .Select(c => c.ToString())
+                    .ToList()
             },
             message = "permissions fetched successfully."
         });

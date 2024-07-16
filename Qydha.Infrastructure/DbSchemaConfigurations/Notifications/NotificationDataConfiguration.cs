@@ -95,7 +95,7 @@ public class NotificationDataConfiguration : IEntityTypeConfiguration<Notificati
             .HasDefaultValue(0)
             .HasColumnName("anonymous_clicks");
         entity.Property(e => e.CreatedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("created_at");
         entity.Property(e => e.Description)
             .HasMaxLength(512)

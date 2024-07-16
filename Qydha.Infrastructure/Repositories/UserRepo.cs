@@ -15,6 +15,17 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     #endregion
 
     #region getUser
+    public async Task<Result<User>> GetByIdForDashboardAsync(Guid userId)
+    {
+        return await _dbCtx.Users
+                .Include(u => u.UserPromoCodes)
+                .Include(u => u.Purchases)
+                .Include(u => u.InfluencerCodes).ThenInclude(c => c.InfluencerCode).ThenInclude(c => c.Category)
+                .AsSplitQuery()
+                .FirstOrDefaultAsync((user) => user.Id == userId) is User user ?
+                Result.Ok(user) :
+                Result.Fail<User>(new EntityNotFoundError<Guid>(userId, nameof(User)));
+    }
     public async Task<Result> IsUserSubscribed(Guid userId)
     {
         return (await _dbCtx.Users

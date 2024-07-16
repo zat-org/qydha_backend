@@ -11,13 +11,13 @@ public class LoginWithQydhaRequestConfiguration : IEntityTypeConfiguration<Login
             .HasDefaultValueSql("uuid_generate_v4()")
             .HasColumnName("id");
         entity.Property(e => e.CreatedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("created_at");
         entity.Property(e => e.Otp)
             .HasMaxLength(6)
             .HasColumnName("otp");
         entity.Property(e => e.UsedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("used_at");
         entity.Property(e => e.UserId).HasColumnName("user_id");
 

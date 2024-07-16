@@ -9,3 +9,7 @@ public class GetUserPromoCodeDto
     public DateTimeOffset CreatedAt { get; set; }
 
 }
+public class GetUsedPromoCodeByUserDto : GetUserPromoCodeDto
+{
+    public DateTimeOffset UsedAt { get; set; }
+}

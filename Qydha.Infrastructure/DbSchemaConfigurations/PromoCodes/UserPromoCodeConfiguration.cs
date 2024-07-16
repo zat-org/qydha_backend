@@ -15,14 +15,14 @@ public class UserPromoCodeConfiguration : IEntityTypeConfiguration<UserPromoCode
             .HasMaxLength(50)
             .HasColumnName("code");
         entity.Property(e => e.CreatedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("created_at");
         entity.Property(e => e.ExpireAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("expire_at");
         entity.Property(e => e.NumberOfDays).HasColumnName("number_of_days");
         entity.Property(e => e.UsedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("used_at");
         entity.Property(e => e.UserId).HasColumnName("user_id");
 

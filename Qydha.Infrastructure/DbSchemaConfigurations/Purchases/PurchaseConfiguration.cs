@@ -19,7 +19,7 @@ public class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
             .HasMaxLength(15)
             .HasColumnName("productsku");
         entity.Property(e => e.PurchaseDate)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("purchase_date");
         entity.Property(e => e.Type)
             .HasMaxLength(10)

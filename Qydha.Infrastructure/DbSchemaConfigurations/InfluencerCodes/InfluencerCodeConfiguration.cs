@@ -20,10 +20,10 @@ public class InfluencerCodeConfiguration : IEntityTypeConfiguration<InfluencerCo
             .HasMaxLength(100)
             .HasColumnName("code");
         entity.Property(e => e.CreatedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("created_at");
         entity.Property(e => e.ExpireAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("expire_at");
         entity.Property(e => e.MaxInfluencedUsersCount)
             .HasDefaultValue(0)

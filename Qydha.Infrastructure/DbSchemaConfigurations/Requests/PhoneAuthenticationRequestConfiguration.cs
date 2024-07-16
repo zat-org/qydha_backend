@@ -11,7 +11,7 @@ public class PhoneAuthenticationRequestConfiguration : IEntityTypeConfiguration<
             .HasDefaultValueSql("uuid_generate_v4()")
             .HasColumnName("id");
         entity.Property(e => e.CreatedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("created_on");
         entity.Property(e => e.Otp)
             .HasMaxLength(6)

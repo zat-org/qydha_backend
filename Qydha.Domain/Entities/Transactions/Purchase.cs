@@ -9,6 +9,4 @@ public class Purchase
     public string ProductSku { get; set; } = string.Empty;
     public int NumberOfDays { get; set; }
     public virtual User User { get; set; } = null!;
-
-    
 }

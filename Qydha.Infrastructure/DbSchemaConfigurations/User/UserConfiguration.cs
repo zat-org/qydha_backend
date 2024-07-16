@@ -46,13 +46,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnType("DATE")
             .HasColumnName("birth_date");
         builder.Property(e => e.CreatedAt)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("created_on");
         builder.Property(e => e.Email)
             .HasMaxLength(200)
             .HasColumnName("email");
         builder.Property(e => e.ExpireDate)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("expire_date");
         builder.Property(e => e.FCMToken)
             .IsRequired(false)
@@ -60,7 +60,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("fcm_token");
 
         builder.Property(e => e.LastLogin)
-            .HasColumnType("timestamp with time zone")
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
             .HasColumnName("last_login");
         builder.Property(e => e.Name)
             .HasMaxLength(200)

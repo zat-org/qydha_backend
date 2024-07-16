@@ -29,6 +29,30 @@ public class UserController(IUserService userService, INotificationService notif
                 });
             }, HttpContext.TraceIdentifier);
     }
+    [HttpGet("{id}")]
+    [Authorize(Roles = RoleConstants.Admin)]
+    public async Task<IActionResult> GetUserByIdForDashboard([FromRoute] Guid id)
+    {
+        return (await _userService.GetByIdForDashboardAsync(id))
+            .Resolve((user) =>
+            {
+                var userMapper = new UserMapper();
+                var influencerCodeMapper = new InfluencerCodeMapper();
+                var promoCodeMapper = new UserPromoCodeMapper();
+                var purchaseMapper = new PurchasesMapper();
+                return Ok(new
+                {
+                    data = new
+                    {
+                        user = userMapper.UserToUserDto(user),
+                        PromoCodes = user.UserPromoCodes.Select(promoCodeMapper.PromoCodeToGetUsedPromoCodeDto),
+                        Purchases = user.Purchases.Select(purchaseMapper.PurchaseToGetUserPurchaseDto),
+                        InfluencerCodes = user.InfluencerCodes.Select(influencerCodeMapper.InfluencerCodeUserLinkToInfluencerCodeUsedByUser)
+                    },
+                    message = "user fetched successfully."
+                });
+            }, HttpContext.TraceIdentifier);
+    }
 
     [HttpGet("me/")]
     [Authorize(Roles = RoleConstants.User)]
@@ -274,6 +298,24 @@ public class UserController(IUserService userService, INotificationService notif
                 message = "User updated Successfully"
             });
         }, HttpContext.TraceIdentifier);
+    }
+
+    [Authorize(Roles = RoleConstants.SuperAdmin)]
+    [HttpGet("roles")]
+    public IActionResult GetUsersRoles()
+    {
+        return Ok(new
+        {
+            data = new
+            {
+                roles = Enum
+                    .GetValues(typeof(UserRoles))
+                    .Cast<UserRoles>()
+                    .Select(c => c.ToString())
+                    .ToList()
+            },
+            message = "Available User Roles fetched Successfully"
+        });
     }
 
     #endregion

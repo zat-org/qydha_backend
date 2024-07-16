@@ -20,12 +20,12 @@ public class BalootMoshtaraConfiguration : IEntityTypeConfiguration<BalootMoshta
         entity.Property(e => e.StartedAt)
             .IsRequired()
             .HasColumnName("started_at")
-            .HasColumnType("timestamp with time zone");
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter);
 
         entity.Property(e => e.EndedAt)
             .IsRequired(false)
             .HasColumnName("ended_at")
-            .HasColumnType("timestamp with time zone");
+            .HasColumnType("timestamp with time zone").HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter);
 
         entity.Property(e => e.UsScore)
             .HasColumnName("us_score");
