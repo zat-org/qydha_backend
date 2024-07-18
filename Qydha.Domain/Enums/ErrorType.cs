@@ -11,6 +11,7 @@ public enum ErrorType
     InvalidAuthToken = 4010, // 401
     InvalidCredentials = 4011, // 400
     InvalidActionOrForbidden = 4014, //403
+    InvalidRefreshToken = 4015, // 400
     #endregion
 
     #region influencer codes errors

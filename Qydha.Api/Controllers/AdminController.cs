@@ -11,12 +11,13 @@ public class AdminController(IAuthService authService) : ControllerBase
     {
         return (await _authService.Login(dto.Username, dto.Password, true, null))
         .Resolve(
-            (tuple) =>
+            (authUserModel) =>
             {
+                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { adminUser = mapper.UserToUserDto(tuple.user), token = tuple.jwtToken },
+                    data = new { adminUser = mapper.UserToUserDto(authUserModel.User), token = authUserModel.JwtToken, authUserModel.RefreshTokenExpirationDate },
                     message = "Logged in successfully."
                 });
             }

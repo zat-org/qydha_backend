@@ -65,8 +65,9 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         return Result.Ok(users);
     }
 
-    public async Task<Result<User>> GetByIdAsync(Guid id) =>
-        await _dbCtx.Users.FirstOrDefaultAsync((user) => user.Id == id) is User user ?
+    public async Task<Result<User>> GetByIdAsync(Guid id, bool withTracking = false) =>
+        await _dbCtx.Users.AsTracking(withTracking ? QueryTrackingBehavior.TrackAll : QueryTrackingBehavior.NoTracking)
+            .FirstOrDefaultAsync((user) => user.Id == id) is User user ?
             Result.Ok(user) :
             Result.Fail<User>(new EntityNotFoundError<Guid>(id, nameof(User)));
 
@@ -109,6 +110,12 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         return Result.Ok();
     }
 
+    public async Task<Result> IsUsernameAndPhoneAvailable(string username, string phone)
+    {
+        return await _dbCtx.Users.AnyAsync(u => u.Username == username || u.Phone == phone) ?
+            Result.Fail(new EntityUniqueViolationError(nameof(username), " اسم المستخدم او رقم الجوال مستخدم بالفعل")) :
+            Result.Ok();
+    }
     #endregion
 
     #region editUser    
@@ -232,17 +239,14 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     }
     public async Task<Result<User>> CheckUserCredentials(string username, string password)
     {
-        var checkRes = (await GetByUsernameAsync(username))
-            .OnSuccess((user) =>
-               {
-                   if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                       return Result.Fail(new InvalidCredentialsError("Invalid credentials"));
-                   return Result.Ok(user);
-               });
-        if (checkRes.IsFailed)
+        var user = await _dbCtx.Users.AsTracking(QueryTrackingBehavior.TrackAll)
+            .FirstOrDefaultAsync((user) => user.NormalizedUsername == username.ToUpper());
+        if (user == null)
+            return Result.Fail<User>(new EntityNotFoundError<string>(username, nameof(User)));
+        if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             return Result.Fail(new InvalidCredentialsError("اسم المستخدم او كلمة المرور غير صحيحة"));
         else
-            return checkRes;
+            return Result.Ok(user);
     }
     public async Task<Result<User>> UpdateAsync(User user)
     {
@@ -250,12 +254,15 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(user);
     }
-    public async Task<Result> DeleteAsync(Guid userId)
+    public async Task<Result> DeleteAsync(User user)
     {
-        var affected = await _dbCtx.Users.Where(c => c.Id == userId).ExecuteDeleteAsync();
-        return affected == 1 ?
-            Result.Ok() :
-            Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
+        _dbCtx.Entry(user).State = EntityState.Deleted;
+        await _dbCtx.SaveChangesAsync();
+        return Result.Ok();
+        // var affected = await _dbCtx.Users.Where(c => c.Id == userId).ExecuteDeleteAsync();
+        // return affected == 1 ?
+        //     Result.Ok() :
+        //     Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
 
 

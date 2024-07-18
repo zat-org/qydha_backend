@@ -28,15 +28,17 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         return (await _authService.Login(dto.Username, dto.Password, asAdmin: false, dto.FCMToken))
         .Resolve(
-            (tuple) =>
+            (authUserModel) =>
             {
+                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.user),
-                        token = tuple.jwtToken
+                        user = mapper.UserToUserDto(authUserModel.User),
+                        token = authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate
                     },
                     message = "Logged In successfully."
                 });
@@ -48,12 +50,18 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         return (await _authService.ConfirmRegistrationWithPhone(dto.Code, dto.RequestId))
         .Resolve(
-            (tuple) =>
+           (authUserModel) =>
             {
+                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { user = mapper.UserToUserDto(tuple.user), token = tuple.jwtToken },
+                    data = new
+                    {
+                        user = mapper.UserToUserDto(authUserModel.User),
+                        token = authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate
+                    },
                     message = "Register in successfully."
                 });
             }, HttpContext.TraceIdentifier);
@@ -72,15 +80,17 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCMToken))
         .Resolve(
-            (tuple) =>
+            (authUserModel) =>
             {
+                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.user),
-                        token = tuple.jwtToken
+                        user = mapper.UserToUserDto(authUserModel.User),
+                        token = authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate
                     },
                     message = "user logged in successfully."
                 });
@@ -101,15 +111,17 @@ public class AuthController(IAuthService authService) : ControllerBase
 
         return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCMToken))
         .Resolve(
-            (tuple) =>
+            (authUserModel) =>
             {
+                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.user),
-                        token = tuple.jwtToken
+                        user = mapper.UserToUserDto(authUserModel.User),
+                        token = authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate
                     },
                     message = "user logged in successfully."
                 });
@@ -155,23 +167,46 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("confirm-login-with-qydha")]
     public async Task<IActionResult> ConfirmLoginWithQydha(ConfirmLoginWithQydhaDto dto)
     {
-        // AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
-
         return (await _authService.ConfirmLoginWithQydha(dto.RequestId, dto.Otp))
         .Resolve(
-            (tuple) =>
+            (user) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.user),
-                        token = tuple.jwtToken
+                        user = mapper.UserToUserDto(user),
                     },
                     message = "user logged in successfully."
                 });
             }, HttpContext.TraceIdentifier);
+    }
+
+
+    [HttpPost("refresh-token")]
+    public IActionResult RefreshToken([FromBody] RefreshTokenDto dto)
+    {
+        var refreshToken = string.IsNullOrWhiteSpace(dto.RefreshToken) ?
+            Request.Cookies[CookiesExtensions.RefreshTokenCookieName] : dto.RefreshToken;
+        if (string.IsNullOrEmpty(refreshToken))
+            return new InvalidRefreshTokenError("Refresh token not provided").Handle(HttpContext.TraceIdentifier);
+        return _authService.RefreshToken(dto.JwtToken, refreshToken)
+        .Resolve(res =>
+        {
+            Response.Cookies.AddRefreshToken(res.RefreshToken, res.RefreshTokenExpirationDate);
+            return Ok(new
+            {
+                data = new
+                {
+                    token = res.JwtToken,
+                    res.RefreshTokenExpirationDate
+                },
+                message = "new access token created."
+            });
+        }
+         , HttpContext.TraceIdentifier);
+
     }
 }
 

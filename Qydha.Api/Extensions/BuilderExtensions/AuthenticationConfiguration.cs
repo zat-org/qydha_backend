@@ -33,11 +33,38 @@ public static class AuthenticationConfiguration
             {
                 ValidateIssuer = true,
                 ValidIssuer = jwtOptions.Issuer,
+
                 ValidateAudience = true,
                 ValidAudience = jwtOptions.Audience,
+
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretForKey)),
-                ValidateLifetime = false, // TODO use refresh tokens 
+
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    if (context.Principal?.IsServiceAccountToken() ?? false)
+                    {
+                        context.Options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidIssuer = jwtOptions.Issuer,
+
+                            ValidateAudience = true,
+                            ValidAudience = jwtOptions.Audience,
+
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretForKey)),
+
+                            ValidateLifetime = false
+                        };
+                    }
+                    return Task.CompletedTask;
+                }
             };
         });
         return services;

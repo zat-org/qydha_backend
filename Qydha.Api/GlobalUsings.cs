@@ -8,6 +8,7 @@ global using Qydha.Domain.Settings;
 global using Qydha.Domain.Constants;
 global using Qydha.Domain.Exceptions;
 global using Qydha.Domain.ValueObjects;
+global using Qydha.Domain.Extensions;
 
 global using Qydha.Infrastructure;
 global using Qydha.Infrastructure.Services;

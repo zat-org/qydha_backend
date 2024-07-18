@@ -1,5 +1,4 @@
-﻿
-namespace Qydha.Domain.Services.Implementation;
+﻿namespace Qydha.Domain.Services.Implementation;
 
 public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRepo userRepo, OtpManager otpManager, IRegistrationOTPRequestRepo registrationOTPRequestRepo, IMessageService messageService, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo, ILoginWithQydhaOtpSenderService loginWithQydhaOtpSenderService, ILoginWithQydhaRequestRepo loginWithQydhaRequestRepo) : IAuthService
 {
@@ -15,23 +14,31 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
     private readonly TokenManager _tokenManager = tokenManager;
     #endregion
 
-    public async Task<Result<(User user, string jwtToken)>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId)
+
+    public async Task<Result<AuthenticatedUserModel>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId)
     {
 
         return (await _registrationOTPRequestRepo.GetByIdAsync(requestId))
         .OnSuccess(otpReq => otpReq.IsRequestValidToUse(_otpManager, otpCode).ToResult(otpReq))
-        .OnSuccessAsync(async (otpReq) => (await _userRepo.IsUsernameAvailable(otpReq.Username)).ToResult(otpReq))
-        .OnSuccessAsync(async (otpReq) => (await _userRepo.IsPhoneAvailable(otpReq.Phone)).ToResult(otpReq))
-        .OnSuccessAsync(SaveUserFromRegistrationOTPRequest)
-        .OnSuccessAsync(async (user) => (await _registrationOTPRequestRepo.MarkRequestAsUsed(requestId, user.Id)).ToResult(user))
-        .OnSuccess((user) =>
+        .OnSuccessAsync(async (otpReq) => (await _userRepo.IsUsernameAndPhoneAvailable(otpReq.Username, otpReq.Phone)).ToResult(otpReq))
+        .OnSuccessAsync(async (otpReq) =>
         {
-            string jwtToken = _tokenManager.Generate(user);
-            return Result.Ok((user, jwtToken));
-        });
+            var user = User.CreateUserFromRegisterRequest(otpReq);
+            var refreshToken = _tokenManager.GenerateRefreshToken();
+            user.RefreshTokens.Add(refreshToken);
+            return (await _userRepo.AddAsync(user))
+                    .ToResult(user =>
+                        new AuthenticatedUserModel(user, _tokenManager.GenerateJwtToken(user), refreshToken.Token, refreshToken.ExpireAt));
+        })
+        .OnSuccessAsync(async (authUserModel) =>
+        {
+            await _mediator.Publish(new UserRegistrationNotification(authUserModel.User));
+            return Result.Ok(authUserModel);
+        })
+        .OnSuccessAsync(async (authUserModel) => (await _registrationOTPRequestRepo.MarkRequestAsUsed(requestId, authUserModel.User.Id)).ToResult(authUserModel));
     }
 
-    public async Task<Result<(User user, string jwtToken)>> Login(string username, string password, bool asAdmin = false, string? fcm_token = null)
+    public async Task<Result<AuthenticatedUserModel>> Login(string username, string password, bool asAdmin = false, string? fcmToken = null)
     {
         return (await _userRepo.CheckUserCredentials(username, password))
         .OnSuccess((user) =>
@@ -40,14 +47,28 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
                 return Result.Fail(new ForbiddenError());
             return Result.Ok(user);
         })
-        .OnSuccessAsync(async (user) => (await _userRepo.UpdateUserLastLoginToNow(user.Id)).ToResult(user))
         .OnSuccessAsync(async (user) =>
         {
-            if (!string.IsNullOrEmpty(fcm_token))
-                return (await _userRepo.UpdateUserFCMToken(user.Id, fcm_token)).ToResult(user);
-            return Result.Ok(user);
+            if (!string.IsNullOrEmpty(fcmToken))
+                user.FCMToken = fcmToken;
+
+            user.LastLogin = DateTimeOffset.UtcNow;
+
+            RefreshToken refreshToken;
+            if (user.RefreshTokens.Any(r => r.IsActive))
+                refreshToken = user.RefreshTokens.First(r => r.IsActive);
+            else
+            {
+                refreshToken = _tokenManager.GenerateRefreshToken();
+                user.RefreshTokens.Add(refreshToken);
+            }
+            return (await _userRepo.UpdateAsync(user)).ToResult((user) => (user, refreshToken));
         })
-        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user))));
+        .OnSuccess((tuple) =>
+        {
+            var authUserModel = new AuthenticatedUserModel(tuple.user, _tokenManager.GenerateJwtToken(tuple.user), tuple.refreshToken.Token, tuple.refreshToken.ExpireAt);
+            return Result.Ok(authUserModel);
+        });
     }
 
     public async Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken)
@@ -71,16 +92,6 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
     public async Task<Result> Logout(Guid userId) =>
         await _userRepo.UpdateUserFCMToken(userId, string.Empty);
 
-    private async Task<Result<User>> SaveUserFromRegistrationOTPRequest(RegistrationOTPRequest otpRequest)
-    {
-        Result<User> saveUserRes = await _userRepo.AddAsync(User.CreateUserFromRegisterRequest(otpRequest));
-        return saveUserRes.OnSuccessAsync(async (user) =>
-        {
-            await _mediator.Publish(new UserRegistrationNotification(saveUserRes.Value));
-            return Result.Ok(user);
-        });
-    }
-
     public async Task<Result<PhoneAuthenticationRequest>> RequestPhoneAuthentication(string phone)
     {
         return (await _userRepo.GetByPhoneAsync(phone))
@@ -93,19 +104,29 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
            await _phoneAuthenticationRequestRepo.AddAsync(new PhoneAuthenticationRequest(tuple.user.Id, tuple.otp, tuple.sender)));
     }
 
-    public async Task<Result<(User user, string jwtToken)>> ConfirmPhoneAuthentication(Guid requestId, string otpCode, string? fcmToken)
+    public async Task<Result<AuthenticatedUserModel>> ConfirmPhoneAuthentication(Guid requestId, string otpCode, string? fcmToken)
     {
         return (await _phoneAuthenticationRequestRepo.GetByIdAsync(requestId))
-        .OnSuccess((otpReq) => otpReq.IsValidToConfirmPhoneAuthUsingIt(_otpManager, otpCode).ToResult(otpReq))
-        .OnSuccessAsync(async (otpReq) => (await _phoneAuthenticationRequestRepo.MarkRequestAsUsed(requestId)).ToResult(otpReq))
-        .OnSuccessAsync(async (otpReq) => await _userRepo.GetByIdAsync(otpReq.UserId))
-        .OnSuccessAsync(async (user) =>
-        {
-            if (!string.IsNullOrWhiteSpace(fcmToken))
-                return (await _userRepo.UpdateUserFCMToken(user.Id, fcmToken)).ToResult(user);
-            return Result.Ok(user);
-        })
-        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user))));
+            .OnSuccess((otpReq) => otpReq.IsValidToConfirmPhoneAuthUsingIt(_otpManager, otpCode).ToResult(otpReq))
+            .OnSuccessAsync(async (otpReq) => (await _phoneAuthenticationRequestRepo.MarkRequestAsUsed(requestId)).ToResult(otpReq))
+            .OnSuccessAsync(async (otpReq) => await _userRepo.GetByIdAsync(otpReq.UserId, withTracking: true))
+            .OnSuccessAsync(async (user) =>
+            {
+                if (!string.IsNullOrEmpty(fcmToken))
+                    user.FCMToken = fcmToken;
+
+                user.LastLogin = DateTimeOffset.UtcNow;
+
+                RefreshToken refreshToken;
+                if (user.RefreshTokens.Any(r => r.IsActive))
+                    refreshToken = user.RefreshTokens.First(r => r.IsActive);
+                else
+                    refreshToken = _tokenManager.GenerateRefreshToken();
+                return (await _userRepo.UpdateAsync(user)).ToResult((user) => (user, refreshToken));
+            })
+            .OnSuccess((tuple) => Result.Ok(new
+                AuthenticatedUserModel(tuple.user, _tokenManager.GenerateJwtToken(tuple.user), tuple.refreshToken.Token, tuple.refreshToken.ExpireAt))
+            );
     }
 
     public async Task<Result<LoginWithQydhaRequest>> SendOtpToLoginWithQydha(string username, string serviceConsumerName)
@@ -120,13 +141,31 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         .OnSuccessAsync(async (tuple) => await _loginWithQydhaRequestRepo.AddAsync(new LoginWithQydhaRequest(tuple.user.Id, tuple.otp)));
     }
 
-    public async Task<Result<(User user, string jwtToken)>> ConfirmLoginWithQydha(Guid requestId, string otpCode)
+    public async Task<Result<User>> ConfirmLoginWithQydha(Guid requestId, string otpCode)
     {
         return (await _loginWithQydhaRequestRepo.GetByIdAsync(requestId))
         .OnSuccess((otpReq) => otpReq.IsRequestValidToUse(_otpManager, otpCode).ToResult(otpReq))
         .OnSuccessAsync(async (otpReq) => (await _loginWithQydhaRequestRepo.MarkRequestAsUsed(requestId)).ToResult(otpReq))
-        .OnSuccessAsync(async (request) => await _userRepo.GetByIdAsync(request.UserId))
-        .OnSuccess((user) => Result.Ok((user, _tokenManager.Generate(user))));
+        .OnSuccessAsync(async (request) => await _userRepo.GetByIdAsync(request.UserId));
     }
-
+    public Result<AuthenticatedUserModel> RefreshToken(string jwtToken, string refreshToken)
+    {
+        return _tokenManager.GetPrincipalFromExpiredToken(jwtToken)
+            .OnSuccess(principal => principal.GetUserIdentifier())
+            .OnSuccessAsync((userId) => _userRepo.GetByIdAsync(userId, withTracking: true))
+            .OnSuccessAsync(async user =>
+            {
+                var refreshTokenEntity = user.RefreshTokens.FirstOrDefault(r => r.Token == refreshToken && r.IsActive);
+                if (refreshTokenEntity == null) return Result.Fail(new InvalidRefreshTokenError());
+                refreshTokenEntity.RevokedAt = DateTimeOffset.UtcNow;
+                RefreshToken newRefreshToken = _tokenManager.GenerateRefreshToken();
+                user.RefreshTokens.Add(newRefreshToken);
+                return (await _userRepo.UpdateAsync(user))
+                    .ToResult((user) => (user, newRefreshToken));
+            })
+            .OnSuccess((tuple) =>
+            {
+                return Result.Ok(new AuthenticatedUserModel(tuple.user, _tokenManager.GenerateJwtToken(tuple.user), tuple.newRefreshToken.Token, tuple.newRefreshToken.ExpireAt));
+            });
+    }
 }

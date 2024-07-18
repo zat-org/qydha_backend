@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using Qydha.Infrastructure;
 namespace Qydha.Api.Migrations
 {
     [DbContext(typeof(QydhaContext))]
-    partial class QydhaContextModelSnapshot : ModelSnapshot
+    [Migration("20240718110409_AddRefreshTokens")]
+    partial class AddRefreshTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1019,13 +1022,11 @@ namespace Qydha.Api.Migrations
                     b.HasOne("Qydha.Domain.Entities.User", "Moderator")
                         .WithMany("ModeratedBalootGames")
                         .HasForeignKey("ModeratorId")
-                        .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_moderator_baloot_games_link");
 
                     b.HasOne("Qydha.Domain.Entities.User", "Owner")
                         .WithMany("CreatedBalootGames")
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_owner_baloot_games_link");
 
                     b.Navigation("Moderator");

@@ -167,5 +167,27 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 .HasDefaultValue(false)
                 .HasColumnName("win_using_zat");
         });
+
+        builder.OwnsMany(u => u.RefreshTokens, refreshTokenEntity =>
+        {
+            refreshTokenEntity.ToTable("refresh_tokens");
+
+            refreshTokenEntity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp with time zone")
+                .HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
+                .HasColumnName("created_at");
+            refreshTokenEntity.Property(e => e.ExpireAt)
+                .HasColumnType("timestamp with time zone")
+                .HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
+                .HasColumnName("expire_at");
+            refreshTokenEntity.Property(e => e.RevokedAt)
+                .IsRequired(required: false)
+                .HasColumnType("timestamp with time zone")
+                .HasConversion(ConfigurationUtils.DateTimeOffsetValueConverter)
+                .HasColumnName("revoked_at");
+            refreshTokenEntity.Property(e => e.Token)
+                .HasMaxLength(150)
+                .HasColumnName("token");
+        });
     }
 }

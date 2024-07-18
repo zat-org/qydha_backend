@@ -11,7 +11,7 @@ public class ServiceAccountsService(IServiceAccountRepo serviceAccountRepo, Toke
 
     public async Task<Result<(ServiceAccount serviceAccount, string jwtToken)>> CreateServiceAccount(string name, string description, List<ServiceAccountPermission> permissions) =>
         (await _serviceAccountRepo.SaveAsync(new ServiceAccount(name, description, permissions)))
-            .OnSuccess((sa) => Result.Ok((sa, _tokenManager.Generate(sa))));
+            .OnSuccess((sa) => Result.Ok((sa, _tokenManager.GenerateJwtToken(sa))));
 
     public async Task<Result<PagedList<ServiceAccount>>> GetServiceAccountsPage(PaginationParameters parameters) =>
         await _serviceAccountRepo.GetServiceAccounts(parameters);
@@ -19,7 +19,7 @@ public class ServiceAccountsService(IServiceAccountRepo serviceAccountRepo, Toke
         (await _serviceAccountRepo.GetById(id))
             .OnSuccess(sa =>
             {
-                string token = _tokenManager.Generate(sa);
+                string token = _tokenManager.GenerateJwtToken(sa);
                 return Result.Ok(token);
             });
 

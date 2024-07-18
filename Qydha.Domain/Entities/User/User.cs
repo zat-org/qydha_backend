@@ -79,6 +79,7 @@ public class User : IClaimable
     public virtual ICollection<InfluencerCodeUserLink> InfluencerCodes { get; set; } = [];
     public virtual ICollection<BalootGame> ModeratedBalootGames { get; set; } = [];
     public virtual ICollection<BalootGame> CreatedBalootGames { get; set; } = [];
+    public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = [];
 
 
     public IEnumerable<Claim> GetClaims()

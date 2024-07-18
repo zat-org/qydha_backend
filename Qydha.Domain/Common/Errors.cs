@@ -115,3 +115,7 @@ public class InvalidAuthTokenError()
 
 public class ForbiddenError() : ResultError($"you haven't previliadge to do this action", ErrorType.InvalidActionOrForbidden, StatusCodes.Status403Forbidden)
 { }
+
+public class InvalidRefreshTokenError(string msg = "Invalid Refresh Token")
+    : ResultError(msg, ErrorType.InvalidRefreshToken, StatusCodes.Status400BadRequest)
+{ }

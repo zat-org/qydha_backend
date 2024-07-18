@@ -3,16 +3,17 @@ public interface IUserRepo
 {
     Task<Result<User>> AddAsync(User user);
     Task<Result<User>> UpdateAsync(User user);
-    Task<Result> DeleteAsync(Guid userId);
+    Task<Result> DeleteAsync(User user);
     Task<Result<User>> GetByIdForDashboardAsync(Guid userId);
     Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
     Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters);
-    Task<Result<User>> GetByIdAsync(Guid id);
+    Task<Result<User>> GetByIdAsync(Guid id, bool withTracking = false);
     Task<Result<User>> GetByPhoneAsync(string phone);
     Task<Result<User>> GetByEmailAsync(string email);
     Task<Result<User>> GetByUsernameAsync(string username);
     Task<Result> IsUsernameAvailable(string username, Guid? userId = null);
     Task<Result> IsPhoneAvailable(string phone);
+    Task<Result> IsUsernameAndPhoneAvailable(string username, string phone);
     Task<Result> IsEmailAvailable(string email, Guid? userId = null);
     Task<Result> IsUserSubscribed(Guid userId);
     Task<Result> UpdateUserLastLoginToNow(Guid userId);

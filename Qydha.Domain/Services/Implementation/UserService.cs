@@ -171,7 +171,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
                 return Result.Fail(new ForbiddenError());
             return Result.Ok(user);
         })
-        .OnSuccessAsync(async (user) => (await _userRepo.DeleteAsync(user.Id)).ToResult(user))
+        .OnSuccessAsync(async (user) => (await _userRepo.DeleteAsync(user)).ToResult(user))
         .OnSuccessAsync(async (user) =>
         {
             _logger.LogInformation("User with id: {userId} , phone :{phone} , username :{username}  deleted his account", userId, user.Phone, user.Username);

@@ -25,13 +25,15 @@ public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
 
         entity.HasOne(d => d.Moderator).WithMany(p => p.ModeratedBalootGames)
             .HasForeignKey(d => d.ModeratorId)
-            .HasConstraintName("fk_moderator_baloot_games_link");
+            .HasConstraintName("fk_moderator_baloot_games_link")
+            .OnDelete(DeleteBehavior.SetNull);
 
         entity.Property(e => e.OwnerId).HasColumnName("owner_id");
 
         entity.HasOne(d => d.Owner).WithMany(p => p.CreatedBalootGames)
             .HasForeignKey(d => d.OwnerId)
-            .HasConstraintName("fk_owner_baloot_games_link");
+            .HasConstraintName("fk_owner_baloot_games_link")
+            .OnDelete(DeleteBehavior.SetNull);
 
 
         entity.Property(e => e.EventsJsonString)

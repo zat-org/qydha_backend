@@ -1,5 +1,5 @@
 
-namespace Qydha.API.Extensions;
+namespace Qydha.Domain.Extensions;
 
 public static class ClaimPrincipalExtensions
 {

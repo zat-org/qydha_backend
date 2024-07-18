@@ -6,7 +6,7 @@ global using System.Security.Claims;
 global using System.Text;
 
 global using Qydha.Domain.Exceptions;
-
+global using Qydha.Domain.Extensions;
 global using Qydha.Domain.Entities;
 global using Qydha.Domain.Repositories;
 global using Qydha.Domain.Enums;
@@ -17,6 +17,7 @@ global using Qydha.Domain.MediatorNotifications;
 global using Qydha.Domain.Constants;
 global using Qydha.Domain.Services.Implementation;
 global using Qydha.Domain.ValueObjects;
+global using Qydha.Domain.Models;
 global using Microsoft.Extensions.Logging;
 
 global using MediatR;
