@@ -44,11 +44,19 @@ public class TokenManager(IOptions<JWTSettings> jwtSettings)
             ValidateLifetime = false
         };
         var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParams, out SecurityToken securityToken);
-        var JwtSecurityToken = securityToken as JwtSecurityToken;
-        if (JwtSecurityToken == null ||
-            !JwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParams, out SecurityToken securityToken);
+            var JwtSecurityToken = securityToken as JwtSecurityToken;
+            if (JwtSecurityToken == null ||
+                !JwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                return Result.Fail(new InvalidAuthTokenError());
+            return Result.Ok(principal);
+        }
+        catch (Exception)
+        {
             return Result.Fail(new InvalidAuthTokenError());
-        return Result.Ok(principal);
+        }
+
     }
 }
