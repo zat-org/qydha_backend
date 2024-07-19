@@ -17,6 +17,7 @@ public static class FluentValidationConfigurations
             configuration.EnablePathBindingSourceAutomaticValidation = true;
             configuration.EnablePathBindingSourceAutomaticValidation = true;
             configuration.EnableQueryBindingSourceAutomaticValidation = true;
+            configuration.EnableCustomBindingSourceAutomaticValidation = true;
         });
 
         ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("ar");
