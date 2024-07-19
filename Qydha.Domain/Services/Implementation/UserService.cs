@@ -5,7 +5,7 @@ namespace Qydha.Domain.Services.Implementation;
 public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo)
  : IUserService
 {
-    #region  injections
+    #region injections
     private readonly OtpManager _otpManager = otpManager;
     private readonly IMessageService _messageService = messageService;
     private readonly IFileService _fileService = fileService;
@@ -180,8 +180,6 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
             return Result.Ok(user);
         });
     }
-
-
 
     #endregion
 

@@ -242,7 +242,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         var user = await _dbCtx.Users.AsTracking(QueryTrackingBehavior.TrackAll)
             .FirstOrDefaultAsync((user) => user.NormalizedUsername == username.ToUpper());
         if (user == null)
-            return Result.Fail<User>(new EntityNotFoundError<string>(username, nameof(User)));
+            return Result.Fail(new InvalidCredentialsError("اسم المستخدم او كلمة المرور غير صحيحة"));
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             return Result.Fail(new InvalidCredentialsError("اسم المستخدم او كلمة المرور غير صحيحة"));
         else

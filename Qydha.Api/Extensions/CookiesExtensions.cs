@@ -11,8 +11,7 @@ public static class CookiesExtensions
             HttpOnly = true,
             Expires = expireAt,
             Secure = true,
-            SameSite = SameSiteMode.None,
-            MaxAge = DateTimeOffset.UtcNow - expireAt
+            MaxAge = expireAt - DateTimeOffset.UtcNow
         };
         cookies.Append(RefreshTokenCookieName, token, cookieOptions);
     }

@@ -13,11 +13,17 @@ public class AdminController(IAuthService authService) : ControllerBase
         .Resolve(
             (authUserModel) =>
             {
-                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { adminUser = mapper.UserToUserDto(authUserModel.User), token = authUserModel.JwtToken, authUserModel.RefreshTokenExpirationDate },
+                    data = new
+                    {
+                        adminUser = mapper.UserToUserDto(authUserModel.User),
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
+                    },
                     message = "Logged in successfully."
                 });
             }

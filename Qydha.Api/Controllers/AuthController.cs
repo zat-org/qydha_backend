@@ -30,15 +30,16 @@ public class AuthController(IAuthService authService) : ControllerBase
         .Resolve(
             (authUserModel) =>
             {
-                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
                         user = mapper.UserToUserDto(authUserModel.User),
-                        token = authUserModel.JwtToken,
-                        authUserModel.RefreshTokenExpirationDate
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
                     },
                     message = "Logged In successfully."
                 });
@@ -52,15 +53,16 @@ public class AuthController(IAuthService authService) : ControllerBase
         .Resolve(
            (authUserModel) =>
             {
-                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
                         user = mapper.UserToUserDto(authUserModel.User),
-                        token = authUserModel.JwtToken,
-                        authUserModel.RefreshTokenExpirationDate
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
                     },
                     message = "Register in successfully."
                 });
@@ -82,15 +84,16 @@ public class AuthController(IAuthService authService) : ControllerBase
         .Resolve(
             (authUserModel) =>
             {
-                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
                         user = mapper.UserToUserDto(authUserModel.User),
-                        token = authUserModel.JwtToken,
-                        authUserModel.RefreshTokenExpirationDate
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
                     },
                     message = "user logged in successfully."
                 });
@@ -113,15 +116,16 @@ public class AuthController(IAuthService authService) : ControllerBase
         .Resolve(
             (authUserModel) =>
             {
-                Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
                         user = mapper.UserToUserDto(authUserModel.User),
-                        token = authUserModel.JwtToken,
-                        authUserModel.RefreshTokenExpirationDate
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
                     },
                     message = "user logged in successfully."
                 });
@@ -187,20 +191,21 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("refresh-token")]
     public IActionResult RefreshToken([FromBody] RefreshTokenDto dto)
     {
-        var refreshToken = string.IsNullOrWhiteSpace(dto.RefreshToken) ?
-            Request.Cookies[CookiesExtensions.RefreshTokenCookieName] : dto.RefreshToken;
-        if (string.IsNullOrEmpty(refreshToken))
-            return new InvalidRefreshTokenError("Refresh token not provided").Handle(HttpContext.TraceIdentifier);
-        return _authService.RefreshToken(dto.JwtToken, refreshToken)
+        // var refreshToken = string.IsNullOrWhiteSpace(dto.RefreshToken) ?
+        //     Request.Cookies[CookiesExtensions.RefreshTokenCookieName] : dto.RefreshToken;
+        // if (string.IsNullOrEmpty(refreshToken))
+        //     return new InvalidRefreshTokenError("Refresh token not provided").Handle(HttpContext.TraceIdentifier);
+        return _authService.RefreshToken(dto.JwtToken, dto.RefreshToken)
         .Resolve(res =>
         {
-            Response.Cookies.AddRefreshToken(res.RefreshToken, res.RefreshTokenExpirationDate);
+            // Response.Cookies.AddRefreshToken(res.RefreshToken, res.RefreshTokenExpirationDate);
             return Ok(new
             {
                 data = new
                 {
-                    token = res.JwtToken,
-                    res.RefreshTokenExpirationDate
+                    res.JwtToken,
+                    res.RefreshTokenExpirationDate,
+                    res.RefreshToken,
                 },
                 message = "new access token created."
             });
