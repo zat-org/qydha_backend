@@ -1,4 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Qydha.API.Extensions;
 
@@ -39,32 +41,13 @@ public static class AuthenticationConfiguration
 
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretForKey)),
-
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            };
-            options.Events = new JwtBearerEvents
-            {
-                OnTokenValidated = context =>
+                ClockSkew = TimeSpan.Zero,
+                LifetimeValidator = (notBefore, expires, token, parameters) =>
                 {
-                    if (context.Principal?.IsServiceAccountToken() ?? false)
-                    {
-                        context.Options.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            ValidateIssuer = true,
-                            ValidIssuer = jwtOptions.Issuer,
-
-                            ValidateAudience = true,
-                            ValidAudience = jwtOptions.Audience,
-
-                            ValidateIssuerSigningKey = true,
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretForKey)),
-
-                            ValidateLifetime = false
-                        };
-                    }
-                    return Task.CompletedTask;
-                }
+                    if (token is not JsonWebToken jwtToken) return false;
+                    var tokenType = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimsNamesConstants.TokenType)?.Value;
+                    return tokenType == ServiceAccount.TokenType || notBefore <= DateTime.UtcNow && expires > DateTime.UtcNow;
+                },
             };
         });
         return services;
