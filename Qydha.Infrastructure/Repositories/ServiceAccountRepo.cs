@@ -4,10 +4,11 @@ public class ServiceAccountRepo(QydhaContext qydhaContext, ILogger<ServiceAccoun
 {
     private readonly QydhaContext _dbCtx = qydhaContext;
     private readonly ILogger<ServiceAccountRepo> _logger = logger;
-    public async Task<Result> CheckServiceHasPermission(Guid accountId, ServiceAccountPermission permission) =>
-        await _dbCtx.ServiceAccounts.AnyAsync(g => g.Id == accountId && g.Permissions.Contains(permission)) ?
-            Result.Ok() :
-            Result.Fail(new ForbiddenError());
+    public async Task<Result> CheckServiceHasPermission(Guid accountId, ServiceAccountPermission permission)
+    {
+        bool hasPermission = await _dbCtx.ServiceAccounts.AnyAsync(g => g.Id == accountId && g.Permissions.Contains(permission));
+        return hasPermission ? Result.Ok() : Result.Fail(new ForbiddenError());
+    }
 
     public async Task<Result<ServiceAccount>> SaveAsync(ServiceAccount account)
     {

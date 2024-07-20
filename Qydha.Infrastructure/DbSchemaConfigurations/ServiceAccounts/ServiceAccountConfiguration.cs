@@ -3,6 +3,21 @@ public class ServiceAccountConfiguration : IEntityTypeConfiguration<ServiceAccou
 {
     public void Configure(EntityTypeBuilder<ServiceAccount> builder)
     {
+        var qydhaServiceAccountId = new Guid("62dd9f79-a8a1-4031-ba55-c2ddca88b0bb");
+        var qydhaServiceAccount = new ServiceAccount(
+            name: "قيدها",
+            description: "qydha primary service account",
+            permissions: [
+                ServiceAccountPermission.AnonymousBalootGameCRUDs,
+                ServiceAccountPermission.CheckUserNameAvailable,
+                ServiceAccountPermission.ReadPopup,
+                ServiceAccountPermission.ReadPublicNotifications,
+                ServiceAccountPermission.ClickOnPublicNotification,
+            ])
+        {
+            Id = qydhaServiceAccountId,
+        };
+        builder.HasData(qydhaServiceAccount);
 
         builder.HasKey(e => e.Id).HasName("service_accounts_pkey");
 
