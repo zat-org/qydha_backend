@@ -21,7 +21,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
 
     #region Get User 
     public async Task<Result<User>> GetByIdForDashboardAsync(Guid userId) => await _userRepo.GetByIdForDashboardAsync(userId);
-    public async Task<Result<User>> GetUserById(Guid userId) => await _userRepo.GetByIdAsync(userId);
+    public async Task<Result<User>> GetUserById(Guid userId, bool withTracking = false) => await _userRepo.GetByIdAsync(userId, withTracking);
     public async Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId) =>
         await _userRepo.GetUserWithSettingsByIdAsync(userId);
 

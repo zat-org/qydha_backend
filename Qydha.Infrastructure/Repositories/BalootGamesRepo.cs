@@ -48,6 +48,7 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
             .Where(g => g.OwnerId == userId)
             .Include(g => g.Sakkas.OrderBy(s => s.Id))
             .ThenInclude(s => s.Moshtaras.OrderBy(m => m.Id))
+            .AsSplitQuery()
             .OrderByDescending(g => g.CreatedAt);
         PagedList<BalootGame> games = await _dbCtx.GetPagedData(query, parameters.PageNumber, parameters.PageSize);
         return Result.Ok(games);
