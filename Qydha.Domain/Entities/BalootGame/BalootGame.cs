@@ -112,7 +112,7 @@ public class BalootGame
 
     public Result CanSakkasCountPerGameChangeTo(int newSakkasCount)
     {
-        if (newSakkasCount >= MaxSakkaPerGame || (newSakkasCount > Sakkas.Count && CheckGameWinner(newSakkasCount) == null))
+        if (newSakkasCount >= MaxSakkaPerGame || (newSakkasCount >= Sakkas.Count && CheckGameWinner(newSakkasCount) == null))
             return Result.Ok();
         return Result.Fail(new InvalidBalootGameActionError("Invalid MaxSakkaCountPerGame => doesn't lead to a non winner state."));
     }
