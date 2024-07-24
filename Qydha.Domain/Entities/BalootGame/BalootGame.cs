@@ -412,6 +412,16 @@ public class BalootGameEndedState(BalootGame game)
                 .OnSuccess(() => Game.CurrentSakka.UpdateMoshtara(moshtaraData, triggeredAt))
                 .OnSuccess(() => Game.StateName = BalootGameStateEnum.Running);
     }
+    public override Result ChangeSakkaCount(int newSakkaCount)
+    {
+        return base.ChangeSakkaCount(newSakkaCount)
+            .OnSuccess(() =>
+            {
+                Game.Winner = null;
+                Game.EndedAt = null;
+                Game.StateName = BalootGameStateEnum.Running;
+            });
+    }
 }
 
 public enum BalootGameStateEnum
