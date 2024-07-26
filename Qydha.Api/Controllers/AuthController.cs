@@ -10,7 +10,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Register([FromBody] UserRegisterDTO dto)
     {
         return (await _authService.RegisterAsync(dto.Username, dto.Password, dto.Phone, dto.FCMToken))
-        .Handle<RegistrationOTPRequest, IActionResult>(
+        .Resolve(
             (req) => Ok(
                 new
                 {
@@ -19,55 +19,54 @@ public class AuthController(IAuthService authService) : ControllerBase
                         RequestId = req.Id,
                     },
                     Message = "otp sent successfully."
-                }),
-            BadRequest
-        );
+                }
+            ), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("login/")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        return (await _authService.Login(dto.Username, dto.Password, dto.FCMToken))
-        .Handle<Tuple<User, string>, IActionResult>(
-            (tuple) =>
+        return (await _authService.Login(dto.Username, dto.Password, asAdmin: false, dto.FCMToken))
+        .Resolve(
+            (authUserModel) =>
             {
-                User user = tuple.Item1;
-                string token = tuple.Item2;
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(user),
-                        token
+                        user = mapper.UserToUserDto(authUserModel.User),
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
                     },
                     message = "Logged In successfully."
                 });
-            },
-            (result) => BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidCredentials,
-                Message = "اسم المستخدم او كلمة السر غير صحيحة"
-            })
-        );
+            }, HttpContext.TraceIdentifier);
     }
 
     [HttpPost("confirm-registration-with-phone/")]
     public async Task<IActionResult> ConfirmRegistrationWithPhone([FromBody] ConfirmPhoneDto dto)
     {
         return (await _authService.ConfirmRegistrationWithPhone(dto.Code, dto.RequestId))
-        .Handle<Tuple<User, string>, IActionResult>(
-            (tuple) =>
+        .Resolve(
+           (authUserModel) =>
             {
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { user = mapper.UserToUserDto(tuple.Item1), token = tuple.Item2 },
+                    data = new
+                    {
+                        user = mapper.UserToUserDto(authUserModel.User),
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
+                    },
                     message = "Register in successfully."
                 });
-            },
-            BadRequest
-        );
+            }, HttpContext.TraceIdentifier);
     }
 
 
@@ -75,30 +74,30 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordDto dto)
     {
         return (await _authService.RequestPhoneAuthentication(dto.Phone!))
-        .Handle<PhoneAuthenticationRequest, IActionResult>(
-            (request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." })
-            , BadRequest);
+        .Resolve((request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("confirm-forget-password")]
     public async Task<IActionResult> ConfirmForgetPassword([FromBody] ConfirmForgetPasswordDto dto)
     {
         return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCMToken))
-        .Handle<Tuple<User, string>, IActionResult>(
-            (tuple) =>
+        .Resolve(
+            (authUserModel) =>
             {
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.Item1),
-                        token = tuple.Item2
+                        user = mapper.UserToUserDto(authUserModel.User),
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
                     },
                     message = "user logged in successfully."
                 });
-            }
-            , BadRequest);
+            }, HttpContext.TraceIdentifier);
     }
 
 
@@ -106,9 +105,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> LoginWithPhone([FromBody] LoginWithPhoneDto dto)
     {
         return (await _authService.RequestPhoneAuthentication(dto.Phone!))
-        .Handle<PhoneAuthenticationRequest, IActionResult>(
-            (request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." })
-            , BadRequest);
+        .Resolve((request) => Ok(new { data = new { RequestId = request.Id }, message = "Otp sent successfully." }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("confirm-login-with-phone")]
@@ -116,44 +113,46 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
 
         return (await _authService.ConfirmPhoneAuthentication(dto.RequestId, dto.Code, dto.FCMToken))
-        .Handle<Tuple<User, string>, IActionResult>(
-            (tuple) =>
+        .Resolve(
+            (authUserModel) =>
             {
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.Item1),
-                        token = tuple.Item2
+                        user = mapper.UserToUserDto(authUserModel.User),
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
                     },
                     message = "user logged in successfully."
                 });
-            }
-            , BadRequest);
+            }, HttpContext.TraceIdentifier);
     }
 
 
-    [Auth(SystemUserRoles.RegularUser)]
+    [Authorize(Roles = RoleConstants.UserWithAnyRole)]
     [HttpPost("logout/")]
-    public async Task<IActionResult> Logout()
+    public IActionResult Logout()
     {
-        User user = (User)HttpContext.Items["User"]!;
-        return (await _authService.Logout(user.Id))
-        .Handle<IActionResult>(
-            () => Ok(new { data = new { }, message = "User logged out successfully." }),
-            BadRequest
-        );
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(_authService.Logout)
+        .Resolve(
+            () => Ok(new { data = new { }, message = "User logged out successfully." })
+        , HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.LoginWithQydha)]
     [HttpPost("login-with-qydha")]
     public async Task<IActionResult> LoginWithQydha(LoginWithQydhaDto dto)
     {
-        AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
+        // AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
 
         return (await _authService.SendOtpToLoginWithQydha(dto.Username, "زات"))
-        .Handle<LoginWithQydhaRequest, IActionResult>(
+        .Resolve(
             (loginReq) =>
             {
                 return Ok(new
@@ -164,33 +163,55 @@ public class AuthController(IAuthService authService) : ControllerBase
                     },
                     message = "otp sent successfully to the user."
                 });
-            },
-            BadRequest
-        );
+            }, HttpContext.TraceIdentifier);
     }
 
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.LoginWithQydha)]
     [HttpPost("confirm-login-with-qydha")]
     public async Task<IActionResult> ConfirmLoginWithQydha(ConfirmLoginWithQydhaDto dto)
     {
-        AdminUser serviceConsumer = (AdminUser)HttpContext.Items["User"]!;
-
         return (await _authService.ConfirmLoginWithQydha(dto.RequestId, dto.Otp))
-        .Handle<Tuple<User, string>, IActionResult>(
-            (tuple) =>
+        .Resolve(
+            (user) =>
             {
                 var mapper = new UserMapper();
                 return Ok(new
                 {
                     data = new
                     {
-                        user = mapper.UserToUserDto(tuple.Item1),
-                        token = tuple.Item2
+                        user = mapper.UserToUserDto(user),
                     },
                     message = "user logged in successfully."
                 });
-            }
-            , BadRequest);
+            }, HttpContext.TraceIdentifier);
+    }
+
+
+    [HttpPost("refresh-token")]
+    public IActionResult RefreshToken([FromBody] RefreshTokenDto dto)
+    {
+        // var refreshToken = string.IsNullOrWhiteSpace(dto.RefreshToken) ?
+        //     Request.Cookies[CookiesExtensions.RefreshTokenCookieName] : dto.RefreshToken;
+        // if (string.IsNullOrEmpty(refreshToken))
+        //     return new InvalidRefreshTokenError("Refresh token not provided").Handle(HttpContext.TraceIdentifier);
+        return _authService.RefreshToken(dto.JwtToken, dto.RefreshToken)
+        .Resolve(res =>
+        {
+            // Response.Cookies.AddRefreshToken(res.RefreshToken, res.RefreshTokenExpirationDate);
+            return Ok(new
+            {
+                data = new
+                {
+                    res.JwtToken,
+                    res.RefreshTokenExpirationDate,
+                    res.RefreshToken,
+                },
+                message = "new access token created."
+            });
+        }
+         , HttpContext.TraceIdentifier);
+
     }
 }
 

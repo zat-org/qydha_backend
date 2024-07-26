@@ -1,132 +1,79 @@
-﻿namespace Qydha.Domain.Common;
+﻿using Microsoft.AspNetCore.Mvc;
+namespace Qydha.Domain.Common;
 
 public static class ResultExtensions
 {
-
-
-    public static Result<T> MapTo<T>(this Result res, T value)
-    {
-        if (res.IsFailure)
-            return Result.Fail<T>(res.Error);
-        return Result.Ok(value);
-    }
-    public static Result<OutT> MapTo<InT, OutT>(this Result<InT> res, Func<InT, OutT> func)
-    {
-        if (res.IsFailure)
-            return Result.Fail<OutT>(res.Error);
-        return Result.Ok(func(res.Value));
-    }
-
     public static Result OnSuccess(this Result result, Action action)
     {
-        if (result.IsFailure) return result;
+        if (result.IsFailed) return result;
         action();
         return Result.Ok();
     }
-
-    // public static Result OnSuccess(this Result result, Func<Result> func)
-    // {
-    //     if (result.IsFailure) return result;
-    //     return func();
-    // }
+    public static Result OnSuccess(this Result result, Func<Result> func)
+    {
+        if (result.IsFailed) return result;
+        return func();
+    }
 
     public static Result<OutT> OnSuccess<InT, OutT>(this Result<InT> result, Func<InT, Result<OutT>> func)
     {
         if (result.IsSuccess)
             return func(result.Value);
-        return Result.Fail<OutT>(result.Error);
+        return result.ToResult<OutT>();
     }
+    public static Result OnSuccess<InT>(this Result<InT> result, Func<InT, Result> func)
+    {
+        if (result.IsSuccess)
+            return func(result.Value);
+        return result.ToResult();
+    }
+
+    public static Result OnSuccess<InT>(this Result<InT> result, Action<InT> func)
+    {
+        if (result.IsSuccess)
+        {
+            func(result.Value);
+            return Result.Ok();
+        }
+        return result.ToResult();
+    }
+    public static Result<OutT> OnSuccess<OutT>(this Result result, Func<Result<OutT>> func)
+    {
+        if (result.IsSuccess)
+            return func();
+        return result;
+    }
+
 
     public static Result OnSuccessAsync(this Result result, Func<Task<Result>> func)
     {
         if (result.IsSuccess)
-        {
-            Task<Result> awaitableTask = func();
-            Result res = awaitableTask.GetAwaiter().GetResult();
-            return res;
-        }
+            return func().GetAwaiter().GetResult();
         return result;
     }
 
     public static Result<T> OnSuccessAsync<T>(this Result result, Func<Task<Result<T>>> func)
     {
         if (result.IsSuccess)
-        {
-            Task<Result<T>> awaitableTask = func();
-            Result<T> res = awaitableTask.GetAwaiter().GetResult();
-            return res;
-        }
-        return Result.Fail<T>(result.Error);
-    }
-    public static Result<T> OnSuccess<T>(this Result<T> result, Func<T, Result<T>> func)
-    {
-        if (result.IsSuccess) return func(result.Value);
+            return func().GetAwaiter().GetResult();
         return result;
     }
-    public static Result<T> OnSuccessAsync<T>(this Result<T> result, Func<T, Task<Result<T>>> func)
+
+    public static Result OnSuccessAsync<T>(this Result<T> result, Func<T, Task<Result>> func)
     {
         if (result.IsSuccess)
-        {
-            Task<Result<T>> awaitableTask = func(result.Value);
-            Result<T> res = awaitableTask.GetAwaiter().GetResult();
-            return res;
-        }
-        return result;
+            return func(result.Value).GetAwaiter().GetResult();
+        return result.ToResult();
     }
+
     public static Result<OutT> OnSuccessAsync<InT, OutT>(this Result<InT> result, Func<InT, Task<Result<OutT>>> func)
     {
         if (result.IsSuccess)
-        {
-            Task<Result<OutT>> awaitableTask = func(result.Value);
-            Result<OutT> res = awaitableTask.GetAwaiter().GetResult();
-            return res;
-        }
-        return Result.Fail<OutT>(result.Error);
+            return func(result.Value).GetAwaiter().GetResult();
+        return result.ToResult<OutT>();
     }
 
-    public static Result OnFailure(this Result result, Action action)
-    {
-        if (result.IsFailure)
-            action();
-        return result;
-    }
-    public static Result OnFailure(this Result result, Action<Result> action)
-    {
-        if (result.IsFailure)
-            action(result);
-        return result;
-    }
-    public static Result OnFailure(this Result result, Func<Error, Error> action)
-    {
-        if (result.IsFailure)
-            return Result.Fail(action(result.Error));
-        return result;
-    }
-
-
-    public static Result<T> OnFailure<T>(this Result<T> result, Func<Error, Error> action)
-    {
-        if (result.IsFailure)
-            return Result.Fail<T>(action(result.Error));
-        return result;
-    }
-
-
-    public static OutT HandleAsync<InT, OutT>(this Result<InT> result, Func<InT, OutT> OnSuccessFunc, Func<Error, Task<OutT>> OnFailureFunc)
-    {
-        if (result.IsSuccess)
-        {
-            return OnSuccessFunc(result.Value);
-        }
-        else
-        {
-            Task<OutT> awaitableTask = OnFailureFunc(result.Error);
-            OutT res = awaitableTask.GetAwaiter().GetResult();
-            return res;
-        }
-    }
-
-    public static T Handle<T>(this Result result, Func<T> OnSuccessFunc, Func<Error, T> OnFailureFunc)
+    public static OutT Handle<OutT>(this Result result, Func<OutT> OnSuccessFunc, Func<List<IError>, OutT> OnFailureFunc)
     {
         if (result.IsSuccess)
         {
@@ -134,11 +81,10 @@ public static class ResultExtensions
         }
         else
         {
-            return OnFailureFunc(result.Error);
+            return OnFailureFunc(result.Errors);
         }
     }
-
-    public static void Handle<InT>(this Result<InT> result, Action<InT> OnSuccessFunc, Action<Error> OnFailureFunc)
+    public static void Handle<InT>(this Result<InT> result, Action<InT> OnSuccessFunc, Action<List<IError>> OnFailureFunc)
     {
         if (result.IsSuccess)
         {
@@ -146,11 +92,11 @@ public static class ResultExtensions
         }
         else
         {
-            OnFailureFunc(result.Error);
+            OnFailureFunc(result.Errors);
         }
     }
 
-    public static OutT Handle<InT, OutT>(this Result<InT> result, Func<InT, OutT> OnSuccessFunc, Func<Error, OutT> OnFailureFunc)
+    public static OutT Handle<InT, OutT>(this Result<InT> result, Func<InT, OutT> OnSuccessFunc, Func<List<IError>, OutT> OnFailureFunc)
     {
         if (result.IsSuccess)
         {
@@ -158,7 +104,40 @@ public static class ResultExtensions
         }
         else
         {
-            return OnFailureFunc(result.Error);
+            return OnFailureFunc(result.Errors);
         }
+    }
+
+}
+public static class ResultResolver
+{
+    public static IActionResult Resolve(this Result result, Func<IActionResult> success, string traceId) =>
+        result switch
+        {
+            { IsSuccess: true } => success(),
+            { IsFailed: true } => result.Errors.First().Handle(traceId),
+            _ => throw new InvalidOperationException()
+        };
+
+    public static IActionResult Resolve<T>(this Result<T> result,
+        Func<T, IActionResult> success, string traceId) =>
+        result switch
+        {
+            { IsSuccess: true } => success(result.Value),
+            { IsFailed: true } => result.Errors.First().Handle(traceId),
+            _ => throw new InvalidOperationException()
+        };
+}
+public static class ErrorHandler
+{
+    public static IActionResult Handle(this IError error, string traceId)
+    {
+        if (error is ResultError resultError)
+            return resultError.ToIResult(traceId);
+        else
+            return new JsonResult(new ErrorResponse(ErrorType.InternalServerError, error.Message, traceId))
+            {
+                StatusCode = StatusCodes.Status500InternalServerError
+            };
     }
 }

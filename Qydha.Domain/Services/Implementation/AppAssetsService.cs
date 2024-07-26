@@ -8,22 +8,26 @@ public class AppAssetsService(IAppAssetsRepo appAssetsRepo, IFileService fileSer
     private readonly BookSettings bookOptions = bookOptions.Value;
     private readonly NotificationImageSettings _notificationImageOptions = notificationImageOptions.Value;
 
-
+    public async Task<Result<PopUpAsset>> GetPopupAssetData() => await _appAssetsRepo.GetPopupAssetData();
     public async Task<Result<BookAsset>> GetBalootBookData() => await _appAssetsRepo.GetBalootBookAssetData();
+    public async Task<Result> UpdatePopupData(PopUpAsset popupAsset)
+    {
+        if (popupAsset.Show && popupAsset.Image is null)
+            return Result.Fail(new InvalidBodyInputError("لا يمكن تحويل حالة الاعلان الي  ظاهر وهو بدون صورة"));
+        else
+            return await _appAssetsRepo.UpdatePopupAssetData(popupAsset);
+    }
+
     public async Task<Result<BookAsset>> UpdateBalootBookData(IFormFile bookFile)
     {
         return (await _appAssetsRepo.GetBalootBookAssetData())
         .OnSuccessAsync(async (bookAsset) => (await _fileService.UploadFile(bookOptions.FolderPath, bookFile))
-            .MapTo((fileData) => new Tuple<BookAsset, FileData>(bookAsset, fileData)))
+            .ToResult((fileData) => (bookAsset, fileData)))
         .OnSuccessAsync(async (tuple) =>
         {
-            if (tuple.Item1.Path is not null)
-                (await _fileService.DeleteFile(tuple.Item1.Path)).OnFailure(() =>
-                {
-                    //! Handle Error On Delete File 
-                    _logger.LogError("Can't delete the old book with the path : {path}", tuple.Item1.Path);
-                });
-            return Result.Ok(tuple.Item2);
+            if (tuple.bookAsset.Path != null)
+                await _fileService.DeleteFile(tuple.bookAsset.Path);
+            return Result.Ok(tuple.fileData);
         })
         .OnSuccessAsync(async (fileData) =>
         {
@@ -33,35 +37,23 @@ public class AppAssetsService(IAppAssetsRepo appAssetsRepo, IFileService fileSer
                 Path = fileData.Path,
                 Url = fileData.Url
             };
-            return (await _appAssetsRepo.UpdateBalootBookAssetData(bookAsset)).MapTo(bookAsset);
+            return (await _appAssetsRepo.UpdateBalootBookAssetData(bookAsset)).ToResult(bookAsset);
         });
     }
-    public async Task<Result<PopUpAsset>> GetPopupAssetData() => await _appAssetsRepo.GetPopupAssetData();
-
-    public async Task<Result> UpdatePopupData(PopUpAsset popupAsset) => await _appAssetsRepo.UpdatePopupAssetData(popupAsset);
 
     public async Task<Result<PopUpAsset>> UpdatePopupImage(IFormFile imageFile)
     {
         return (await _appAssetsRepo.GetPopupAssetData())
         .OnSuccessAsync(async (popupAsset) => (await _fileService.UploadFile(_notificationImageOptions.FolderPath, imageFile))
-                .MapTo((fileData) => new Tuple<PopUpAsset, FileData>(popupAsset, fileData)))
-        .OnSuccessAsync<Tuple<PopUpAsset, FileData>>(async (tuple) =>
-        {
-            if (tuple.Item1.Image is not null)
-                (await _fileService.DeleteFile(tuple.Item1.Image.Path))
-                    .OnFailure(() =>
-                    {
-                        //! Handle Error On Delete File 
-                        _logger.LogError("Can't delete the old Popup image with the path : {path}", tuple.Item1.Image.Path);
-                    });
-            return Result.Ok(tuple);
-        })
+                .ToResult((fileData) => (popupAsset, fileData)))
         .OnSuccessAsync(async (tuple) =>
         {
-            PopUpAsset popupAsset = tuple.Item1;
-            FileData fileData = tuple.Item2;
-            popupAsset.Image = fileData;
-            return (await _appAssetsRepo.UpdatePopupAssetData(popupAsset)).MapTo(popupAsset);
-        });
+            if (tuple.popupAsset.Image != null)
+                await _fileService.DeleteFile(tuple.popupAsset.Image.Path);
+            tuple.popupAsset.Image = tuple.fileData;
+            return Result.Ok(tuple.popupAsset);
+        })
+        .OnSuccessAsync(async (popupAsset) =>
+            (await _appAssetsRepo.UpdatePopupAssetData(popupAsset)).ToResult(popupAsset));
     }
 }

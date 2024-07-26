@@ -1,57 +1,43 @@
-﻿using Google.Apis.Auth.OAuth2;
-using Google.Cloud.Storage.V1;
-
+﻿using Google.Cloud.Storage.V1;
 namespace Qydha.Infrastructure.Services;
 
-public class GoogleCloudFileService(GoogleStorageService googleStorageService) : IFileService
+public class GoogleCloudFileService(GoogleStorageService googleStorageService, IOptions<GoogleStorageSettings> options, ILogger<GoogleCloudFileService> logger) : IFileService
 {
 
     private readonly StorageClient _client = googleStorageService.GetStorageClient();
-    private readonly string bucketName = "qydha_bucket";
+    private readonly ILogger<GoogleCloudFileService> _logger = logger;
+    private readonly GoogleStorageSettings _googleStorageSettings = options.Value;
 
     public async Task<Result> DeleteFile(string path)
     {
         try
         {
-            await _client.DeleteObjectAsync(bucketName, path);
+            await _client.DeleteObjectAsync(_googleStorageSettings.BucketName, path);
             return Result.Ok();
         }
-        catch (Exception e)
+        catch (Exception exp)
         {
-            return Result.Fail(new Error()
-            {
-                Code = ErrorType.FileDeleteError,
-                Message = $"Google Cloud File ERROR : Can't Delete File , with message : {e.Message}"
-            });
+            _logger.LogCritical("Error in Deleting file in bucket : {bucketName} with path : {filePath} with exception message : {expMsg} ", _googleStorageSettings.BucketName, path, exp.Message);
+            return Result.Fail(new FileStorageOperationError(FileStorageAction.Delete, path).CausedBy(exp));
         }
     }
 
-    public async Task<Result<FileData>> UploadFile(string pathInBucket, IFormFile file)
+    public async Task<Result<FileData>> UploadFile(string folderPath, IFormFile file)
     {
         try
         {
             using var ms = new MemoryStream();
-
-            string fileName = $"({Guid.NewGuid()})-{file.FileName}";
-            string pathToFileInTheBucket = $"{pathInBucket}{fileName}";
-
+            string fileName = $"{Path.GetRandomFileName()}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+            string pathToFileInTheBucket = $"{folderPath}/{fileName}";
             await file.CopyToAsync(ms);
-
             UploadObjectOptions options = new() { PredefinedAcl = PredefinedObjectAcl.PublicRead };
-
-            var res = await _client.UploadObjectAsync(bucketName, pathToFileInTheBucket, file.ContentType, ms, options);
-
-            string publicAccessLink = $"https://storage.googleapis.com/{bucketName}/{pathToFileInTheBucket}";
-
-            return Result.Ok(new FileData() { Url = publicAccessLink, Path = pathToFileInTheBucket });
+            var res = await _client.UploadObjectAsync(_googleStorageSettings.BucketName, pathToFileInTheBucket, file.ContentType, ms, options);
+            return Result.Ok(new FileData() { Url = res.MediaLink, Path = pathToFileInTheBucket });
         }
-        catch (Exception e)
+        catch (Exception exp)
         {
-            return Result.Fail<FileData>(new()
-            {
-                Code = ErrorType.FileUploadError,
-                Message = $"Google Cloud File ERROR : Can't Upload File , With Message = {e.Message}"
-            });
+            _logger.LogCritical("Error in Uploading file in bucket : {bucketName} with Folder path : {folderPath} with exception message : {expMsg} ", _googleStorageSettings.BucketName, folderPath, exp.Message);
+            return Result.Fail(new FileStorageOperationError(FileStorageAction.Upload, folderPath).CausedBy(exp));
         }
     }
 }

@@ -3,50 +3,44 @@ namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("notifications/")]
-[Auth(SystemUserRoles.Admin)]
-
 public class NotificationController(INotificationService notificationService) : ControllerBase
 {
     private readonly INotificationService _notificationService = notificationService;
 
     [HttpGet("public/")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetPublicNotifications([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.ReadPublicNotifications)]
+    public async Task<IActionResult> GetPublicNotifications([FromQuery] PaginationParameters pageParams)
     {
-        return (await _notificationService.GetAllAnonymous(pageSize, pageNumber))
-        .Handle<IEnumerable<Notification>, IActionResult>(
-            (notificationsData) =>
+        return (await _notificationService.GetAllAnonymous(pageParams))
+        .Resolve(
+            (notifications) =>
             {
-                var mapper = new NotificationMapper();
-
-                return Ok(
-                    new
-                    {
-                        data = new { notifications = notificationsData.Select(n => mapper.NotificationToGetNotificationDto(n)) },
-                        message = "Notifications Fetched successfully."
-                    });
-            }
-            , BadRequest
-        );
+                return Ok(new
+                {
+                    Data = new NotificationMapper().PageListToNotificationPageDto(notifications),
+                    Message = "Notifications Fetched successfully."
+                });
+            }, HttpContext.TraceIdentifier);
     }
 
     [HttpPatch("click/{notificationId}")]
-    [AllowAnonymous]
+    [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
+    [Permission(ServiceAccountPermission.ClickOnPublicNotification)]
     public async Task<IActionResult> ApplyAnonymousClickOnNotification([FromRoute] int notificationId)
     {
         return (await _notificationService.ApplyAnonymousClick(notificationId))
-        .Handle<IActionResult>(
+        .Resolve(
             () => Ok(
                     new
                     {
                         data = new { },
                         message = "Notification Clicked successfully."
-                    })
-            , BadRequest
-        );
+                    }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("send-to-user/")]
+    [Authorize(Roles = RoleConstants.Admin)]
     public IActionResult SendNotificationToUser([FromForm] NotificationSendToUserDto dto)
     {
         Dictionary<string, object> payload = [];
@@ -71,13 +65,13 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             }, templateValues: []);
         })
-        .Handle<User, IActionResult>((user) =>
-            Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" })
-        , BadRequest);
+        .Resolve((user) => Ok(new { message = $"Notification sent to the user with username = '{user.Username}'" }), HttpContext.TraceIdentifier);
     }
 
 
     [HttpPost("send-to-all-users/")]
+    [Authorize(Roles = RoleConstants.Admin)]
+
     public IActionResult SendNotificationToAllUsers([FromForm] NotificationSendDto dto)
     {
         Dictionary<string, object> payload = [];
@@ -102,12 +96,11 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             }, templateValues: []);
         })
-        .Handle<int, IActionResult>((usersCount) =>
-            Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" })
-        , BadRequest);
+        .Resolve((usersCount) => Ok(new { message = $"Notification sent to the users with count = '{usersCount}'" }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("send-to-anonymous-users/")]
+    [Authorize(Roles = RoleConstants.Admin)]
     public IActionResult SendNotificationToAnonymousUsers([FromForm] NotificationSendDto dto)
     {
         Dictionary<string, object> payload = [];
@@ -132,8 +125,6 @@ public class NotificationController(INotificationService notificationService) : 
                 TemplateValues = []
             });
         })
-        .Handle<Notification, IActionResult>((notification) =>
-            Ok(new { message = $"Notification sent to the Anonymous users" })
-        , BadRequest);
+        .Resolve((notification) => Ok(new { message = $"Notification sent to the Anonymous users" }), HttpContext.TraceIdentifier);
     }
 }

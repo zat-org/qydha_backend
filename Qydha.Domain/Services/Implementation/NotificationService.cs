@@ -12,7 +12,7 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
     public async Task<Result<User>> SendToUser(Guid userId, NotificationData notification, Dictionary<string, string> templateValues)
     {
         Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
-        return getUserRes.OnSuccessAsync<User>(async (user) => await SendToUser(user, notification, templateValues));
+        return getUserRes.OnSuccessAsync(async (user) => await SendToUser(user, notification, templateValues));
     }
     public async Task<Result<User>> SendToUser(User user, NotificationData notificationData, Dictionary<string, string> templateValues)
     {
@@ -20,20 +20,18 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         .OnSuccessAsync(async (notification) =>
         {
             if (!string.IsNullOrEmpty(user.FCMToken))
-                (await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description))
-                .OnFailure((err) =>
-                {
-                    //! Handle Error in send push notification to User with fcm;
-                    _logger.LogError("Error In Send push Notification To user with ID :{userId} with code : {errorCode} and Message : {errorMsg}", user.Id, err.Code, err.Message);
-                    return err;
-                });
+            {
+                var notifyingRes = await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description);
+                if (notifyingRes.IsFailed)
+                    await _userRepo.UpdateUserFCMToken(user.Id, string.Empty);
+            }
             return Result.Ok(user);
         });
     }
     public async Task<Result<User>> SendToUserPreDefinedNotification(Guid userId, int notificationId, Dictionary<string, string> templateValues)
     {
         Result<User> getUserRes = await _userRepo.GetByIdAsync(userId);
-        return getUserRes.OnSuccessAsync<User>(async (user) => await SendToUserPreDefinedNotification(user, notificationId, templateValues));
+        return getUserRes.OnSuccessAsync(async (user) => await SendToUserPreDefinedNotification(user, notificationId, templateValues));
     }
     public async Task<Result<User>> SendToUserPreDefinedNotification(User user, int notificationId, Dictionary<string, string> templateValues)
     {
@@ -42,13 +40,9 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         {
             if (!string.IsNullOrEmpty(user.FCMToken))
             {
-                (await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description))
-                .OnFailure((err) =>
-                {
-                    //! Handle Error in send push notification to User with fcm;
-                    _logger.LogError("Error In Send push Notification To user with ID :{userId} with code : {errorCode} and Message : {errorMsg}", user.Id, err.Code, err.Message);
-                    return err;
-                });
+                var notifyingRes = await _pushNotificationService.SendToToken(user.FCMToken, notification.Title, notification.Description);
+                if (notifyingRes.IsFailed)
+                    await _userRepo.UpdateUserFCMToken(user.Id, string.Empty);
             }
             return Result.Ok(user);
         });
@@ -60,56 +54,37 @@ public class NotificationService(INotificationRepo notificationRepo, ILogger<Not
         {
             var effected = tuple.Item1;
             var notification = tuple.Item2;
-            (await _pushNotificationService.SendToAllUsers(notification))
-            .OnFailure((err) =>
-            {
-                //! Handle Error in send push notification to User with fcm; 
-                _logger.LogError("Error In Send push Notification To All users with code : {errorCode} and Message : {errorMsg}", err.Code, err.Message);
-                return err;
-            });
+
+            await _pushNotificationService.SendToAllUsers(notification);
+
             return Result.Ok(effected);
         });
     }
     public async Task<Result<Notification>> SendToAnonymousUsers(NotificationData notificationData)
     {
         return (await _notificationRepo.CreateAndAssignToAnonymousUsers(notificationData))
-        .OnSuccessAsync<Notification>(async (notification) =>
+        .OnSuccessAsync(async (notification) =>
         {
-            (await _pushNotificationService.SendToAnonymousUsers(notification))
-            .OnFailure((err) =>
-            {
-                //! Handle Error in send push notification to User with fcm;
-                _logger.LogError("Error In Send push Notification To Anonymous users with code : {errorCode} and Message : {errorMsg}", err.Code, err.Message);
-                return err;
-            });
+            await _pushNotificationService.SendToAnonymousUsers(notification);
             return Result.Ok(notification);
         });
     }
     public async Task<Result> MarkAllNotificationsOfUserAsRead(Guid userId) =>
-        await _notificationRepo.MarkAllAsReadByUserIdAsync(userId);
+        (await _notificationRepo.MarkAllAsReadByUserIdAsync(userId)).ToResult();
     public async Task<Result> MarkNotificationAsRead(Guid userId, int notificationId) =>
-        await _notificationRepo.MarkAsReadByIdsAsync(userId, notificationId);
+        (await _notificationRepo.MarkAsReadByIdsAsync(userId, notificationId)).ToResult();
     public async Task<Result> DeleteNotification(Guid userId, int notificationId) =>
-        await _notificationRepo.DeleteByIdsAsync(userId, notificationId);
+        (await _notificationRepo.DeleteByIdsAsync(userId, notificationId)).ToResult();
     public async Task<Result> DeleteAll(Guid userId) =>
-        await _notificationRepo.DeleteAllByUserIdAsync(userId);
-    public async Task<Result<IEnumerable<Notification>>> GetByUserId(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null) =>
-        await _notificationRepo.GetAllByUserId(userId, pageSize, pageNumber, isRead);
-    public async Task<Result<IEnumerable<Notification>>> GetAllAnonymous(int pageSize = 10, int pageNumber = 1) =>
-           await _notificationRepo.GetAllAnonymous(pageSize, pageNumber);
+        (await _notificationRepo.DeleteAllByUserIdAsync(userId)).ToResult();
+    public async Task<Result<PagedList<Notification>>> GetByUserId(Guid userId, PaginationParameters pageParams) =>
+        await _notificationRepo.GetAllByUserId(userId, pageParams);
+    public async Task<Result<PagedList<Notification>>> GetAllAnonymous(PaginationParameters pageParams) =>
+        await _notificationRepo.GetAllAnonymous(pageParams);
     public async Task<Result<FileData>> UploadNotificationImage(IFormFile file)
     {
-        return (await _fileService.UploadFile(_imageSettings.FolderPath, file))
-                    .OnFailure((err) =>
-                    {
-                        _logger.LogError("Can't Upload Notification Image with file Data = {fileData} with Error code = {errorCode},  Message = {errorMsg} ", new { file.Length, name = file.FileName, file.ContentType }, err.Code, err.Message);
-                        return new()
-                        {
-                            Code = ErrorType.FileUploadError,
-                            Message = "حدث عطل اثناء حفظ الصورة برجاء المحاولة مرة اخري"
-                        };
-                    });
+        return await _fileService.UploadFile(_imageSettings.FolderPath, file);
     }
     public async Task<Result> ApplyAnonymousClick(int notificationId) =>
-            await _notificationRepo.ApplyAnonymousClickById(notificationId);
+           (await _notificationRepo.ApplyAnonymousClickById(notificationId)).ToResult();
 }

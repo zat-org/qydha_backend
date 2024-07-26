@@ -7,11 +7,11 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
     private readonly IInfluencerCodesService _influencerCodesService = influencerCodesService;
 
     [HttpPost]
-    [Auth(SystemUserRoles.Admin)]
+    [Authorize(Roles = RoleConstants.Admin)]
     public async Task<IActionResult> AddInfluencerCode(AddInfluencerCodeDto dto)
     {
         return (await _influencerCodesService.AddInfluencerCode(dto.Code, dto.NumberOfDays, dto.ExpireAt, dto.MaxInfluencedUsersCount, dto.CategoryId))
-        .Handle<InfluencerCode, IActionResult>((infCode) => Ok(new
+        .Resolve((infCode) => Ok(new
         {
             Data = new
             {
@@ -21,46 +21,25 @@ public class InfluencerCodesController(IInfluencerCodesService influencerCodesSe
                 categoryId = infCode.CategoryId
             },
             message = "Influencer Code Added Successfully."
-        }), BadRequest);
+        }), HttpContext.TraceIdentifier);
     }
 
     [HttpPost("use")]
-    [Auth(SystemUserRoles.RegularUser)]
-    public async Task<IActionResult> UseInfluencerCode(UseInfluencerCodeDto dto)
+    [Authorize(Roles = RoleConstants.User)]
+    public IActionResult UseInfluencerCode(UseInfluencerCodeDto dto)
     {
-        User user = (User)HttpContext.Items["User"]!;
 
-        return (await _influencerCodesService.UseInfluencerCode(user.Id, dto.Code))
-        .Handle<User, IActionResult>((user) =>
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(async id => await _influencerCodesService.UseInfluencerCode(id, dto.Code))
+        .Resolve((user) =>
         {
             var mapper = new UserMapper();
-
             return Ok(new
             {
                 Data = new { user = mapper.UserToUserDto(user) },
                 message = "Influencer Code Used Successfully."
             });
-        }, BadRequest);
+        }, HttpContext.TraceIdentifier);
     }
 
-    // [HttpGet]
-    // [Auth(SystemUserRoles.Admin)]
-    // public async Task<IActionResult> GetInfluencerCodes()
-    // {
-    //     throw new Exception();
-    // }
-
-    // [HttpPatch]
-    // [Auth(SystemUserRoles.Admin)]
-    // public async Task<IActionResult> PatchInfluencerCode(AddInfluencerCodeDto dto)
-    // {
-    //     throw new Exception();
-    // }
-
-    // [HttpDelete]
-    // [Auth(SystemUserRoles.Admin)]
-    // public async Task<IActionResult> DeleteInfluencerCode(AddInfluencerCodeDto dto)
-    // {
-    //     throw new Exception();
-    // }
 }

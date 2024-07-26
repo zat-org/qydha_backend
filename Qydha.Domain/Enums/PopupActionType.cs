@@ -7,3 +7,8 @@ public enum PopupActionType
     GoToScreen = 3,
     GoToTab = 4,
 }
+public enum FileStorageAction
+{
+    Upload,
+    Delete
+}

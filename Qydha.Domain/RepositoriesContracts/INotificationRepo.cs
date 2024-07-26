@@ -7,11 +7,11 @@ public interface INotificationRepo
     Task<Result<Notification>> CreateAndAssignToUser(Guid userId, NotificationData notification, Dictionary<string, string> templateValues);
     Task<Result<Tuple<int, Notification>>> CreateAndAssignToAllUsers(NotificationData notification, Dictionary<string, string> templateValues);
     Task<Result<Notification>> CreateAndAssignToAnonymousUsers(NotificationData notification);
-    Task<Result<IEnumerable<Notification>>> GetAllByUserId(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null);
-    Task<Result<IEnumerable<Notification>>> GetAllAnonymous(int pageSize = 10, int pageNumber = 1);
+    Task<Result<PagedList<Notification>>> GetAllByUserId(Guid userId, PaginationParameters pageParams);
+    Task<Result<PagedList<Notification>>> GetAllAnonymous(PaginationParameters pageParams);
     Task<Result<int>> DeleteAllByUserIdAsync(Guid userId);
     Task<Result<int>> DeleteByIdsAsync(Guid userId, int notificationId);
     Task<Result<int>> MarkAllAsReadByUserIdAsync(Guid userId);
     Task<Result<int>> MarkAsReadByIdsAsync(Guid userId, int notificationId);
-    Task<Result> ApplyAnonymousClickById(int notificationId);
+    Task<Result<int>> ApplyAnonymousClickById(int notificationId);
 }

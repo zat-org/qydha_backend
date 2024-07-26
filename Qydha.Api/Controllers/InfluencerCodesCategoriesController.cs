@@ -2,7 +2,7 @@
 
 [ApiController]
 [Route("influencer-codes-categories/")]
-[Auth(SystemUserRoles.Admin)]
+[Authorize(Roles = RoleConstants.Admin)]
 public class InfluencerCodesCategoriesController(IInfluencerCodeCategoryService influencerCodeCategoryService) : ControllerBase
 {
     private readonly IInfluencerCodeCategoryService _influencerCodeCategoryService = influencerCodeCategoryService;
@@ -12,33 +12,33 @@ public class InfluencerCodesCategoriesController(IInfluencerCodeCategoryService 
     {
         var mapper = new InfluencerCodeCategoryMapper();
         return (await _influencerCodeCategoryService.Add(mapper.InfluencerCodeCategoryFromAddDto(dto)))
-        .Handle<InfluencerCodeCategory, IActionResult>((infCodeCategory) => Ok(new
+        .Resolve((infCodeCategory) => Ok(new
         {
             Data = infCodeCategory,
             message = "Influencer Code Category Added Successfully."
-        }), BadRequest);
+        }), HttpContext.TraceIdentifier);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAllCategories()
     {
         return (await _influencerCodeCategoryService.GetAll())
-        .Handle<IEnumerable<InfluencerCodeCategory>, IActionResult>((infCodeCategories) => Ok(new
+        .Resolve((infCodeCategories) => Ok(new
         {
             Data = infCodeCategories,
             message = "Influencer Code Categories Fetched Successfully."
-        }), BadRequest);
+        }), HttpContext.TraceIdentifier);
     }
 
     [HttpDelete("{categoryId}")]
     public async Task<IActionResult> DeleteCategory([FromRoute] int categoryId)
     {
         return (await _influencerCodeCategoryService.Delete(categoryId))
-        .Handle<IActionResult>(() => Ok(new
+        .Resolve(() => Ok(new
         {
             Data = new { },
             message = "Influencer Code Category Deleted Successfully."
-        }), BadRequest);
+        }), HttpContext.TraceIdentifier);
     }
     [HttpPut("{categoryId}")]
     public async Task<IActionResult> UpdateCategory([FromRoute] int categoryId, [FromBody] InfluencerCodeCategoryDto dto)
@@ -47,10 +47,10 @@ public class InfluencerCodesCategoriesController(IInfluencerCodeCategoryService 
         var category = mapper.InfluencerCodeCategoryFromAddDto(dto);
         category.Id = categoryId;
         return (await _influencerCodeCategoryService.Update(category))
-        .Handle<InfluencerCodeCategory, IActionResult>((infCodeCategory) => Ok(new
+        .Resolve((infCodeCategory) => Ok(new
         {
             Data = infCodeCategory,
             message = "Influencer Code Categories Updated Successfully."
-        }), BadRequest);
+        }), HttpContext.TraceIdentifier);
     }
 }

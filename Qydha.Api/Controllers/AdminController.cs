@@ -2,49 +2,31 @@
 
 [ApiController]
 [Route("/admin")]
-public class AdminController(IAdminUserService adminUserService) : ControllerBase
+public class AdminController(IAuthService authService) : ControllerBase
 {
-    private readonly IAdminUserService _adminUserService = adminUserService;
+    private readonly IAuthService _authService = authService;
 
     [HttpPost("login/")]
-    public async Task<IActionResult> Login([FromBody] AdminUserLoginDto dto)
+    public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        return (await _adminUserService.Login(dto.Username, dto.Password))
-        .Handle<Tuple<AdminUser, string>, IActionResult>(
-            (tuple) =>
+        return (await _authService.Login(dto.Username, dto.Password, true, null))
+        .Resolve(
+            (authUserModel) =>
             {
-                var mapper = new AdminUserMapper();
+                // Response.Cookies.AddRefreshToken(authUserModel.RefreshToken, authUserModel.RefreshTokenExpirationDate);
+                var mapper = new UserMapper();
                 return Ok(new
                 {
-                    data = new { adminUser = mapper.AdminUserToAdminUserDto(tuple.Item1), token = tuple.Item2 },
+                    data = new
+                    {
+                        adminUser = mapper.UserToUserDto(authUserModel.User),
+                        authUserModel.JwtToken,
+                        authUserModel.RefreshTokenExpirationDate,
+                        authUserModel.RefreshToken,
+                    },
                     message = "Logged in successfully."
                 });
-            },
-            (result) => BadRequest(new Error()
-            {
-                Code = ErrorType.InvalidCredentials,
-                Message = "اسم المستخدم او كلمة السر غير صحيحة"
-            })
-        );
-    }
-
-
-    [Auth(SystemUserRoles.Admin)]
-    [HttpPatch("change-password/")]
-    public async Task<IActionResult> ChangePassword([FromBody] AdminUserChangePasswordDto dto)
-    {
-        AdminUser adminUser = (AdminUser)HttpContext.Items["User"]!;
-
-        return (await _adminUserService.ChangePassword(adminUser.Id, dto.OldPassword, dto.NewPassword))
-        .Handle<AdminUser, IActionResult>((adminUser) =>
-            {
-                var mapper = new AdminUserMapper();
-                return Ok(new
-                {
-                    data = new { adminUser = mapper.AdminUserToAdminUserDto(adminUser) },
-                    message = "Password updated successfully."
-                });
-            },
-            BadRequest);
+            }
+        , HttpContext.TraceIdentifier);
     }
 }

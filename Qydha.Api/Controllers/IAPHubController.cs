@@ -12,28 +12,24 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
     public async Task<IActionResult> IApHubWebHook([FromBody] WebHookDto webHookDto)
     {
         if (!Request.Headers.TryGetValue("x-auth-token", out var authToken))
-            return Unauthorized(new { Error = new Error() { Code = ErrorType.InvalidIAPHupToken, Message = "x-auth-token header is Missing" } });
+            return new ForbiddenError().Handle(HttpContext.TraceIdentifier);
         string tokenValue = authToken.ToString();
-        if (tokenValue != _iAPHubSettings.XAuthToken) return Unauthorized(new { Error = new Error() { Code = ErrorType.InvalidIAPHupToken, Message = "x-auth-token header is wrong." } });
+        if (tokenValue != _iAPHubSettings.XAuthToken)
+            return new ForbiddenError().Handle(HttpContext.TraceIdentifier);
 
         switch (webHookDto.Type)
         {
             case "purchase":
-                return (await _purchaseService.AddPurchase(webHookDto.Id, webHookDto.Data!.UserId, webHookDto.Data.ProductSku, webHookDto.Data.PurchaseDate)).Handle<User, IActionResult>(
+                return (await _purchaseService.AddPurchase(webHookDto.Id, webHookDto.Data!.UserId, webHookDto.Data.ProductSku, webHookDto.Data.PurchaseDate))
+                .Resolve(
                     (user) =>
                     {
                         var mapper = new UserMapper();
-                        return Ok(new { Data = new { user = mapper.UserToUserDto(user) }, message = "Enjoy your subscription." });
-                    },
-                    (err) =>
-                    {
-                        _logger.LogError("Error in IAPHUB WebHook type = \"purchase\" and  userId = {userId} with Data : {webhookData}", webHookDto.Data!.UserId, webHookDto);
-                        return BadRequest(err);
-                    }
-                );
+                        return Ok(new { Data = new { }, message = "Purchase Added Successfully." });
+                    }, HttpContext.TraceIdentifier);
             default:
                 _logger.LogWarning("Unhandled IAPHUB Action Type : {type} , Data => {data}", webHookDto.Type, webHookDto);
-                return Ok();
+                return BadRequest();
         }
     }
 

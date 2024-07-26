@@ -12,8 +12,8 @@ public interface INotificationService
     Task<Result> MarkNotificationAsRead(Guid userId, int notificationId);
     Task<Result> DeleteNotification(Guid userId, int notificationId);
     Task<Result> DeleteAll(Guid userId);
-    Task<Result<IEnumerable<Notification>>> GetByUserId(Guid userId, int pageSize = 10, int pageNumber = 1, bool? isRead = null);
-    Task<Result<IEnumerable<Notification>>> GetAllAnonymous(int pageSize = 10, int pageNumber = 1);
+    Task<Result<PagedList<Notification>>> GetByUserId(Guid userId, PaginationParameters pageParams);
+    Task<Result<PagedList<Notification>>> GetAllAnonymous(PaginationParameters pageParams);
     Task<Result<FileData>> UploadNotificationImage(IFormFile file);
     Task<Result> ApplyAnonymousClick(int notificationId);
 }
