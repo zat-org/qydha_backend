@@ -50,6 +50,7 @@ app.UseSerilogRequestLogging(op =>
         diagnosticContext.Set("TokenType", httpContext.User.FindFirst(ClaimsNamesConstants.TokenType)?.Value ?? "Token type not provided");
         diagnosticContext.Set("RequestId", httpContext.TraceIdentifier);
         diagnosticContext.Set("NewLine", " \n");
+        diagnosticContext.Set("DeviceData", httpContext.Request.Headers.GetXInfoHeaderData());
     };
 });
 
