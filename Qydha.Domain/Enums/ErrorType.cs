@@ -6,6 +6,9 @@ public enum ErrorType
     InvalidBodyInput = 4001, //400
     InvalidPatchBodyInput = 4002, //400
     #endregion
+    #region  default Errors 
+    RequestTimeout = 4008,
+    #endregion
 
     #region AuthN , AuthZ errors
     InvalidAuthToken = 4010, // 401

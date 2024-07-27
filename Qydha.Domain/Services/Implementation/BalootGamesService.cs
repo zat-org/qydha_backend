@@ -12,7 +12,7 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
             Result res = e.ApplyToState(game);
             if (res.IsFailed)
             {
-                _logger.LogWarning("Baloot Game Error While trying to Create game with these events : {events}", JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings));
+                _logger.LogWarning("Baloot Game Error with message :: \" {msg} \" While trying to Create game with the events : {events}", res.Errors.First().Message, events);
                 return res;
             }
         }
@@ -39,7 +39,7 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
                     Result res = e.ApplyToState(game);
                     if (res.IsFailed)
                     {
-                        _logger.LogWarning("Baloot Game Error While trying to Apply these events userId : {userId} , gameId : {gameId} , events {events}", userId, gameId, JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings));
+                        _logger.LogWarning("Baloot Game Error with message :: {msg} While trying to Apply these events userId : {userId} , gameId : {gameId} , events {events}", res.Errors.First().Message, userId, gameId, events);
                         return res;
                     }
                 }
@@ -52,11 +52,15 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
         return (await _balootGamesRepo.GetById(gameId))
             .OnSuccess((game) =>
             {
-                if (!isRequesterAdmin &&
-                    requesterId != game.ModeratorId &&
-                    requesterId != game.OwnerId)
-                    return Result.Fail(new ForbiddenError());
-                return Result.Ok(game);
+                if (isRequesterAdmin)
+                    return Result.Ok(game);
+                else
+                {
+                    if (requesterId != game.ModeratorId && requesterId != game.OwnerId)
+                        return Result.Fail(new ForbiddenError());
+                    return Result.Ok(game);
+                }
+
             });
     }
 

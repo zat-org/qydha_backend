@@ -1,4 +1,5 @@
 ﻿using System.Data.Common;
+using Newtonsoft.Json;
 
 namespace Qydha.API.Attributes;
 
@@ -9,29 +10,27 @@ public class ExceptionHandlerAttribute(ILogger<ExceptionHandlerAttribute> logger
     public override void OnException(ExceptionContext context)
     {
         var exception = context.Exception;
-        ObjectResult res;
-        if (exception is InvalidBalootGameEventException balootEventException)
+        ResultError res = exception switch
         {
-
-            res = new InvalidBodyInputError(balootEventException.Message).ToObjectResult(context.HttpContext.TraceIdentifier);
-
-        }
-        else if (exception is DbException dbException)
-        {
-            _logger.LogError(dbException, "Error caught by Exception Filter DbException Message :: {msg} ; trace id : {TraceId}", dbException.Message, context.HttpContext.TraceIdentifier); //logger 
-            res = new InternalServerError().ToObjectResult(context.HttpContext.TraceIdentifier);
-
-        }
-        else
-        {
-            _logger.LogError(exception, "Error caught by Exception Handler exception Message :: {msg} ; trace id : {TraceId}", exception.Message, context.HttpContext.TraceIdentifier); //logger 
-            res = new InternalServerError().ToObjectResult(context.HttpContext.TraceIdentifier);
-        }
-        context.Result = res;
+            InvalidBalootGameEventException => new InvalidBodyInputError(exception.Message),
+            JsonReaderException => new InvalidBodyInputError("Invalid body input schema"),
+            OperationCanceledException => new RequestTimeoutError(),
+            DbException => new InternalServerError(),
+            _ => new InternalServerError(),
+        };
+        _logger.LogError(exception, "Error caught by Exception Filter exception type :: {exceptionType} ; Message :: {msg} ; trace id : {TraceId}", exception.GetType(), exception.Message, context.HttpContext.TraceIdentifier); //logger 
+        context.Result = res.ToObjectResult(context.HttpContext.TraceIdentifier);
     }
 }
 public sealed class InternalServerError() : ResultError(
     "Internal Server Error , please try again later",
     ErrorType.InternalServerError,
     StatusCodes.Status500InternalServerError)
+{ }
+
+public sealed class RequestTimeoutError() : ResultError(
+    "The operation was canceled.",
+    ErrorType.RequestTimeout,
+    StatusCodes.Status408RequestTimeout
+)
 { }

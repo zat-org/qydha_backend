@@ -39,7 +39,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // app.UseStaticFiles();
-
 app.UseSerilogRequestLogging(op =>
 {
     op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Token Type : {TokenType} {NewLine} => Client IP : {ClientIp} {NewLine} => X-INFO : {xINFO} {NewLine} => TraceId : {RequestId} ";
