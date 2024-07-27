@@ -12,7 +12,14 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
             Result res = e.ApplyToState(game);
             if (res.IsFailed)
             {
-                _logger.LogWarning("Baloot Game Error with message :: \" {msg} \" While trying to Create game with the events : {events}", res.Errors.First().Message, events);
+                using (_logger.BeginScope(new Dictionary<string, object>
+                {
+                    ["events"] = events
+                }))
+                {
+                    _logger.LogWarning("Baloot Game Error with message :: \" {msg} \" While trying to Create game with the events", res.Errors.First().Message);
+                }
+
                 return res;
             }
         }
@@ -39,7 +46,13 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
                     Result res = e.ApplyToState(game);
                     if (res.IsFailed)
                     {
-                        _logger.LogWarning("Baloot Game Error with message :: {msg} While trying to Apply these events userId : {userId} , gameId : {gameId} , events {events}", res.Errors.First().Message, userId, gameId, events);
+                        using (_logger.BeginScope(new Dictionary<string, object>
+                        {
+                            ["events"] = events
+                        }))
+                        {
+                            _logger.LogWarning("Baloot Game Error with message :: {msg} While trying to Apply these events userId : {userId} , gameId : {gameId} ", res.Errors.First().Message, userId, gameId);
+                        }
                         return res;
                     }
                 }
