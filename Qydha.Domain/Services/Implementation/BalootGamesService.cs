@@ -14,7 +14,7 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
             {
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
-                    ["events"] = events
+                    ["events"] = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings)
                 }))
                 {
                     _logger.LogWarning("Baloot Game Error with message :: \" {msg} \" While trying to Create game with the events", res.Errors.First().Message);
@@ -48,7 +48,7 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
                     {
                         using (_logger.BeginScope(new Dictionary<string, object>
                         {
-                            ["events"] = events
+                            ["events"] = JsonConvert.SerializeObject(events, BalootConstants.balootEventsSerializationSettings)
                         }))
                         {
                             _logger.LogWarning("Baloot Game Error with message :: {msg} While trying to Apply these events userId : {userId} , gameId : {gameId} ", res.Errors.First().Message, userId, gameId);
