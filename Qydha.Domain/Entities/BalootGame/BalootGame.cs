@@ -15,7 +15,7 @@ public class BalootGame
         ThemName = "Them";
         PausingIntervals = [];
     }
-    public static BalootGame CreateSinglePlayerGame(Guid ownerId, DateTimeOffset createdAt)
+    public static BalootGame CreateSinglePlayerGame(Guid ownerId, DateTimeOffset createdAt, XInfoData deviceData)
     {
         return new BalootGame(BalootGameStateEnum.Created)
         {
@@ -23,9 +23,10 @@ public class BalootGame
             CreatedAt = createdAt.ToUniversalTime(),
             OwnerId = ownerId,
             ModeratorId = ownerId,
+            DeviceData = deviceData
         };
     }
-    public static BalootGame CreateAnonymousGame(DateTimeOffset createdAt)
+    public static BalootGame CreateAnonymousGame(DateTimeOffset createdAt, XInfoData deviceData)
     {
         return new BalootGame(BalootGameStateEnum.Created)
         {
@@ -33,6 +34,7 @@ public class BalootGame
             CreatedAt = createdAt.ToUniversalTime(),
             OwnerId = null,
             ModeratorId = null,
+            DeviceData = deviceData
         };
     }
     public Guid Id { get; set; }
@@ -44,6 +46,8 @@ public class BalootGame
     public Guid? OwnerId { get; set; }
     public virtual User? Owner { get; set; }
     private BalootGameState State { get; set; } = null!;
+
+    public XInfoData DeviceData { get; init; } = null!;
 
     private BalootGameStateEnum _stateName;
     public BalootGameStateEnum StateName

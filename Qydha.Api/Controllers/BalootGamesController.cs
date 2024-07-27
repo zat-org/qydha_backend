@@ -10,14 +10,15 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     [HttpPost]
     public IActionResult CreateBalootGame([ModelBinder(typeof(CreateBalootGameDtoModelBinder))] CreateBalootGameDto dto)
     {
+        var xInfoData = HttpContext.Request.Headers.GetXInfoHeaderData();
         var balootGameMapper = new BalootGameMapper();
         return balootGameMapper.BalootEventsDtoToBalootEvents(dto.Events)
         .OnSuccess(events => HttpContext.User.GetUserIdentifier().Map(userId => (userId, events)))
         .OnSuccessAsync((tuple) =>
            {
                if (HttpContext.User.IsServiceAccountToken())
-                   return _balootGamesService.CreateAnonymousBalootGame(tuple.events, dto.CreatedAt);
-               return _balootGamesService.CreateSingleBalootGame(tuple.userId, tuple.events, dto.CreatedAt);
+                   return _balootGamesService.CreateAnonymousBalootGame(tuple.events, dto.CreatedAt, xInfoData);
+               return _balootGamesService.CreateSingleBalootGame(tuple.userId, tuple.events, dto.CreatedAt, xInfoData);
            })
            .Resolve(
            (game) => Ok(new

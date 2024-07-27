@@ -103,5 +103,13 @@ public class BalootGameConfiguration : IEntityTypeConfiguration<BalootGame>
             .HasColumnType("geometry(Point, 4326)");
 
 
+        entity.Property(e => e.DeviceData)
+            .HasDefaultValueSql($"'{JsonConvert.SerializeObject(new XInfoData())}'::jsonb")
+            .HasColumnType("jsonb")
+            .HasColumnName("device_data")
+            .HasConversion(
+                v => JsonConvert.SerializeObject(v),
+                v => JsonConvert.DeserializeObject<XInfoData>(v) ?? new XInfoData(null, null, null, null, null)
+            );
     }
 }
