@@ -250,7 +250,9 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     }
     public async Task<Result<User>> UpdateAsync(User user)
     {
-        _dbCtx.Update(user);
+        _dbCtx.Users.Attach(user);
+        _dbCtx.Entry(user).State = EntityState.Modified;
+        // _dbCtx.Update(user);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(user);
     }
