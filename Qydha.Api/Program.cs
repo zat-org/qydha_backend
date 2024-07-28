@@ -41,10 +41,9 @@ app.UseAuthorization();
 // app.UseStaticFiles();
 app.UseSerilogRequestLogging(op =>
 {
-    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Token Type : {TokenType} {NewLine} => Client IP : {ClientIp} {NewLine} => X-INFO : {xINFO} {NewLine} => TraceId : {RequestId} ";
+    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Token Type : {TokenType} {NewLine} => Client IP : {ClientIp} {NewLine} => X-INFO : Environment : {Environment} Platform : {Platform} DeviceName : {DeviceName} AppVersion : {AppVersion} DeviceId : {DeviceId} {NewLine} => TraceId : {RequestId} ";
     op.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
-        diagnosticContext.Set("xINFO", httpContext.Request.Headers["x-info"].ToString());
         diagnosticContext.Set("ClientIp", httpContext.Request.Headers["X-Real-IP"].ToString());
         diagnosticContext.Set("UserId", httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "user Id not provided");
         diagnosticContext.Set("TokenType", httpContext.User.FindFirst(ClaimsNamesConstants.TokenType)?.Value ?? "Token type not provided");
