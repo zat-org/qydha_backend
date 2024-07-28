@@ -39,6 +39,8 @@ public static class ServicesRegistrations
         services.AddScoped<ILoginWithQydhaOtpSenderService, LoginWithQydhaOtpSenderAsNotification>();
         services.AddScoped<IBalootGamesService, BalootGamesService>();
         services.AddScoped<IServiceAccountsService, ServiceAccountsService>();
+        services.AddScoped<IBalootGameStreamService, BalootGameStreamService>();
+
         #endregion
         return services;
 

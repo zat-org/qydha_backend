@@ -74,6 +74,14 @@ public class BalootGamesRepo(QydhaContext qydhaContext) : IBalootGamesRepo
             Result.Ok() :
             Result.Fail(new EntityNotFoundError<Guid>(gameId, nameof(BalootGame)));
     }
-
-
+ 
+    public async Task<Result<BalootGame>> GetBalootGameByBoardIdAsync(Guid boardId)
+    {
+        var balootGame = await _dbCtx.BalootGames
+            .Include(g => g.Sakkas.OrderBy(s => s.Id))
+            .ThenInclude(s => s.Moshtaras.OrderBy(m => m.Id))
+            .OrderByDescending(g => g.CreatedAt)
+            .FirstOrDefaultAsync(g => g.Owner != null && g.Owner.BalootGameBoards.Id == boardId);
+        return balootGame != null ? Result.Ok(balootGame) : Result.Fail(new EntityNotFoundError<Guid>(boardId, nameof(BalootGameBoard)));
+    }
 }

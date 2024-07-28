@@ -88,45 +88,55 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(e => e.Username)
             .HasMaxLength(100)
             .HasColumnName("username");
-        builder.OwnsOne(d => d.UserBalootSettings, entity =>
+        builder.OwnsOne(d => d.BalootGameBoards, entity =>
         {
-            entity.HasData(new { UserId = adminId });
-
+            // entity.HasData(new { UserId = adminId, Id = new Guid("62dd9f79-a8a1-4031-ba55-c2ddca88b0bb") });
+            entity.HasKey(e => new { e.UserId, e.Id });
+            entity.ToTable("baloot_boards");
             entity.Property(e => e.UserId)
                 .HasColumnName("user_id");
-            entity.HasKey(e => e.UserId);
-            entity.ToTable("user_baloot_settings");
-            entity.Property(e => e.IsAdvancedRecording)
-                .HasDefaultValue(false)
-                .HasColumnName("is_advanced_recording");
-            entity.Property(e => e.IsCommentsSoundEnabled)
-                .HasDefaultValue(true)
-                .HasColumnName("is_comments_sound_enabled");
-            entity.Property(e => e.IsFlipped)
-                .HasDefaultValue(false)
-                .HasColumnName("is_flipped");
-            entity.Property(e => e.IsNumbersSoundEnabled)
-                .HasDefaultValue(true)
-                .HasColumnName("is_numbers_sound_enabled");
-            entity.Property(e => e.IsSakkahMashdodahMode)
-                .HasDefaultValue(false)
-                .HasColumnName("is_sakkah_mashdodah_mode");
-            entity.Property(e => e.ShowWhoWonDialogOnDraw)
-                .HasDefaultValue(false)
-                .HasColumnName("show_who_won_dialog_on_draw");
-            entity.Property(e => e.IsEkakShown)
-                .HasDefaultValue(false)
-                .HasColumnName("is_ekak_shown");
-            entity.Property(e => e.IsAklatShown)
-                .HasDefaultValue(false)
-                .HasColumnName("is_aklat_shown");
-            entity.Property(e => e.SakkasCount)
-                .HasDefaultValue(1)
-                .HasColumnName("sakkas_count");
+            entity.Property(e => e.Id)
+                .HasColumnName("id");
         });
+        builder.OwnsOne(d => d.UserBalootSettings, entity =>
+         {
+             entity.HasData(new { UserId = adminId });
+
+             entity.Property(e => e.UserId)
+                 .HasColumnName("user_id");
+             entity.HasKey(e => e.UserId);
+             entity.ToTable("user_baloot_settings");
+             entity.Property(e => e.IsAdvancedRecording)
+                 .HasDefaultValue(false)
+                 .HasColumnName("is_advanced_recording");
+             entity.Property(e => e.IsCommentsSoundEnabled)
+                 .HasDefaultValue(true)
+                 .HasColumnName("is_comments_sound_enabled");
+             entity.Property(e => e.IsFlipped)
+                 .HasDefaultValue(false)
+                 .HasColumnName("is_flipped");
+             entity.Property(e => e.IsNumbersSoundEnabled)
+                 .HasDefaultValue(true)
+                 .HasColumnName("is_numbers_sound_enabled");
+             entity.Property(e => e.IsSakkahMashdodahMode)
+                 .HasDefaultValue(false)
+                 .HasColumnName("is_sakkah_mashdodah_mode");
+             entity.Property(e => e.ShowWhoWonDialogOnDraw)
+                 .HasDefaultValue(false)
+                 .HasColumnName("show_who_won_dialog_on_draw");
+             entity.Property(e => e.IsEkakShown)
+                 .HasDefaultValue(false)
+                 .HasColumnName("is_ekak_shown");
+             entity.Property(e => e.IsAklatShown)
+                 .HasDefaultValue(false)
+                 .HasColumnName("is_aklat_shown");
+             entity.Property(e => e.SakkasCount)
+                 .HasDefaultValue(1)
+                 .HasColumnName("sakkas_count");
+         });
         builder.OwnsOne(d => d.UserGeneralSettings, entity =>
         {
-            entity.HasData(new UserGeneralSettings() { UserId = adminId, PlayersNames = [], TeamsNames = [] });
+            entity.HasData(new { UserId = adminId, PlayersNames = new List<string>() { }, TeamsNames = new List<string>() { } });
 
             entity.Property(e => e.UserId)
                 .HasColumnName("user_id");
@@ -167,7 +177,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 .HasDefaultValue(false)
                 .HasColumnName("win_using_zat");
         });
-
         builder.OwnsMany(u => u.RefreshTokens, refreshTokenEntity =>
         {
             refreshTokenEntity.ToTable("refresh_tokens");

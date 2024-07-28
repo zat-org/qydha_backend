@@ -1,9 +1,10 @@
 ﻿
 namespace Qydha.Domain.Services.Implementation;
 
-public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<BalootGamesService> logger) : IBalootGamesService
+public class BalootGamesService(IBalootGamesRepo balootGamesRepo, IMediator mediator, ILogger<BalootGamesService> logger) : IBalootGamesService
 {
     private readonly IBalootGamesRepo _balootGamesRepo = balootGamesRepo;
+    private readonly IMediator _mediator = mediator;
     private readonly ILogger<BalootGamesService> _logger = logger;
     private async Task<Result<BalootGame>> ApplyEventsAndSaveTheGame(BalootGame game, ICollection<BalootGameEvent> events)
     {
@@ -27,7 +28,13 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
         return await _balootGamesRepo.SaveGame(game);
     }
     public async Task<Result<BalootGame>> CreateSingleBalootGame(Guid userId, ICollection<BalootGameEvent> events, DateTimeOffset createdAt, XInfoData xInfoData) =>
-        await ApplyEventsAndSaveTheGame(BalootGame.CreateSinglePlayerGame(userId, createdAt, xInfoData), events);
+        (await ApplyEventsAndSaveTheGame(BalootGame.CreateSinglePlayerGame(userId, createdAt, xInfoData), events))
+        .OnSuccessAsync(async (game) =>
+        {
+            if (game.OwnerId != null)
+                await _mediator.Publish(new ApplyEventsToBalootGameNotification(game.OwnerId.Value, game));
+            return Result.Ok(game);
+        });
 
     public async Task<Result<BalootGame>> CreateAnonymousBalootGame(ICollection<BalootGameEvent> events, DateTimeOffset createdAt, XInfoData xInfoData) =>
             await ApplyEventsAndSaveTheGame(BalootGame.CreateAnonymousGame(createdAt, xInfoData), events);
@@ -57,6 +64,12 @@ public class BalootGamesService(IBalootGamesRepo balootGamesRepo, ILogger<Baloot
                     }
                 }
                 return (await _balootGamesRepo.AddEvents(game, events)).ToResult(game);
+            })
+            .OnSuccessAsync(async (game) =>
+            {
+                if (game.GameMode != BalootGameMode.AnonymousGame && game.OwnerId != null)
+                    await _mediator.Publish(new ApplyEventsToBalootGameNotification(game.OwnerId.Value, game));
+                return Result.Ok(game);
             });
     }
 

@@ -11,11 +11,13 @@ public interface IUserRepo
     Task<Result<User>> GetByPhoneAsync(string phone);
     Task<Result<User>> GetByEmailAsync(string email);
     Task<Result<User>> GetByUsernameAsync(string username);
+    Task<Result<BalootGameBoard>> GetBalootBoardByUserIdAsync(Guid userId);
     Task<Result> IsUsernameAvailable(string username, Guid? userId = null);
     Task<Result> IsPhoneAvailable(string phone);
     Task<Result> IsUsernameAndPhoneAvailable(string username, string phone);
     Task<Result> IsEmailAvailable(string email, Guid? userId = null);
     Task<Result> IsUserSubscribed(Guid userId);
+    Task<Result> IsUserStreamer(Guid userId);
     Task<Result> UpdateUserLastLoginToNow(Guid userId);
     Task<Result> UpdateUserFCMToken(Guid userId, string fcmToken);
     Task<Result> UpdateUserPassword(Guid userId, string passwordHash);

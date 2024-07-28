@@ -23,6 +23,8 @@ public static class ClaimPrincipalExtensions
         user.HasClaim(c => c.Type == ClaimsNamesConstants.TokenType && c.Value == ServiceAccount.TokenType);
     public static bool HasAdminRole(this ClaimsPrincipal user) =>
         user.HasRoles([UserRoles.StaffAdmin, UserRoles.SuperAdmin]);
+    public static bool HasStreamerRole(this ClaimsPrincipal user) =>
+        user.HasRoles(UserRoles.Streamer);
     public static bool HasUserRole(this ClaimsPrincipal user) => user.HasRoles(UserRoles.User);
 
 }

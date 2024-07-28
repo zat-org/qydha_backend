@@ -66,6 +66,16 @@ public static class ResultExtensions
         return result.ToResult();
     }
 
+    public static Result OnSuccessAsync<T>(this Result<T> result, Func<T, Task> func)
+    {
+        if (result.IsSuccess)
+        {
+            func(result.Value).GetAwaiter().GetResult();
+            return Result.Ok();
+        }
+        return result.ToResult();
+    }
+
     public static Result<OutT> OnSuccessAsync<InT, OutT>(this Result<InT> result, Func<InT, Task<Result<OutT>>> func)
     {
         if (result.IsSuccess)

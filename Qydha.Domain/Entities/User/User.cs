@@ -80,6 +80,7 @@ public class User : IClaimable
     public virtual ICollection<BalootGame> ModeratedBalootGames { get; set; } = [];
     public virtual ICollection<BalootGame> CreatedBalootGames { get; set; } = [];
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+    public virtual BalootGameBoard BalootGameBoards { get; set; } = null!;
 
 
     public IEnumerable<Claim> GetClaims()
@@ -126,7 +127,8 @@ public class User : IClaimable
             FCMToken = otpRequest.FCMToken,
             UserBalootSettings = new(),
             UserHandSettings = new(),
-            UserGeneralSettings = new()
+            UserGeneralSettings = new(),
+            BalootGameBoards = new()
         };
     }
 }

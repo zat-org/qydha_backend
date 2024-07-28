@@ -1,0 +1,72 @@
+﻿namespace Qydha.Domain.Mappers;
+[Mapper]
+public partial class BalootGameStreamMapper
+{
+    [MapProperty([nameof(BalootGame.Id)], [nameof(BalootGameStreamDto.Id)])]
+    [MapProperty([nameof(BalootGame.StateName)], [nameof(BalootGameStreamDto.State)])]
+    [MapProperty([nameof(BalootGame.UsName)], [nameof(BalootGameStreamDto.UsName)])]
+    [MapProperty([nameof(BalootGame.ThemName)], [nameof(BalootGameStreamDto.ThemName)])]
+    [MapProperty([nameof(BalootGame.MaxSakkaPerGame)], [nameof(BalootGameStreamDto.MaxSakkaPerGame)])]
+    [MapProperty([nameof(BalootGame.UsGameScore)], [nameof(BalootGameStreamDto.UsGameScore)])]
+    [MapProperty([nameof(BalootGame.ThemGameScore)], [nameof(BalootGameStreamDto.ThemGameScore)])]
+    [MapProperty([nameof(BalootGame.Winner)], [nameof(BalootGameStreamDto.Winner)])]
+    [MapProperty([nameof(BalootGame.Sakkas)], [nameof(BalootGameStreamDto.Sakkas)])]
+    [MapperIgnoreSource(nameof(BalootGame.EventsJsonString))]
+    [MapperIgnoreSource(nameof(BalootGame.ModeratorId))]
+    [MapperIgnoreSource(nameof(BalootGame.Moderator))]
+    [MapperIgnoreSource(nameof(BalootGame.Owner))]
+    [MapperIgnoreSource(nameof(BalootGame.OwnerId))]
+    [MapperIgnoreSource(nameof(BalootGame.IsEnded))]
+    [MapperIgnoreSource(nameof(BalootGame.IsRunningWithoutSakkas))]
+    [MapperIgnoreSource(nameof(BalootGame.IsRunningWithSakkas))]
+    [MapperIgnoreSource(nameof(BalootGame.IsCreated))]
+    [MapperIgnoreSource(nameof(BalootGame.PausingIntervals))]
+    [MapperIgnoreSource(nameof(BalootGame.CurrentSakka))]
+    [MapperIgnoreSource(nameof(BalootGame.CreatedAt))]
+    [MapperIgnoreSource(nameof(BalootGame.StartedAt))]
+    [MapperIgnoreSource(nameof(BalootGame.EndedAt))]
+    [MapperIgnoreSource(nameof(BalootGame.GameMode))]
+    [MapperIgnoreSource(nameof(BalootGame.Location))]
+    [MapperIgnoreSource(nameof(BalootGame.GameInterval))]
+
+    public partial BalootGameStreamDto BalootGameToBalootGameDto(BalootGame game);
+
+
+
+    [MapProperty([nameof(BalootSakka.Id)], [nameof(BalootSakkaStreamDto.Id)])]
+    [MapProperty(nameof(BalootSakka.Winner), nameof(BalootSakkaStreamDto.Winner))]
+    [MapProperty(nameof(BalootSakka.IsMashdoda), nameof(BalootSakkaStreamDto.IsMashdoda))]
+    [MapProperty(nameof(BalootSakka.Moshtaras), nameof(BalootSakkaStreamDto.Moshtaras))]
+    [MapProperty(nameof(BalootSakka.UsScore), nameof(BalootSakkaStreamDto.UsSakkaScore))]
+    [MapProperty(nameof(BalootSakka.ThemScore), nameof(BalootSakkaStreamDto.ThemSakkaScore))]
+    [MapProperty(nameof(BalootSakka.StateName), nameof(BalootSakkaStreamDto.State))]
+    [MapperIgnoreSource(nameof(BalootSakka.IsRunningWithMoshtaras))]
+    [MapperIgnoreSource(nameof(BalootSakka.IsRunning))]
+    [MapperIgnoreSource(nameof(BalootSakka.IsEnded))]
+    [MapperIgnoreSource(nameof(BalootSakka.BalootGameId))]
+    [MapperIgnoreSource(nameof(BalootSakka.IsRunningWithoutMoshtaras))]
+    [MapperIgnoreSource(nameof(BalootSakka.CurrentMoshtara))]
+    [MapperIgnoreSource(nameof(BalootSakka.WinningScore))]
+    [MapperIgnoreSource(nameof(BalootSakka.DrawHandler))]
+    [MapperIgnoreSource(nameof(BalootSakka.StartedAt))]
+    [MapperIgnoreSource(nameof(BalootSakka.EndedAt))]
+    [MapperIgnoreSource(nameof(BalootSakka.PausingIntervals))]
+    [MapperIgnoreSource(nameof(BalootSakka.SakkaInterval))]
+    public partial BalootSakkaStreamDto BalootSakkaStateToSakkaDto(BalootSakka sakka);
+
+    [MapProperty([nameof(BalootMoshtara.Id)], [nameof(BalootMoshtaraStreamDto.Id)])]
+    [MapProperty(nameof(BalootMoshtara.UsScore), nameof(BalootMoshtaraStreamDto.UsAbnat))]
+    [MapProperty(nameof(BalootMoshtara.ThemScore), nameof(BalootMoshtaraStreamDto.ThemAbnat))]
+    [MapProperty(nameof(BalootMoshtara.StateName), nameof(BalootMoshtaraStreamDto.State))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.MoshtaraInterval))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.StartedAt))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.EndedAt))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.PausingIntervals))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.IsRunning))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.IsEnded))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.IsPaused))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.Data))]
+    [MapperIgnoreSource(nameof(BalootMoshtara.BalootSakkaId))]
+    public partial BalootMoshtaraStreamDto BalootMoshtaraStateToMoshtaraDto(BalootMoshtara moshtara);
+
+}

@@ -33,6 +33,15 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
                 Result.Ok() :
                 Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
+
+    public async Task<Result> IsUserStreamer(Guid userId)
+    {
+        return (await _dbCtx.Users
+                   .AnyAsync((user) => user.Id == userId && user.Roles.Contains(UserRoles.Streamer))) ?
+                       Result.Ok() :
+                       Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
+    }
+
     public async Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId)
     {
         return await _dbCtx.Users
@@ -43,6 +52,13 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             .FirstOrDefaultAsync((user) => user.Id == userId) is User user ?
             Result.Ok(user) :
             Result.Fail<User>(new EntityNotFoundError<Guid>(userId, nameof(User)));
+    }
+    public async Task<Result<BalootGameBoard>> GetBalootBoardByUserIdAsync(Guid userId)
+    {
+        return await _dbCtx.Users.AsSplitQuery()
+            .FirstOrDefaultAsync((user) => user.Id == userId && user.Roles.Contains(UserRoles.Streamer)) is User user ?
+            Result.Ok(user.BalootGameBoards) :
+            Result.Fail<BalootGameBoard>(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
 
     public async Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters)
