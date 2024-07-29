@@ -257,7 +257,7 @@ public class UserController(IUserService userService, INotificationService notif
     {
         var mapper = new UserMapper();
         return HttpContext.User.GetUserIdentifier()
-        .OnSuccessAsync((userId) => _userService.GetUserById(userId, withTracking: true))
+        .OnSuccessAsync(_userService.GetUserById)
         .OnSuccess((user) =>
         {
             var dto = mapper.UserToUpdateUserDto(user);
@@ -394,7 +394,7 @@ public class UserController(IUserService userService, INotificationService notif
         var mapper = new UserMapper();
 
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(userId => _userService.GetUserById(userId, withTracking: true))
+            .OnSuccessAsync(_userService.GetUserById)
             .OnSuccess((user) =>
             {
                 var dto = mapper.UserGeneralSettingsToDto(user.UserGeneralSettings);
@@ -430,7 +430,7 @@ public class UserController(IUserService userService, INotificationService notif
         var mapper = new UserMapper();
 
         return HttpContext.User.GetUserIdentifier()
-        .OnSuccessAsync(userId => _userService.GetUserById(userId, withTracking: true))
+        .OnSuccessAsync(_userService.GetUserById)
         .OnSuccess((user) =>
         {
             var dto = mapper.UserHandSettingsToDto(user.UserHandSettings);
@@ -466,7 +466,7 @@ public class UserController(IUserService userService, INotificationService notif
         var mapper = new UserMapper();
 
         return HttpContext.User.GetUserIdentifier()
-        .OnSuccessAsync(userId => _userService.GetUserById(userId, withTracking: true))
+        .OnSuccessAsync(_userService.GetUserById)
         .OnSuccess((user) =>
         {
             var dto = mapper.UserBalootSettingsToDto(user.UserBalootSettings);
@@ -493,7 +493,7 @@ public class UserController(IUserService userService, INotificationService notif
     public IActionResult GetUserGeneralSettings()
     {
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(userId => _userService.GetUserById(userId, withTracking: false))
+            .OnSuccessAsync(_userService.GetUserById)
             .Resolve(
                 (user) =>
                 {
@@ -511,7 +511,7 @@ public class UserController(IUserService userService, INotificationService notif
     public IActionResult GetUserHandSettings()
     {
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(userId => _userService.GetUserById(userId, withTracking: false))
+            .OnSuccessAsync(_userService.GetUserById)
             .Resolve(
                 (user) =>
                 {
@@ -529,7 +529,7 @@ public class UserController(IUserService userService, INotificationService notif
     public IActionResult GetUserBalootSettings()
     {
         return HttpContext.User.GetUserIdentifier()
-            .OnSuccessAsync(userId => _userService.GetUserById(userId, withTracking: false))
+            .OnSuccessAsync(_userService.GetUserById)
             .Resolve(
                 (user) =>
                 {

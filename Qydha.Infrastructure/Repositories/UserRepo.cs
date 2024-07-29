@@ -65,8 +65,8 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         return Result.Ok(users);
     }
 
-    public async Task<Result<User>> GetByIdAsync(Guid id, bool withTracking = false) =>
-        await _dbCtx.Users.AsTracking(withTracking ? QueryTrackingBehavior.TrackAll : QueryTrackingBehavior.NoTracking)
+    public async Task<Result<User>> GetByIdAsync(Guid id) =>
+        await _dbCtx.Users
             .FirstOrDefaultAsync((user) => user.Id == id) is User user ?
             Result.Ok(user) :
             Result.Fail<User>(new EntityNotFoundError<Guid>(id, nameof(User)));
@@ -239,7 +239,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     }
     public async Task<Result<User>> CheckUserCredentials(string username, string password)
     {
-        var user = await _dbCtx.Users.AsTracking(QueryTrackingBehavior.TrackAll)
+        var user = await _dbCtx.Users
             .FirstOrDefaultAsync((user) => user.NormalizedUsername == username.ToUpper());
         if (user == null)
             return Result.Fail(new InvalidCredentialsError("اسم المستخدم او كلمة المرور غير صحيحة"));
@@ -252,7 +252,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     {
         _dbCtx.Users.Attach(user);
         _dbCtx.Entry(user).State = EntityState.Modified;
-        // _dbCtx.Update(user);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(user);
     }
@@ -261,10 +260,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         _dbCtx.Entry(user).State = EntityState.Deleted;
         await _dbCtx.SaveChangesAsync();
         return Result.Ok();
-        // var affected = await _dbCtx.Users.Where(c => c.Id == userId).ExecuteDeleteAsync();
-        // return affected == 1 ?
-        //     Result.Ok() :
-        //     Result.Fail(new EntityNotFoundError<Guid>(userId, nameof(User)));
     }
 
 

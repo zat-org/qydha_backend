@@ -109,7 +109,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         return (await _phoneAuthenticationRequestRepo.GetByIdAsync(requestId))
             .OnSuccess((otpReq) => otpReq.IsValidToConfirmPhoneAuthUsingIt(_otpManager, otpCode).ToResult(otpReq))
             .OnSuccessAsync(async (otpReq) => (await _phoneAuthenticationRequestRepo.MarkRequestAsUsed(requestId)).ToResult(otpReq))
-            .OnSuccessAsync(async (otpReq) => await _userRepo.GetByIdAsync(otpReq.UserId, withTracking: true))
+            .OnSuccessAsync(async (otpReq) => await _userRepo.GetByIdAsync(otpReq.UserId))
             .OnSuccessAsync(async (user) =>
             {
                 if (!string.IsNullOrEmpty(fcmToken))
@@ -152,7 +152,7 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
     {
         return _tokenManager.GetPrincipalFromExpiredToken(jwtToken)
             .OnSuccess(principal => principal.GetUserIdentifier())
-            .OnSuccessAsync((userId) => _userRepo.GetByIdAsync(userId, withTracking: true))
+            .OnSuccessAsync(_userRepo.GetByIdAsync)
             .OnSuccessAsync(async user =>
             {
                 var refreshTokenEntity = user.RefreshTokens.FirstOrDefault(r => r.Token == refreshToken && r.IsActive);

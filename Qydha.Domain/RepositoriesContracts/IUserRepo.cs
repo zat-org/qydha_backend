@@ -7,7 +7,7 @@ public interface IUserRepo
     Task<Result<User>> GetByIdForDashboardAsync(Guid userId);
     Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId);
     Task<Result<PagedList<User>>> GetAllRegularUsers(PaginationParameters parameters, UsersFilterParameters filterParameters);
-    Task<Result<User>> GetByIdAsync(Guid id, bool withTracking = false);
+    Task<Result<User>> GetByIdAsync(Guid id);
     Task<Result<User>> GetByPhoneAsync(string phone);
     Task<Result<User>> GetByEmailAsync(string email);
     Task<Result<User>> GetByUsernameAsync(string username);
