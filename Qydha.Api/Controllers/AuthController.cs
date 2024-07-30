@@ -37,6 +37,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     data = new
                     {
                         user = mapper.UserToUserDto(authUserModel.User),
+                        token = authUserModel.JwtToken,
                         authUserModel.JwtToken,
                         authUserModel.RefreshTokenExpirationDate,
                         authUserModel.RefreshToken,
@@ -60,6 +61,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     data = new
                     {
                         user = mapper.UserToUserDto(authUserModel.User),
+                        token = authUserModel.JwtToken,
                         authUserModel.JwtToken,
                         authUserModel.RefreshTokenExpirationDate,
                         authUserModel.RefreshToken,
@@ -91,6 +93,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     data = new
                     {
                         user = mapper.UserToUserDto(authUserModel.User),
+                        token = authUserModel.JwtToken,
                         authUserModel.JwtToken,
                         authUserModel.RefreshTokenExpirationDate,
                         authUserModel.RefreshToken,
@@ -123,6 +126,7 @@ public class AuthController(IAuthService authService) : ControllerBase
                     data = new
                     {
                         user = mapper.UserToUserDto(authUserModel.User),
+                        token = authUserModel.JwtToken,
                         authUserModel.JwtToken,
                         authUserModel.RefreshTokenExpirationDate,
                         authUserModel.RefreshToken,

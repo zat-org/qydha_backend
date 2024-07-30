@@ -41,7 +41,7 @@ app.UseAuthorization();
 // app.UseStaticFiles();
 app.UseSerilogRequestLogging(op =>
 {
-    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Token Type : {TokenType} {NewLine} => Client IP : {ClientIp} {NewLine} => X-INFO : Environment : {Environment} Platform : {Platform} DeviceName : {DeviceName} AppVersion : {AppVersion} DeviceId : {DeviceId} {NewLine} => TraceId : {RequestId} ";
+    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Token Type : {TokenType} {NewLine} => Client IP : {ClientIp} {NewLine} => X-Info {XInfo} {NewLine} => Device_Info : Environment : {Environment} Platform : {Platform} DeviceName : {DeviceName} AppVersion : {AppVersion} DeviceId : {DeviceId} {NewLine} => TraceId : {RequestId} ";
     op.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
         diagnosticContext.Set("ClientIp", httpContext.Request.Headers["X-Real-IP"].ToString());
@@ -49,6 +49,7 @@ app.UseSerilogRequestLogging(op =>
         diagnosticContext.Set("TokenType", httpContext.User.FindFirst(ClaimsNamesConstants.TokenType)?.Value ?? "Token type not provided");
         diagnosticContext.Set("RequestId", httpContext.TraceIdentifier);
         diagnosticContext.Set("NewLine", " \n");
+        diagnosticContext.Set("XInfo", httpContext.Request.Headers["X-INFO"]);
         var XInfoData = httpContext.Request.Headers.GetXInfoHeaderData();
         diagnosticContext.Set("Environment", XInfoData.Environment);
         diagnosticContext.Set("Platform", XInfoData.Platform);
