@@ -13,7 +13,7 @@ public class GetUserDto
     public string? AvatarUrl { get; set; }
     public DateTimeOffset? ExpireDate { get; set; }
     public List<UserRoles> Roles { get; set; } = null!;
-
+    public int FreeSubscriptionUsed { get; set; }
 }
 
 
