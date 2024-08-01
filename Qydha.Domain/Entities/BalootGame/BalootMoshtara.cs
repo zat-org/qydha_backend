@@ -84,22 +84,22 @@ public class BalootMoshtara
 
 
     #region transitions 
-    public Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
+    public Result<BalootGameEventEffect> EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
         => State.EndMoshtara(moshtaraData, endAt);
 
-    public Result Pause(DateTimeOffset pausedAt)
+    public Result<BalootGameEventEffect> Pause(DateTimeOffset pausedAt)
         => State.Pause(pausedAt);
 
-    public Result Resume(DateTimeOffset resumedAt)
+    public Result<BalootGameEventEffect> Resume(DateTimeOffset resumedAt)
         => State.Resume(resumedAt);
 
-    public Result Back()
+    public Result<BalootGameEventEffect> Back()
         => State.Back();
 
-    public Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    public Result<BalootGameEventEffect> UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
         => State.UpdateMoshtara(moshtaraData, triggeredAt);
 
-    public Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
+    public Result<BalootGameEventEffect> AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => State.AddMashare3(usScore, themScore, triggeredAt);
     #endregion
 
@@ -114,22 +114,22 @@ public abstract class BalootMoshtaraState(BalootMoshtara moshtara, BalootMoshtar
        => new($"Can't Fire trigger : {triggerName} On Moshtara Current State : {StateName}");
 
     #region state behavior
-    public virtual Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
+    public virtual Result<BalootGameEventEffect> EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
         => Result.Fail(InvalidTrigger(nameof(EndMoshtara)));
 
-    public virtual Result Pause(DateTimeOffset pausedAt)
+    public virtual Result<BalootGameEventEffect> Pause(DateTimeOffset pausedAt)
         => Result.Fail(InvalidTrigger(nameof(Pause)));
 
-    public virtual Result Resume(DateTimeOffset resumedAt)
+    public virtual Result<BalootGameEventEffect> Resume(DateTimeOffset resumedAt)
         => Result.Fail(InvalidTrigger(nameof(Resume)));
 
-    public virtual Result Back()
+    public virtual Result<BalootGameEventEffect> Back()
         => Result.Fail(InvalidTrigger(nameof(Back)));
 
-    public virtual Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    public virtual Result<BalootGameEventEffect> UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
         => Result.Fail(InvalidTrigger(nameof(UpdateMoshtara)));
 
-    public virtual Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
+    public virtual Result<BalootGameEventEffect> AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => Result.Fail(InvalidTrigger(nameof(AddMashare3)));
     #endregion
 
@@ -138,50 +138,50 @@ public abstract class BalootMoshtaraState(BalootMoshtara moshtara, BalootMoshtar
 public class BalootMoshtaraRunningState(BalootMoshtara moshtara)
     : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Running)
 {
-    public override Result Pause(DateTimeOffset pausedAt)
+    public override Result<BalootGameEventEffect> Pause(DateTimeOffset pausedAt)
     {
         Moshtara.PausingIntervals.Add(new(pausedAt, null));
         Moshtara.StateName = BalootMoshtaraStateEnum.Paused;
-        return Result.Ok();
+        return Result.Ok(BalootGameEventEffect.NoChange);
     }
 
-    public override Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
+    public override Result<BalootGameEventEffect> EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
     {
         Moshtara.Data = moshtaraData;
         Moshtara.EndedAt = endAt;
         Moshtara.StateName = BalootMoshtaraStateEnum.Ended;
-        return Result.Ok();
+        return Result.Ok(BalootGameEventEffect.ScoreChanges);
     }
 }
 public class BalootMoshtaraPausedState(BalootMoshtara moshtara)
     : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Paused)
 {
-    public override Result Resume(DateTimeOffset resumedAt)
+    public override Result<BalootGameEventEffect> Resume(DateTimeOffset resumedAt)
     {
         if (Moshtara.PausingIntervals.Count == 0)
             throw new IndexOutOfRangeException("Moshtara PausingIntervals doesn't have any values to get the last one.");
         Moshtara.PausingIntervals[^1] = Moshtara.PausingIntervals.Last() with { EndAt = resumedAt };
         Moshtara.StateName = BalootMoshtaraStateEnum.Running;
-        return Result.Ok();
+        return Result.Ok(BalootGameEventEffect.NoChange);
     }
 }
 public class BalootMoshtaraEndedState(BalootMoshtara moshtara)
     : BalootMoshtaraState(moshtara, BalootMoshtaraStateEnum.Ended)
 {
-    public override Result Back()
+    public override Result<BalootGameEventEffect> Back()
     {
         Moshtara.Data = null;
         Moshtara.EndedAt = null;
         Moshtara.StateName = BalootMoshtaraStateEnum.Running;
-        return Result.Ok();
+        return Result.Ok(BalootGameEventEffect.ScoreChanges);
     }
-    public override Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    public override Result<BalootGameEventEffect> UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
         Moshtara.Data = moshtaraData;
         Moshtara.EndedAt = triggeredAt;
-        return Result.Ok();
+        return Result.Ok(BalootGameEventEffect.ScoreChanges);
     }
-    public override Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
+    public override Result<BalootGameEventEffect> AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
     {
         if (Moshtara.Data == null)
             throw new NullReferenceException("Moshtara Data can't be null in state ended.");
@@ -190,6 +190,7 @@ public class BalootMoshtaraEndedState(BalootMoshtara moshtara)
             {
                 Moshtara.Data = moshtaraData;
                 Moshtara.EndedAt = triggeredAt;
+                return Result.Ok(BalootGameEventEffect.ScoreChanges);
             });
     }
 

@@ -104,32 +104,48 @@ public class BalootSakka
     #endregion
 
     #region transactions 
-    public Result StartMoshtara(DateTimeOffset startAt)
+    public Result<BalootGameEventEffect> StartMoshtara(DateTimeOffset startAt)
        => State.StartMoshtara(startAt);
-    public Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
+    public Result<BalootGameEventEffect> EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
         => State.EndMoshtara(moshtaraData, endAt)
-            .OnSuccess(UpdateScores);
+            .OnSuccess((effect) =>
+            {
+                UpdateScores();
+                return Result.Ok(effect);
+            });
 
-    public Result Pause(DateTimeOffset pausedAt)
+    public Result<BalootGameEventEffect> Pause(DateTimeOffset pausedAt)
         => State.Pause(pausedAt);
 
-    public Result Resume(DateTimeOffset resumedAt)
+    public Result<BalootGameEventEffect> Resume(DateTimeOffset resumedAt)
         => State.Resume(resumedAt);
 
-    public Result Back(bool withRemoveLastMoshtara = true)
+    public Result<BalootGameEventEffect> Back(bool withRemoveLastMoshtara = true)
         => State.Back(withRemoveLastMoshtara)
-            .OnSuccess(UpdateScores);
+            .OnSuccess((effect) =>
+            {
+                UpdateScores();
+                return Result.Ok(effect);
+            });
 
-    public Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    public Result<BalootGameEventEffect> UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
         => State.UpdateMoshtara(moshtaraData, triggeredAt)
-            .OnSuccess(UpdateScores);
+            .OnSuccess((effect) =>
+            {
+                UpdateScores();
+                return Result.Ok(effect);
+            });
 
-    public Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
+    public Result<BalootGameEventEffect> AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => State.AddMashare3(usScore, themScore, triggeredAt)
-            .OnSuccess(UpdateScores);
-    public Result EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
+            .OnSuccess((effect) =>
+            {
+                UpdateScores();
+                return Result.Ok(effect);
+            });
+    public Result<BalootGameEventEffect> EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
        => State.EndSakka(winner, drawHandler, triggeredAt);
-    public Result ChangeIsSakkaMashdoda(bool isMashdoda)
+    public Result<BalootGameEventEffect> ChangeIsSakkaMashdoda(bool isMashdoda)
         => State.ChangeIsSakkaMashdoda(isMashdoda);
     #endregion
 
@@ -145,33 +161,33 @@ public abstract class BalootSakkaState(BalootSakka sakka, BalootSakkaStateEnum s
 
     #region state Transitions
 
-    public virtual Result StartMoshtara(DateTimeOffset startAt)
+    public virtual Result<BalootGameEventEffect> StartMoshtara(DateTimeOffset startAt)
         => Result.Fail(InvalidTrigger(nameof(StartMoshtara)));
-    public virtual Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
+    public virtual Result<BalootGameEventEffect> EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
         => Result.Fail(InvalidTrigger(nameof(EndMoshtara)));
 
-    public virtual Result Pause(DateTimeOffset pausedAt)
+    public virtual Result<BalootGameEventEffect> Pause(DateTimeOffset pausedAt)
         => Result.Fail(InvalidTrigger(nameof(Pause)));
 
-    public virtual Result Resume(DateTimeOffset resumedAt)
+    public virtual Result<BalootGameEventEffect> Resume(DateTimeOffset resumedAt)
         => Result.Fail(InvalidTrigger(nameof(Resume)));
 
-    public virtual Result Back(bool withRemoveLastMoshtara = true)
+    public virtual Result<BalootGameEventEffect> Back(bool withRemoveLastMoshtara = true)
         => Result.Fail(InvalidTrigger(nameof(Back)));
 
-    public virtual Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    public virtual Result<BalootGameEventEffect> UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
         => Result.Fail(InvalidTrigger(nameof(UpdateMoshtara)));
 
-    public virtual Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
+    public virtual Result<BalootGameEventEffect> AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
         => Result.Fail(InvalidTrigger(nameof(AddMashare3)));
 
-    public virtual Result EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
+    public virtual Result<BalootGameEventEffect> EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
        => Result.Fail(InvalidTrigger(nameof(EndSakka)));
 
-    public virtual Result ChangeIsSakkaMashdoda(bool isMashdoda)
+    public virtual Result<BalootGameEventEffect> ChangeIsSakkaMashdoda(bool isMashdoda)
     {
         Sakka.IsMashdoda = isMashdoda;
-        return Result.Ok();
+        return Result.Ok(BalootGameEventEffect.IsCurrentSakkaMashdodaChanged);
     }
 
     #endregion
@@ -182,17 +198,17 @@ public class BalootSakkaRunningState(BalootSakka Sakka)
     : BalootSakkaState(Sakka, BalootSakkaStateEnum.Running)
 {
 
-    public override Result Pause(DateTimeOffset pausedAt)
+    public override Result<BalootGameEventEffect> Pause(DateTimeOffset pausedAt)
     {
         return Sakka.CurrentMoshtara.Pause(pausedAt)
-        .OnSuccess(() =>
+        .OnSuccess((effect) =>
         {
             Sakka.PausingIntervals.Add(new(pausedAt, null));
             Sakka.StateName = BalootSakkaStateEnum.Paused;
-            return Result.Ok();
+            return Result.Ok(effect);
         });
     }
-    public override Result StartMoshtara(DateTimeOffset startAt)
+    public override Result<BalootGameEventEffect> StartMoshtara(DateTimeOffset startAt)
     {
         if (Sakka.CheckSakkaWinner(selectedWinner: BalootGameTeam.Us) != null)
         {
@@ -202,9 +218,9 @@ public class BalootSakkaRunningState(BalootSakka Sakka)
             ));
         }
         Sakka.Moshtaras.Add(BalootMoshtara.CreateNewMoshtara(startAt));
-        return Result.Ok();
+        return Result.Ok(BalootGameEventEffect.NoChange);
     }
-    public override Result EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
+    public override Result<BalootGameEventEffect> EndMoshtara(MoshtaraData moshtaraData, DateTimeOffset endAt)
     {
         if (Sakka.Moshtaras.Count == 0)
             return Result.Fail(
@@ -213,7 +229,7 @@ public class BalootSakkaRunningState(BalootSakka Sakka)
                 ));
         return Sakka.CurrentMoshtara.EndMoshtara(moshtaraData, endAt);
     }
-    public override Result Back(bool withRemoveLastMoshtara = true)
+    public override Result<BalootGameEventEffect> Back(bool withRemoveLastMoshtara = true)
     {
         if (Sakka.IsRunningWithoutMoshtaras)
             return Result.Fail(new InvalidBalootGameActionError($"Can't Fire Back in sakka state : IsRunningWithoutMoshtaras"));
@@ -221,7 +237,7 @@ public class BalootSakkaRunningState(BalootSakka Sakka)
             Sakka.Moshtaras.RemoveAt(Sakka.Moshtaras.Count - 1);
         return Sakka.CurrentMoshtara.Back();
     }
-    public override Result EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
+    public override Result<BalootGameEventEffect> EndSakka(BalootGameTeam winner, BalootDrawHandler drawHandler, DateTimeOffset triggeredAt)
     {
         var calculatedWinner = Sakka.CheckSakkaWinner(winner, drawHandler);
         if (calculatedWinner is null)
@@ -231,9 +247,9 @@ public class BalootSakkaRunningState(BalootSakka Sakka)
         Sakka.Winner = calculatedWinner;
         Sakka.DrawHandler = drawHandler;
         Sakka.StateName = BalootSakkaStateEnum.Ended;
-        return Result.Ok();
+        return Result.Ok(BalootGameEventEffect.SakkaEnded);
     }
-    public override Result UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
+    public override Result<BalootGameEventEffect> UpdateMoshtara(MoshtaraData moshtaraData, DateTimeOffset triggeredAt)
     {
         if (Sakka.IsRunningWithoutMoshtaras)
             return Result.Fail(new InvalidBalootGameActionError($"Can't Fire UpdateMoshtara in sakka state : IsRunningWithoutMoshtaras"));
@@ -243,7 +259,7 @@ public class BalootSakkaRunningState(BalootSakka Sakka)
 
         return Sakka.CurrentMoshtara.UpdateMoshtara(moshtaraData, triggeredAt);
     }
-    public override Result AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
+    public override Result<BalootGameEventEffect> AddMashare3(int usScore, int themScore, DateTimeOffset triggeredAt)
     {
         if (Sakka.IsRunningWithoutMoshtaras)
             return Result.Fail(new InvalidBalootGameActionError($"Can't Fire AddMashare3 in sakka state : IsRunningWithoutMoshtaras"));
@@ -260,36 +276,41 @@ public class BalootSakkaPausedState(BalootSakka Sakka)
     : BalootSakkaState(Sakka, BalootSakkaStateEnum.Paused)
 {
 
-    public override Result Resume(DateTimeOffset resumedAt)
+    public override Result<BalootGameEventEffect> Resume(DateTimeOffset resumedAt)
     {
         return Sakka.CurrentMoshtara.Resume(resumedAt)
-        .OnSuccess(() =>
+        .OnSuccess((effect) =>
         {
             if (Sakka.PausingIntervals.Count == 0)
                 throw new IndexOutOfRangeException("Sakka PausingIntervals doesn't have any values to get the last one.");
             Sakka.PausingIntervals[^1] = Sakka.PausingIntervals.Last() with { EndAt = resumedAt };
             Sakka.StateName = BalootSakkaStateEnum.Running;
+            return Result.Ok(effect);
         });
     }
 }
 public class BalootSakkaEndedState(BalootSakka Sakka)
     : BalootSakkaState(Sakka, BalootSakkaStateEnum.Ended)
 {
-    public override Result ChangeIsSakkaMashdoda(bool isMashdoda)
+    public override Result<BalootGameEventEffect> ChangeIsSakkaMashdoda(bool isMashdoda)
        => Result.Fail(InvalidTrigger(nameof(ChangeIsSakkaMashdoda)));
 
-    public override Result Back(bool withRemoveLastMoshtara = true)
+    public override Result<BalootGameEventEffect> Back(bool withRemoveLastMoshtara = true)
     {
         Sakka.Winner = null;
         Sakka.DrawHandler = BalootDrawHandler.ExtraMoshtara;
         Sakka.EndedAt = null;
         if (withRemoveLastMoshtara)
             return Sakka.CurrentMoshtara.Back()
-                .OnSuccess(() => Sakka.StateName = BalootSakkaStateEnum.Running);
+                .OnSuccess((effect) =>
+                {
+                    Sakka.StateName = BalootSakkaStateEnum.Running;
+                    return Result.Ok(effect);
+                });
         else
         {
             Sakka.StateName = BalootSakkaStateEnum.Running;
-            return Result.Ok();
+            return Result.Ok(BalootGameEventEffect.NoChange);
         }
 
     }

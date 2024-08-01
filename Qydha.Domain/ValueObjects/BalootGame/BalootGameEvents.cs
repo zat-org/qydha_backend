@@ -6,7 +6,19 @@ public abstract class BalootGameEvent(string eventName)
 {
     public readonly string EventName = eventName;
     public DateTimeOffset TriggeredAt { get; set; } = DateTimeOffset.UtcNow;
-    public abstract Result ApplyToState(BalootGame game);
+    public abstract Result<BalootGameEventEffect> ApplyToState(BalootGame game);
+}
+
+[Flags]
+public enum BalootGameEventEffect
+{
+    NoChange = 0,
+    ScoreChanges = 1 << 0,
+    SakkaEnded = 1 << 1,
+    GameEnded = 1 << 2,
+    NamesChanged = 1 << 3,
+    MaxSakkaCountChanged = 1 << 4,
+    IsCurrentSakkaMashdodaChanged = 1 << 5,
 }
 
 
@@ -21,7 +33,7 @@ public sealed class ChangeTeamsNamesEvent : BalootGameEvent
     }
     public string UsName { get; set; } = null!;
     public string ThemName { get; set; } = null!;
-    public override Result ApplyToState(BalootGame game) => game.ChangeTeamsNames(UsName, ThemName);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.ChangeTeamsNames(UsName, ThemName);
 
 }
 public sealed class ChangeSakkaCountPerGameEvent : BalootGameEvent
@@ -33,7 +45,7 @@ public sealed class ChangeSakkaCountPerGameEvent : BalootGameEvent
     }
     public int SakkaPerGameCount { get; set; } = 3;
 
-    public override Result ApplyToState(BalootGame game) => game.ChangeSakkaCount(SakkaPerGameCount);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.ChangeSakkaCount(SakkaPerGameCount);
 
 }
 public sealed class ChangeIsSakkaMashdodaEvent : BalootGameEvent
@@ -44,7 +56,7 @@ public sealed class ChangeIsSakkaMashdodaEvent : BalootGameEvent
         IsSakkaMashdoda = isSakkaMashdoda;
     }
     public bool IsSakkaMashdoda { get; set; }
-    public override Result ApplyToState(BalootGame game) => game.ChangeIsCurrentSakkaMashdoda(IsSakkaMashdoda);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.ChangeIsCurrentSakkaMashdoda(IsSakkaMashdoda);
 }
 public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
 {
@@ -60,7 +72,7 @@ public sealed class AddMashare3ToLastMoshtaraEvent : BalootGameEvent
         RecordingMode = BalootRecordingMode.Regular;
     }
 
-    public override Result ApplyToState(BalootGame game)
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game)
     {
         if (RecordingMode != BalootRecordingMode.Regular)
             return Result.Fail(new InvalidBodyInputError(
@@ -91,7 +103,7 @@ public sealed class StartBalootGameEvent : BalootGameEvent
     public string ThemName { get; set; } = null!;
     public Point? Location { get; set; }
 
-    public override Result ApplyToState(BalootGame game) => game.StartGame(UsName, ThemName, SakkaCountPerGame, TriggeredAt, Location);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.StartGame(UsName, ThemName, SakkaCountPerGame, TriggeredAt, Location);
 }
 public sealed class StartSakkaEvent : BalootGameEvent
 {
@@ -102,11 +114,11 @@ public sealed class StartSakkaEvent : BalootGameEvent
     }
     public bool IsSakkaMashdoda { get; set; }
 
-    public override Result ApplyToState(BalootGame game) => game.StartSakka(IsSakkaMashdoda, TriggeredAt);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.StartSakka(IsSakkaMashdoda, TriggeredAt);
 }
 public sealed class StartMoshtaraEvent() : BalootGameEvent(nameof(StartMoshtaraEvent))
 {
-    public override Result ApplyToState(BalootGame game) => game.StartMoshtara(TriggeredAt);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.StartMoshtara(TriggeredAt);
 }
 public sealed class EndMoshtaraEvent : BalootGameEvent
 {
@@ -117,7 +129,7 @@ public sealed class EndMoshtaraEvent : BalootGameEvent
     }
     public MoshtaraData MoshtaraData { get; set; } = null!;
 
-    public override Result ApplyToState(BalootGame game) =>
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) =>
         game.EndMoshtara(MoshtaraData, TriggeredAt);
 }
 public sealed class UpdateMoshtaraEvent : BalootGameEvent
@@ -129,12 +141,12 @@ public sealed class UpdateMoshtaraEvent : BalootGameEvent
     }
     public MoshtaraData MoshtaraData { get; set; } = null!;
 
-    public override Result ApplyToState(BalootGame game) =>
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) =>
         game.UpdateMoshtara(MoshtaraData, TriggeredAt);
 }
 public sealed class RemoveMoshtaraEvent() : BalootGameEvent(nameof(RemoveMoshtaraEvent))
 {
-    public override Result ApplyToState(BalootGame game) => game.Back();
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.Back();
 }
 public sealed class EndSakkaEvent : BalootGameEvent
 {
@@ -146,7 +158,7 @@ public sealed class EndSakkaEvent : BalootGameEvent
     }
     public BalootGameTeam Winner { get; set; }
     public BalootDrawHandler DrawHandler { get; set; } = BalootDrawHandler.ExtraMoshtara;
-    public override Result ApplyToState(BalootGame game) => game.EndSakka(Winner, DrawHandler, TriggeredAt);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.EndSakka(Winner, DrawHandler, TriggeredAt);
 }
 public sealed class EndGameEvent : BalootGameEvent
 {
@@ -156,22 +168,22 @@ public sealed class EndGameEvent : BalootGameEvent
         Winner = winnerTeam;
     }
     public BalootGameTeam Winner { get; set; }
-    public override Result ApplyToState(BalootGame game) => game.EndGame(Winner, TriggeredAt);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.EndGame(Winner, TriggeredAt);
 }
 public sealed class PauseGameEvent() : BalootGameEvent(nameof(PauseGameEvent))
 {
-    public override Result ApplyToState(BalootGame game) => game.Pause(TriggeredAt);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.Pause(TriggeredAt);
 }
 public sealed class ResumeGameEvent() : BalootGameEvent(nameof(ResumeGameEvent))
 {
-    public override Result ApplyToState(BalootGame game) => game.Resume(TriggeredAt);
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game) => game.Resume(TriggeredAt);
 }
 #endregion
 
 #region  book & chat events
 public sealed class OpenBalootBookEvent() : BalootGameEvent(nameof(OpenBalootBookEvent))
 {
-    public override Result ApplyToState(BalootGame game)
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game)
     {
         // ! TODO count book opens 
         return Result.Ok();
@@ -179,7 +191,7 @@ public sealed class OpenBalootBookEvent() : BalootGameEvent(nameof(OpenBalootBoo
 }
 public sealed class CloseBalootBookEvent() : BalootGameEvent(nameof(CloseBalootBookEvent))
 {
-    public override Result ApplyToState(BalootGame game)
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game)
     {
         // ! TODO count book opens 
         return Result.Ok();
@@ -187,7 +199,7 @@ public sealed class CloseBalootBookEvent() : BalootGameEvent(nameof(CloseBalootB
 }
 public sealed class OpenRefereeChatEvent() : BalootGameEvent(nameof(OpenRefereeChatEvent))
 {
-    public override Result ApplyToState(BalootGame game)
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game)
     {
         // ! TODO count chat opens 
         return Result.Ok();
@@ -195,7 +207,7 @@ public sealed class OpenRefereeChatEvent() : BalootGameEvent(nameof(OpenRefereeC
 }
 public sealed class CloseRefereeChatEvent() : BalootGameEvent(nameof(CloseRefereeChatEvent))
 {
-    public override Result ApplyToState(BalootGame game)
+    public override Result<BalootGameEventEffect> ApplyToState(BalootGame game)
     {
         // ! TODO count chat opens 
         return Result.Ok();
