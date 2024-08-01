@@ -12,7 +12,7 @@ public static class CorsConfigurations
             options.AddPolicy(name: MyAllowSpecificOrigins, builder =>
             {
                 builder
-                .WithOrigins("http://localhost:5173")
+                .WithOrigins("http://localhost:5173","http://localhost:3000","http://localhost:4200", "https://qayedhaadmin.web.app")
                     // .AllowAnyOrigin()
                     .AllowAnyMethod()
                     .AllowAnyHeader()

@@ -3,7 +3,7 @@
 public interface IAuthService
 {
     Task<Result<AuthenticatedUserModel>> ConfirmRegistrationWithPhone(string otpCode, Guid requestId);
-    Task<Result<AuthenticatedUserModel>> Login(string username, string password, bool asAdmin = false, string? fcm_token = null);
+    Task<Result<AuthenticatedUserModel>> Login(string username, string password, List<UserRoles> mustBeInRole, string? fcm_token = null);
     Task<Result<PhoneAuthenticationRequest>> RequestPhoneAuthentication(string phone);
     Task<Result<AuthenticatedUserModel>> ConfirmPhoneAuthentication(Guid requestId, string otp, string? fcmToken);
     Task<Result<RegistrationOTPRequest>> RegisterAsync(string username, string password, string phone, string? fcmToken);

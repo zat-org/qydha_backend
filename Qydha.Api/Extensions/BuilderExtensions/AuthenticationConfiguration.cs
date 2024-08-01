@@ -59,6 +59,7 @@ public static class RoleConstants
     public const string SuperAdmin = nameof(UserRoles.SuperAdmin);
     public const string StaffAdmin = nameof(UserRoles.StaffAdmin);
     public const string User = nameof(UserRoles.User);
+    public const string Streamer = nameof(UserRoles.Streamer);
     public const string UserWithAnyRole = nameof(UserRoles.StaffAdmin) + "," + nameof(UserRoles.SuperAdmin) + "," + nameof(UserRoles.User);
     public const string Admin = nameof(UserRoles.StaffAdmin) + "," + nameof(UserRoles.SuperAdmin);
 }

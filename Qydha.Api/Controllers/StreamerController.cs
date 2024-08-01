@@ -1,15 +1,17 @@
-﻿namespace Qydha.API.Controllers;
+﻿using Google.Api;
+
+namespace Qydha.API.Controllers;
 
 [ApiController]
-[Route("/admin")]
-public class AdminController(IAuthService authService) : ControllerBase
+[Route("/streamer")]
+public class StreamerController(IAuthService authService) : ControllerBase
 {
     private readonly IAuthService _authService = authService;
 
     [HttpPost("login/")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        return (await _authService.Login(dto.Username, dto.Password, [UserRoles.StaffAdmin, UserRoles.SuperAdmin], null))
+        return (await _authService.Login(dto.Username, dto.Password, [UserRoles.Streamer], null))
         .Resolve(
             (authUserModel) =>
             {
@@ -29,4 +31,5 @@ public class AdminController(IAuthService authService) : ControllerBase
             }
         , HttpContext.TraceIdentifier);
     }
+
 }

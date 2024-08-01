@@ -38,12 +38,12 @@ public class AuthService(TokenManager tokenManager, IMediator mediator, IUserRep
         .OnSuccessAsync(async (authUserModel) => (await _registrationOTPRequestRepo.MarkRequestAsUsed(requestId, authUserModel.User.Id)).ToResult(authUserModel));
     }
 
-    public async Task<Result<AuthenticatedUserModel>> Login(string username, string password, bool asAdmin = false, string? fcmToken = null)
+    public async Task<Result<AuthenticatedUserModel>> Login(string username, string password, List<UserRoles> mustBeInRoles, string? fcmToken = null)
     {
         return (await _userRepo.CheckUserCredentials(username, password))
         .OnSuccess((user) =>
         {
-            if (asAdmin && !user.Roles.Any(r => r == UserRoles.SuperAdmin || r == UserRoles.StaffAdmin))
+            if (!mustBeInRoles.Intersect(user.Roles).Any())
                 return Result.Fail(new ForbiddenError());
             return Result.Ok(user);
         })

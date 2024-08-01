@@ -4,7 +4,7 @@ namespace Qydha.Domain.Hubs;
 
 public interface IBalootGameClient
 {
-    Task BalootGameStateChanged(string eventsEffect, string game);
+    Task BalootGameStateChanged(string eventName, string game);
 }
 public class BalootGamesHub(IBalootGameStreamService balootGameStreamService) : Hub<IBalootGameClient>
 {
