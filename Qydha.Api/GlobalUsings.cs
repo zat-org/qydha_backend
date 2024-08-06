@@ -9,6 +9,8 @@ global using Qydha.Domain.Constants;
 global using Qydha.Domain.Exceptions;
 global using Qydha.Domain.ValueObjects;
 global using Qydha.Domain.Extensions;
+global using Qydha.Domain.Hubs;
+global using Qydha.Domain.Mappers;
 
 global using Qydha.Infrastructure;
 global using Qydha.Infrastructure.Services;
@@ -24,7 +26,6 @@ global using Qydha.API.Binders;
 global using Qydha.API.Middlewares;
 global using Qydha.API.Policies;
 
-
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.Filters;
 global using Microsoft.AspNetCore.Authorization;
@@ -32,6 +33,7 @@ global using Microsoft.Extensions.Options;
 global using Microsoft.AspNetCore.JsonPatch;
 
 global using Riok.Mapperly.Abstractions;
+
 
 global using System.Text.RegularExpressions;
 

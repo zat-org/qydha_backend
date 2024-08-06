@@ -18,7 +18,10 @@ global using Qydha.Domain.Constants;
 global using Qydha.Domain.Services.Implementation;
 global using Qydha.Domain.ValueObjects;
 global using Qydha.Domain.Models;
+global using Qydha.Domain.Hubs;
 global using Microsoft.Extensions.Logging;
+
+global using Riok.Mapperly.Abstractions;
 
 global using MediatR;
 global using Newtonsoft.Json;

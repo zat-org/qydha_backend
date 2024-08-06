@@ -79,6 +79,27 @@ public class UserController(IUserService userService, INotificationService notif
                 HttpContext.TraceIdentifier);
     }
 
+    [Authorize(Roles = RoleConstants.Streamer)]
+    [HttpGet("me/baloot-board/")]
+    public IActionResult GetBalootBoard()
+    {
+        return HttpContext.User.GetUserIdentifier()
+        .OnSuccessAsync(_userService.GetUserById)
+        .Resolve(
+            (user) =>
+            {
+                return Ok(new
+                {
+                    data = new
+                    {
+                        board = user.BalootGameBoards,
+                    },
+                    message = "Board fetched successfully."
+                });
+            }
+        , HttpContext.TraceIdentifier);
+    }
+
     [Authorize(Policy = PolicyConstants.ServiceAccountPermission)]
     [Permission(ServiceAccountPermission.CheckUserNameAvailable)]
     [HttpGet("is-username-available")]

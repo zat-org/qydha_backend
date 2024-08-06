@@ -12,9 +12,11 @@ public static class CorsConfigurations
             options.AddPolicy(name: MyAllowSpecificOrigins, builder =>
             {
                 builder
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
+                .WithOrigins("http://localhost:5173","http://localhost:3000","http://localhost:4200", "https://qayedhaadmin.web.app")
+                    // .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
             });
         });
         return MyAllowSpecificOrigins;

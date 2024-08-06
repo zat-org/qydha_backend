@@ -9,4 +9,6 @@ public interface IBalootGamesRepo
     Task<Result> AddEvents(BalootGame game, ICollection<BalootGameEvent> events);
     Task<Result<PagedList<BalootGame>>> GetUserBalootGamesArchive(Guid userId, PaginationParameters parameters);
     Task<Result<int>> GetUserBalootGamesWinsCount(Guid userId);
+    Task<Result<BalootGame>> GetBalootGameByBoardIdAsync(Guid boardId);
+
 }

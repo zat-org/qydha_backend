@@ -21,6 +21,7 @@ builder.Services.ConfigureSwagger();
 builder.Services.ConfigureMediatR();
 builder.Services.RegisterSettings(builder.Configuration);
 builder.Services.AuthConfiguration(builder.Configuration);
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -58,6 +59,8 @@ app.UseSerilogRequestLogging(op =>
         diagnosticContext.Set("DeviceId", XInfoData.DeviceId);
     };
 });
+
+app.MapHub<BalootGamesHub>("/baloot-games-hub");
 
 app.MapControllers();
 
