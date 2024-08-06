@@ -11,5 +11,5 @@ public class GetUserPromoCodeDto
 }
 public class GetUsedPromoCodeByUserDto : GetUserPromoCodeDto
 {
-    public DateTimeOffset UsedAt { get; set; }
+    public DateTimeOffset? UsedAt { get; set; }
 }
