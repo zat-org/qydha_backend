@@ -7,7 +7,7 @@ FirebaseApp.Create(new AppOptions()
 var builder = WebApplication.CreateBuilder(args);
 
 ReadingConfigurationFile.ReadConfigurationFile(builder.Configuration, builder.Environment);
-string MyAllowSpecificOrigins = builder.Services.ConfigureCORS();
+string MyAllowSpecificOrigins = builder.Services.ConfigureCORS(builder.Environment);
 LoggerServiceExtension.AddLoggerConfiguration(builder.Configuration, builder.Environment);
 builder.Host.UseSerilog();
 // builder.WebHost.UseWebRoot("wwwroot");
@@ -42,7 +42,7 @@ app.UseAuthorization();
 // app.UseStaticFiles();
 app.UseSerilogRequestLogging(op =>
 {
-    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Token Type : {TokenType} {NewLine} => Client IP : {ClientIp} {NewLine} => X-Info {XInfo} {NewLine} => Device_Info : Environment : {Environment} Platform : {Platform} DeviceName : {DeviceName} AppVersion : {AppVersion} DeviceId : {DeviceId} {NewLine} => TraceId : {RequestId} ";
+    op.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms {NewLine} => UserId : {UserId} {NewLine} => Token Type : {TokenType} {NewLine} => Client IP : {ClientIp} {NewLine} => Device_Info : Environment : {Environment} Platform : {Platform} DeviceName : {DeviceName} AppVersion : {AppVersion} DeviceId : {DeviceId} {NewLine} => TraceId : {RequestId} ";
     op.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
         diagnosticContext.Set("ClientIp", httpContext.Request.Headers["X-Real-IP"].ToString());
