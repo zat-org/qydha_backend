@@ -36,9 +36,6 @@ app.UseRequestContextLogging();
 
 app.UseCors(MyAllowSpecificOrigins);
 
-app.UseAuthentication();
-app.UseAuthorization();
-
 // app.UseStaticFiles();
 app.UseSerilogRequestLogging(op =>
 {
@@ -58,6 +55,9 @@ app.UseSerilogRequestLogging(op =>
         diagnosticContext.Set("DeviceId", XInfoData.DeviceId);
     };
 });
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapHub<BalootGamesHub>("/baloot-games-hub");
 app.MapHub<UsersHub>("/users-hub");
