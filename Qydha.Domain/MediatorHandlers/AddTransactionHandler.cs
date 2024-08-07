@@ -1,8 +1,12 @@
-﻿namespace Qydha.Domain.MediatorHandlers;
+﻿using Microsoft.AspNetCore.SignalR;
+using Qydha.Domain.Mappers;
 
-public class AddPurchaseHandler(INotificationService notificationService) : INotificationHandler<AddTransactionNotification>
+namespace Qydha.Domain.MediatorHandlers;
+
+public class AddPurchaseHandler(INotificationService notificationService, IHubContext<UsersHub, IUserClient> hubContext) : INotificationHandler<AddTransactionNotification>
 {
     private readonly INotificationService _notificationService = notificationService;
+    private readonly IHubContext<UsersHub, IUserClient> _hubContext = hubContext;
     public async Task Handle(AddTransactionNotification notification, CancellationToken cancellationToken)
     {
         int notificationId = SystemDefaultNotifications.MakePurchase;
@@ -18,6 +22,10 @@ public class AddPurchaseHandler(INotificationService notificationService) : INot
                 notificationId = SystemDefaultNotifications.UseInfluencerCode;
                 break;
         }
-        await _notificationService.SendToUserPreDefinedNotification(notification.UserId, notificationId, []);
+        var mapper = new UserStreamMapper();
+
+        string serializedUser = JsonConvert.SerializeObject(mapper.UserToUserDto(notification.User), BalootConstants.balootEventsSerializationSettings);
+        await _hubContext.Clients.User(notification.User.Id.ToString()).UserDataChanged(serializedUser);
+        await _notificationService.SendToUserPreDefinedNotification(notification.User.Id, notificationId, []);
     }
 }

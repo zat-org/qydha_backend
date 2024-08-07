@@ -11,6 +11,7 @@ global using Qydha.Domain.ValueObjects;
 global using Qydha.Domain.Extensions;
 global using Qydha.Domain.Hubs;
 global using Qydha.Domain.Mappers;
+global using Qydha.Domain.Models;
 
 global using Qydha.Infrastructure;
 global using Qydha.Infrastructure.Services;

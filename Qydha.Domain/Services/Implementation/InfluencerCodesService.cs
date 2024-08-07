@@ -43,10 +43,11 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IM
             .OnSuccess((tuple) => tuple.influencerCode.IsUserReachedCategoryMaxUsage(tuple.usage).ToResult(influencerCode));
         })
         .OnSuccessAsync(async (influencerCode) => await _influencerCodesRepo.UseInfluencerCode(userId, influencerCode))
-        .OnSuccessAsync(async (influencerCode) =>
+        .OnSuccessAsync(async (influencerCode) => await _userRepo.UpdateUserExpireDate(userId))
+        .OnSuccessAsync(async (user) =>
         {
-            await _mediator.Publish(new AddTransactionNotification(userId, TransactionType.InfluencerCode));
-            return await _userRepo.UpdateUserExpireDate(userId);
+            await _mediator.Publish(new AddTransactionNotification(user, TransactionType.InfluencerCode));
+            return Result.Ok(user);
         });
     }
 }

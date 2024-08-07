@@ -61,7 +61,7 @@ public class User : IClaimable
 
 
 
-    public List<UserRoles> Roles { get; set; } = null!;
+    public List<UserRoles> Roles { get; private set; } = null!;
 
     public bool IsAdmin => Roles.Any(r => r == UserRoles.SuperAdmin || r == UserRoles.StaffAdmin);
     public bool IsSuperAdmin => Roles.Any(r => r == UserRoles.SuperAdmin);
@@ -130,6 +130,21 @@ public class User : IClaimable
             UserGeneralSettings = new(),
             BalootGameBoards = new()
         };
+    }
+    public void UpdateData(User user)
+    {
+        Name = user.Name;
+        BirthDate = user.BirthDate;
+        LastLogin = user.LastLogin;
+        AvatarUrl = user.AvatarUrl;
+        AvatarPath = user.AvatarPath;
+        ExpireDate = user.ExpireDate;
+        FCMToken = user.FCMToken;
+        UserGeneralSettings = user.UserGeneralSettings;
+        UserHandSettings = user.UserHandSettings;
+        UserBalootSettings = user.UserBalootSettings;
+        RefreshTokens = user.RefreshTokens;
+
     }
 }
 

@@ -48,6 +48,18 @@ public static class AuthenticationConfiguration
                     var tokenType = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimsNamesConstants.TokenType)?.Value;
                     return tokenType == ServiceAccount.TokenType || notBefore <= DateTime.UtcNow && expires > DateTime.UtcNow;
                 },
+
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/users-hub"))
+                        context.Token = accessToken;
+                    return Task.CompletedTask;
+                }
             };
         });
         return services;

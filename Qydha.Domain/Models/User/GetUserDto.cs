@@ -1,4 +1,4 @@
-﻿namespace Qydha.API.Models;
+﻿namespace Qydha.Domain.Models;
 
 public class GetUserDto
 {
@@ -14,8 +14,3 @@ public class GetUserDto
     public DateTimeOffset? ExpireDate { get; set; }
     public List<UserRoles> Roles { get; set; } = null!;
 }
-
-
-public class UsersPage(List<GetUserDto> items, int count, int pageNumber, int pageSize)
-    : Page<GetUserDto>(items, count, pageNumber, pageSize)
-{ }

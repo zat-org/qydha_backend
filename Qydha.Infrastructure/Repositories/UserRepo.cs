@@ -45,9 +45,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     public async Task<Result<User>> GetUserWithSettingsByIdAsync(Guid userId)
     {
         return await _dbCtx.Users
-            // .Include(user => user.UserGeneralSettings)
-            // .Include(user => user.UserBalootSettings)
-            // .Include(user => user.UserHandSettings)
             .AsSplitQuery()
             .FirstOrDefaultAsync((user) => user.Id == userId) is User user ?
             Result.Ok(user) :
@@ -264,12 +261,18 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
         else
             return Result.Ok(user);
     }
-    public async Task<Result<User>> UpdateAsync(User user)
+    public async Task<Result<User>> UpdateAsync(User userWithNewData)
     {
-        _dbCtx.Users.Attach(user);
-        _dbCtx.Entry(user).State = EntityState.Modified;
+
+        var trackedUser = await _dbCtx.Users
+           .AsSplitQuery()
+           .AsTracking(QueryTrackingBehavior.TrackAll)
+           .FirstOrDefaultAsync((u) => u.Id == userWithNewData.Id);
+        if (trackedUser == null)
+            return Result.Fail<User>(new EntityNotFoundError<Guid>(userWithNewData.Id, nameof(User)));
+        trackedUser.UpdateData(userWithNewData);
         await _dbCtx.SaveChangesAsync();
-        return Result.Ok(user);
+        return Result.Ok(userWithNewData);
     }
     public async Task<Result> DeleteAsync(User user)
     {

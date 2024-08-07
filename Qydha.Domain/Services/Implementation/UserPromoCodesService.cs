@@ -24,11 +24,13 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMedi
         return (await _userPromoCodesRepo.GetByIdAsync(promoId))
        .OnSuccess((promo) => promo.IsPromoCodeValidToUse(userId))
        .OnSuccessAsync(async () => await _userPromoCodesRepo.MarkAsUsedByIdAsync(promoId))
-       .OnSuccessAsync(async () =>
+       .OnSuccessAsync(async () => await _userRepo.UpdateUserExpireDate(userId))
+       .OnSuccessAsync(async (user) =>
         {
-            await _mediator.Publish(new AddTransactionNotification(userId, TransactionType.PromoCode));
-            return await _userRepo.UpdateUserExpireDate(userId);
+            await _mediator.Publish(new AddTransactionNotification(user, TransactionType.PromoCode));
+            return Result.Ok(user);
         });
+
     }
 
     public async Task<Result<IEnumerable<UserPromoCode>>> GetUserValidPromoCodeAsync(Guid userId)

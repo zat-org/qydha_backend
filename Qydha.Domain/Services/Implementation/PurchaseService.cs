@@ -31,11 +31,12 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
             };
             return await _purchaseRepo.AddAsync(purchase);
         })
-        .OnSuccessAsync(async (purchase) =>
-        {
-            await _mediator.Publish(new AddTransactionNotification(userId, TransactionType.Purchase));
-            return await _userRepo.UpdateUserExpireDate(userId);
-        });
+        .OnSuccessAsync(async (purchase) => await _userRepo.UpdateUserExpireDate(userId))
+        .OnSuccessAsync(async (user) =>
+            {
+                await _mediator.Publish(new AddTransactionNotification(user, TransactionType.Purchase));
+                return Result.Ok(user);
+            });
     }
 }
 

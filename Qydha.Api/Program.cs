@@ -60,6 +60,7 @@ app.UseSerilogRequestLogging(op =>
 });
 
 app.MapHub<BalootGamesHub>("/baloot-games-hub");
+app.MapHub<UsersHub>("/users-hub");
 
 app.MapControllers();
 
