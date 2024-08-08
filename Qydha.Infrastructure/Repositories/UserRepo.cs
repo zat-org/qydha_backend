@@ -212,7 +212,7 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
             .Where(l => l.UserId == userId)
             .Select(p => new Transaction() { NumberOfDays = p.NumberOfDays, UsedAt = p.UsedAt }))
             .Union(_dbCtx.Purchases
-            .Where(p => p.UserId == userId)
+            .Where(p => p.UserId == userId && p.RefundedAt == null)
             .Select(p => new Transaction() { NumberOfDays = p.NumberOfDays, UsedAt = p.PurchaseDate }))
             .OrderBy(t => t.UsedAt)
             .ToListAsync();

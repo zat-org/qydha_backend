@@ -4,5 +4,6 @@ public enum TransactionType
 {
     Purchase,
     PromoCode,
-    InfluencerCode
+    InfluencerCode,
+    Refund
 }

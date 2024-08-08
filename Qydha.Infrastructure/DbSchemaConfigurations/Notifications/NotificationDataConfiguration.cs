@@ -77,7 +77,19 @@ public class NotificationDataConfiguration : IEntityTypeConfiguration<Notificati
                 Visibility = NotificationVisibility.Private,
                 SendingMechanism=NotificationSendingMechanism.Automatic,
                 AnonymousClicks = 0
-            }
+            },
+            new() {
+                Id = 7,
+                Title = "تم الغاء الاشتراك",
+                Description = "برجاء مشاركتنا رأيك فى التطبيق لنعمل على تحسينه",
+                CreatedAt = DateTimeOffset.Parse("2023-11-01T00:00:00.000000Z"),
+                Payload = new(),
+                ActionPath = "_",
+                ActionType = NotificationActionType.NoAction,
+                Visibility = NotificationVisibility.Private,
+                SendingMechanism=NotificationSendingMechanism.Automatic,
+                AnonymousClicks = 0
+            },
         };
 
         entity.HasData(automaticNotifications);

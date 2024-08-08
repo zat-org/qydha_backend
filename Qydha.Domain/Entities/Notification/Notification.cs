@@ -81,4 +81,5 @@ public static class SystemDefaultNotifications
     public const int UseTicket = 4;
     public const int UseInfluencerCode = 5;
     public const int LoginWithQydha = 6;
+    public const int RefundPurchase = 7;
 }

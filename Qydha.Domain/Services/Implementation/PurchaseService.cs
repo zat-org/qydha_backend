@@ -38,5 +38,17 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
                 return Result.Ok(user);
             });
     }
+
+    public async Task<Result<User>> RefundPurchase(Guid userId, string purchaseId, DateTimeOffset refundedAt)
+    {
+        return (await _purchaseRepo.RefundByPurchaseIdAsync(purchaseId, refundedAt))
+        .OnSuccessAsync(async () => await _userRepo.UpdateUserExpireDate(userId))
+        .OnSuccessAsync(async (user) =>
+        {
+            await _mediator.Publish(new AddTransactionNotification(user, TransactionType.Refund));
+            return Result.Ok(user);
+        });
+
+    }
 }
 

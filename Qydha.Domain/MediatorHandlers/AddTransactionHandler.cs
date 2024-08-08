@@ -21,6 +21,9 @@ public class AddPurchaseHandler(INotificationService notificationService, IHubCo
             case TransactionType.InfluencerCode:
                 notificationId = SystemDefaultNotifications.UseInfluencerCode;
                 break;
+            case TransactionType.Refund:
+                notificationId = SystemDefaultNotifications.RefundPurchase;
+                break;
         }
         var mapper = new UserStreamMapper();
 

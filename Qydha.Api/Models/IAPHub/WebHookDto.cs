@@ -33,6 +33,7 @@ public class WebhookData
 {
     public string Id { get; set; } = string.Empty;
     public DateTimeOffset PurchaseDate { get; set; }
+    public DateTimeOffset RefundDate { get; set; }
     public string ProductSku { get; set; } = string.Empty;
     public Guid UserId { get; set; }
 }

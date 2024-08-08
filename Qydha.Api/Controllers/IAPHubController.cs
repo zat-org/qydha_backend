@@ -20,12 +20,20 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
         switch (webHookDto.Type)
         {
             case "purchase":
-                return (await _purchaseService.AddPurchase(webHookDto.Id, webHookDto.Data!.UserId, webHookDto.Data.ProductSku, webHookDto.Data.PurchaseDate))
+                return (await _purchaseService.AddPurchase(webHookDto.Data!.Id, webHookDto.Data!.UserId, webHookDto.Data.ProductSku, webHookDto.Data.PurchaseDate))
                 .Resolve(
                     (user) =>
                     {
                         var mapper = new UserMapper();
                         return Ok(new { Data = new { }, message = "Purchase Added Successfully." });
+                    }, HttpContext.TraceIdentifier);
+            case "refund":
+                return (await _purchaseService.RefundPurchase(webHookDto.Data!.UserId, webHookDto.Data!.Id, webHookDto.Data.RefundDate))
+                .Resolve(
+                    (user) =>
+                    {
+                        var mapper = new UserMapper();
+                        return Ok(new { Data = new { }, message = "Purchase Refunded Successfully." });
                     }, HttpContext.TraceIdentifier);
             default:
                 _logger.LogWarning("Unhandled IAPHUB Action Type : {type} , Data => {data}", webHookDto.Type, webHookDto);

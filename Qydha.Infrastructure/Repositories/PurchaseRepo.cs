@@ -10,6 +10,12 @@ public class PurchaseRepo(QydhaContext qydhaContext, ILogger<PurchaseRepo> logge
            .Where(purchase => purchase.UserId == userId).OrderByDescending(purchase => purchase.PurchaseDate).ToListAsync();
         return Result.Ok((IEnumerable<Purchase>)codes);
     }
+    public async Task<Result<Purchase>> GetByPurchaseIdAsync(string purchaseId)
+    {
+        var purchase = await _dbCtx.Purchases.SingleOrDefaultAsync(purchase => purchase.IAPHubPurchaseId == purchaseId);
+        if (purchase == null) return Result.Fail(new EntityNotFoundError<string>(purchaseId, nameof(Purchase)));
+        return Result.Ok(purchase);
+    }
     public async Task<Result<Purchase>> AddAsync(Purchase purchase)
     {
         if (!_dbCtx.Users.Any(u => u.Id == purchase.UserId))
@@ -17,5 +23,15 @@ public class PurchaseRepo(QydhaContext qydhaContext, ILogger<PurchaseRepo> logge
         await _dbCtx.Purchases.AddAsync(purchase);
         await _dbCtx.SaveChangesAsync();
         return Result.Ok(purchase);
+    }
+
+    public async Task<Result> RefundByPurchaseIdAsync(string purchaseId, DateTimeOffset refundedAt)
+    {
+        var affected = await _dbCtx.Purchases.Where(purchase => purchase.IAPHubPurchaseId == purchaseId).ExecuteUpdateAsync(
+           setters => setters
+               .SetProperty(p => p.RefundedAt, refundedAt)
+        );
+        if (affected == 0) return Result.Fail(new EntityNotFoundError<string>(purchaseId, nameof(Purchase)));
+        return Result.Ok();
     }
 }

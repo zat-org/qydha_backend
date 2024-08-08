@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using Qydha.Infrastructure;
 namespace Qydha.Api.Migrations
 {
     [DbContext(typeof(QydhaContext))]
-    partial class QydhaContextModelSnapshot : ModelSnapshot
+    [Migration("20240808182300_AddRefundedAtPurshase")]
+    partial class AddRefundedAtPurshase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -565,20 +568,6 @@ namespace Qydha.Api.Migrations
                             TemplateValues = "{}",
                             Title = "تسجيل دخول الى {ServiceName}",
                             Visibility = "Private"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            ActionPath = "_",
-                            ActionType = 1,
-                            AnonymousClicks = 0,
-                            CreatedAt = new DateTimeOffset(new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "برجاء مشاركتنا رأيك فى التطبيق لنعمل على تحسينه",
-                            Payload = "{\"Image\":null}",
-                            SendingMechanism = "Automatic",
-                            TemplateValues = "{}",
-                            Title = "تم الغاء الاشتراك",
-                            Visibility = "Private"
                         });
                 });
 
@@ -704,9 +693,6 @@ namespace Qydha.Api.Migrations
 
                     b.HasKey("Id")
                         .HasName("purchases_pkey");
-
-                    b.HasIndex("IAPHubPurchaseId")
-                        .IsUnique();
 
                     b.HasIndex("UserId");
 
