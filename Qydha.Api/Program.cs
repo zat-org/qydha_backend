@@ -61,7 +61,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHub<BalootGamesHub>("/baloot-games-hub");
-app.MapHub<UsersHub>("/users/hub");
+app.MapHub<UsersHub>("/users-hub");
 
 app.MapControllers();
 
