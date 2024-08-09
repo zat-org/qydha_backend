@@ -28,6 +28,7 @@ public class UserPromoCodesService(IUserPromoCodesRepo userPromoCodesRepo, IMedi
        .OnSuccessAsync(async (user) =>
         {
             await _mediator.Publish(new AddTransactionNotification(user, TransactionType.PromoCode));
+            await _mediator.Publish(new UserDataChangedNotification(user));
             return Result.Ok(user);
         });
 

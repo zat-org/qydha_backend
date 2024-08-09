@@ -2,7 +2,7 @@
 
 namespace Qydha.Domain.Services.Implementation;
 
-public class UserService(IUserRepo userRepo, IMessageService messageService, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo)
+public class UserService(IUserRepo userRepo, IMessageService messageService, IMediator mediator, ILogger<UserService> logger, IFileService fileService, IMailingService mailingService, OtpManager otpManager, IUpdatePhoneOTPRequestRepo updatePhoneOTPRequestRepo, IUpdateEmailRequestRepo updateEmailRequestRepo, IOptions<AvatarSettings> avatarOptions, IPhoneAuthenticationRequestRepo phoneAuthenticationRequestRepo)
  : IUserService
 {
     #region injections
@@ -14,6 +14,7 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
     private readonly IUpdateEmailRequestRepo _updateEmailRequestRepo = updateEmailRequestRepo;
     private readonly IUpdatePhoneOTPRequestRepo _updatePhoneOTPRequestRepo = updatePhoneOTPRequestRepo;
     private readonly IPhoneAuthenticationRequestRepo _phoneAuthenticationRequestRepo = phoneAuthenticationRequestRepo;
+    private readonly IMediator _mediator = mediator;
 
     private readonly AvatarSettings _avatarSettings = avatarOptions.Value;
     private readonly ILogger<UserService> _logger = logger;
@@ -156,7 +157,12 @@ public class UserService(IUserRepo userRepo, IMessageService messageService, ILo
             else
                 return changeRes;
         })
-        .OnSuccessAsync(_userRepo.UpdateAsync);
+        .OnSuccessAsync(_userRepo.UpdateAsync)
+        .OnSuccessAsync(async (user) =>
+        {
+            await _mediator.Publish(new UserDataChangedNotification(user));
+            return Result.Ok(user);
+        });
     }
     #endregion
 

@@ -1,4 +1,6 @@
 
+using Microsoft.AspNetCore.Http.Timeouts;
+
 FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile("firebase_private_key.json")
@@ -22,7 +24,6 @@ builder.Services.ConfigureMediatR();
 builder.Services.RegisterSettings(builder.Configuration);
 builder.Services.AuthConfiguration(builder.Configuration);
 builder.Services.AddSignalR();
-
 var app = builder.Build();
 
 
@@ -60,7 +61,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHub<BalootGamesHub>("/baloot-games-hub");
-app.MapHub<UsersHub>("/users-hub");
+app.MapHub<UsersHub>("/users/hub");
 
 app.MapControllers();
 

@@ -3,8 +3,8 @@
 public class WebHookDto
 {
 
-    public string Id { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
+    public string Id { get; set; } = null!;
+    public string Type { get; set; } = null!;
     public DateTimeOffset CreateDate { get; set; }
     public WebhookData? Data { get; set; }
     public Guid? OldUserId { get; set; }
@@ -14,8 +14,8 @@ public class WebHookDto
     {
         return
         @$" 
-        Transaction type : {Type}   
-        Transaction id : {Id}   
+        Webhook type : {Type}   
+        Webhook id : {Id}   
         CreateDate : {CreateDate}
         OldUserId : {OldUserId}
         NewUserId : {NewUserId}
@@ -31,9 +31,11 @@ public class WebHookDto
 
 public class WebhookData
 {
-    public string Id { get; set; } = string.Empty;
+    public string Id { get; set; } = null!;
     public DateTimeOffset PurchaseDate { get; set; }
     public DateTimeOffset RefundDate { get; set; }
-    public string ProductSku { get; set; } = string.Empty;
+    public string ProductSku { get; set; } = null!;
     public Guid UserId { get; set; }
+    public bool IsSandbox { get; set; }
+
 }

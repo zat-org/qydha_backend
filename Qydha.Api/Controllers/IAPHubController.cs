@@ -17,6 +17,11 @@ public class IAPHubController(IPurchaseService purchaseService, ILogger<IAPHubCo
         if (tokenValue != _iAPHubSettings.XAuthToken)
             return new ForbiddenError().Handle(HttpContext.TraceIdentifier);
 
+        if (webHookDto.Data!.IsSandbox)
+        {
+            _logger.LogWarning("Unhandled IAPHUB Action Type : {type} , Data => {data}", webHookDto.Type, webHookDto);
+            return Ok();
+        }
         switch (webHookDto.Type)
         {
             case "purchase":

@@ -3,10 +3,9 @@ using Qydha.Domain.Mappers;
 
 namespace Qydha.Domain.MediatorHandlers;
 
-public class AddPurchaseHandler(INotificationService notificationService, IHubContext<UsersHub, IUserClient> hubContext) : INotificationHandler<AddTransactionNotification>
+public class AddPurchaseHandler(INotificationService notificationService) : INotificationHandler<AddTransactionNotification>
 {
     private readonly INotificationService _notificationService = notificationService;
-    private readonly IHubContext<UsersHub, IUserClient> _hubContext = hubContext;
     public async Task Handle(AddTransactionNotification notification, CancellationToken cancellationToken)
     {
         int notificationId = SystemDefaultNotifications.MakePurchase;
@@ -25,10 +24,6 @@ public class AddPurchaseHandler(INotificationService notificationService, IHubCo
                 notificationId = SystemDefaultNotifications.RefundPurchase;
                 break;
         }
-        var mapper = new UserStreamMapper();
-
-        string serializedUser = JsonConvert.SerializeObject(mapper.UserToUserDto(notification.User), BalootConstants.balootEventsSerializationSettings);
-        await _hubContext.Clients.User(notification.User.Id.ToString()).UserDataChanged(serializedUser);
         await _notificationService.SendToUserPreDefinedNotification(notification.User.Id, notificationId, []);
     }
 }

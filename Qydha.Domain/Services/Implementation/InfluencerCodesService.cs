@@ -47,6 +47,7 @@ public class InfluencerCodesService(IInfluencerCodesRepo influencerCodesRepo, IM
         .OnSuccessAsync(async (user) =>
         {
             await _mediator.Publish(new AddTransactionNotification(user, TransactionType.InfluencerCode));
+            await _mediator.Publish(new UserDataChangedNotification(user));
             return Result.Ok(user);
         });
     }

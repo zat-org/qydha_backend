@@ -1,4 +1,6 @@
-﻿namespace Qydha.API.Controllers;
+﻿using Microsoft.AspNetCore.Http.Timeouts;
+
+namespace Qydha.API.Controllers;
 [ApiController]
 [Route("baloot-games/")]
 public class BalootGamesController(IBalootGamesService balootGamesService) : ControllerBase
@@ -8,6 +10,8 @@ public class BalootGamesController(IBalootGamesService balootGamesService) : Con
     [Authorize(Policy = PolicyConstants.UserOrServiceAccount)]
     [Permission(ServiceAccountPermission.AnonymousBalootGameCRUDs)]
     [HttpPost]
+    [RequestSizeLimit(30_000_000)]
+    [RequestTimeout(milliseconds: 10_000)]
     public IActionResult CreateBalootGame([ModelBinder(typeof(CreateBalootGameDtoModelBinder))] CreateBalootGameDto dto)
     {
         var xInfoData = HttpContext.Request.Headers.GetXInfoHeaderData();

@@ -35,6 +35,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
         .OnSuccessAsync(async (user) =>
             {
                 await _mediator.Publish(new AddTransactionNotification(user, TransactionType.Purchase));
+                await _mediator.Publish(new UserDataChangedNotification(user));
                 return Result.Ok(user);
             });
     }
@@ -46,6 +47,7 @@ public class PurchaseService(IPurchaseRepo purchaseRepo, IMediator mediator, IUs
         .OnSuccessAsync(async (user) =>
         {
             await _mediator.Publish(new AddTransactionNotification(user, TransactionType.Refund));
+            await _mediator.Publish(new UserDataChangedNotification(user));
             return Result.Ok(user);
         });
 

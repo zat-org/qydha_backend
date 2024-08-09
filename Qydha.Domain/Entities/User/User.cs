@@ -144,7 +144,7 @@ public class User : IClaimable
         UserHandSettings = user.UserHandSettings;
         UserBalootSettings = user.UserBalootSettings;
         RefreshTokens = user.RefreshTokens;
-
+        Roles = user.Roles;
     }
 }
 

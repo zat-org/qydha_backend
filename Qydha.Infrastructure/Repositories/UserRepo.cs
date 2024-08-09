@@ -263,7 +263,6 @@ public class UserRepo(QydhaContext qydhaContext, ILogger<UserRepo> logger) : IUs
     }
     public async Task<Result<User>> UpdateAsync(User userWithNewData)
     {
-
         var trackedUser = await _dbCtx.Users
            .AsSplitQuery()
            .AsTracking(QueryTrackingBehavior.TrackAll)

@@ -1,14 +1,17 @@
 ﻿
 
+using Microsoft.AspNetCore.SignalR;
+
 namespace Qydha.API.Controllers;
 
 [ApiController]
 [Route("users/")]
-public class UserController(IUserService userService, INotificationService notificationService) : ControllerBase
+public class UserController(IUserService userService, INotificationService notificationService, IHubContext<UsersHub, IUserClient> usersHubCtx) : ControllerBase
 {
     #region injections and ctor
     private readonly IUserService _userService = userService;
     private readonly INotificationService _notificationService = notificationService;
+    private readonly IHubContext<UsersHub, IUserClient> _usersHubCtx = usersHubCtx;
 
     #endregion
 
@@ -116,6 +119,8 @@ public class UserController(IUserService userService, INotificationService notif
                 });
             }, HttpContext.TraceIdentifier);
     }
+
+   
 
     #endregion
 
